@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sac County Ag Inspector - Study Tool</title>
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<header>
+  <h1>Sacramento County Ag Inspector - Study Tool</h1>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="crop">Crop &amp; Tree ID</button>
+    <button class="tab-btn" data-tab="map">Map Drawing</button>
+    <button class="tab-btn" data-tab="math">Math Practice</button>
+    <button class="tab-btn" data-tab="reading">Reading Comp</button>
+    <button class="tab-btn" data-tab="conservation">Conservation</button>
+  </div>
+</header>
+
+<main>
+  <!-- CROP & TREE ID -->
+  <div id="crop" class="section active">
+    <div class="score-bar">
+      <span>Score: <span id="crop-score">0</span> / <span id="crop-total">0</span></span>
+      <span class="srs-info">Due: <span id="crop-due">0</span></span>
+      <button class="reset-btn" data-section="crop">Reset</button>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="crop-quiz-btn" data-mode="quiz">Quiz Mode</button>
+      <button class="mode-btn" id="crop-flash-btn" data-mode="flash">Flashcards</button>
+    </div>
+    <div id="crop-quiz-area" class="card">
+      <span class="timer" id="crop-timer">0s</span>
+      <div class="question-header"><div class="question-text" id="crop-question"></div></div>
+      <div id="crop-view-img"></div>
+      <div class="options" id="crop-options"></div>
+      <div id="crop-dk-area"></div>
+      <div class="feedback" id="crop-feedback"></div>
+      <div class="skip-prompt" id="crop-skip-prompt">Press <kbd>D</kbd> again to skip</div>
+      <button class="next-btn" id="crop-next" style="display:none">Next Question</button>
+      <div class="key-hints"><kbd>A</kbd> prev · <kbd>D</kbd> next · <kbd>Space</kbd> advance</div>
+    </div>
+    <div id="crop-flash-area" style="display:none">
+      <div class="flashcard-container">
+        <div class="flashcard" id="flashcard">
+          <div class="flashcard-face flashcard-front" id="flash-front"></div>
+          <div class="flashcard-face flashcard-back" id="flash-back"></div>
+        </div>
+      </div>
+      <div class="flashcard-hint">Click card to flip</div>
+      <div class="flashcard-nav">
+        <button id="flash-prev">Previous</button>
+        <span id="flash-counter"></span>
+        <button id="flash-next">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAP DRAWING -->
+  <div id="map" class="section">
+    <div class="score-bar">
+      <span>Score: <span id="map-score">0</span> / <span id="map-total">0</span></span>
+      <span class="srs-info">Due: <span id="map-due">0</span></span>
+      <button class="reset-btn" data-section="map">Reset</button>
+    </div>
+    <div class="card">
+      <h2>Map Drawing Tips</h2>
+      <ul class="tips-list">
+        <li>Always orient your map with North at the top; draw a North arrow</li>
+        <li>Use bird's-eye (plan) view &mdash; look straight down, not at an angle</li>
+        <li>Establish a consistent scale and note it (e.g., 1 inch = 50 feet)</li>
+        <li>Label every feature: buildings, roads, fences, water sources, traps</li>
+        <li>Include a legend for any symbols you use</li>
+        <li>Draw property boundaries first, then add interior features</li>
+        <li>Mark compass directions for relative positions (NE corner, south fence line)</li>
+        <li>Use simple, consistent shapes: squares for buildings, circles for trees</li>
+        <li>Note distances between key features when specified</li>
+        <li>Read the entire description before drawing anything</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="timer" id="map-timer">0s</span>
+      <h3>Spatial Reasoning Quiz</h3>
+      <div id="map-passage" class="passage"></div>
+      <div class="question-text" id="map-question"></div>
+      <div class="options" id="map-options"></div>
+      <div id="map-dk-area"></div>
+      <div class="feedback" id="map-feedback"></div>
+      <div class="skip-prompt" id="map-skip-prompt">Press <kbd>D</kbd> again to skip</div>
+      <button class="next-btn" id="map-next" style="display:none">Next Question</button>
+      <div class="key-hints"><kbd>A</kbd> prev · <kbd>D</kbd> next · <kbd>Space</kbd> advance</div>
+    </div>
+  </div>
+
+  <!-- MATH PRACTICE -->
+  <div id="math" class="section">
+    <div class="score-bar">
+      <span>Score: <span id="math-score">0</span> / <span id="math-total">0</span></span>
+      <span class="srs-info">Due: <span id="math-due">-</span></span>
+      <button class="reset-btn" data-section="math">Reset</button>
+    </div>
+    <div class="math-category-btns" id="math-cats">
+      <button class="active" data-cat="all">All</button>
+      <button data-cat="conversion">Unit Conversions</button>
+      <button data-cat="average">Averages</button>
+      <button data-cat="percent">Percentages</button>
+      <button data-cat="decimal">Decimals</button>
+    </div>
+    <div class="card">
+      <span class="timer" id="math-timer">0s</span>
+      <div class="question-text" id="math-question"></div>
+      <div class="math-input">
+        <input type="text" id="math-answer" placeholder="Your answer">
+        <button id="math-submit">Submit</button>
+      </div>
+      <div class="feedback" id="math-feedback"></div>
+      <button class="next-btn" id="math-next" style="display:none">New Problem</button>
+    </div>
+  </div>
+
+  <!-- READING COMPREHENSION -->
+  <div id="reading" class="section">
+    <div class="score-bar">
+      <span>Score: <span id="read-score">0</span> / <span id="read-total">0</span></span>
+      <span class="srs-info">Due: <span id="read-due">0</span></span>
+      <button class="reset-btn" data-section="reading">Reset</button>
+    </div>
+    <div class="card">
+      <span class="timer" id="read-timer">0s</span>
+      <h3>Read the passage, then answer the question.</h3>
+      <div id="read-passage" class="passage"></div>
+      <div class="question-text" id="read-question"></div>
+      <div class="options" id="read-options"></div>
+      <div id="read-dk-area"></div>
+      <div class="feedback" id="read-feedback"></div>
+      <div class="skip-prompt" id="read-skip-prompt">Press <kbd>D</kbd> again to skip</div>
+      <button class="next-btn" id="read-next" style="display:none">Next Question</button>
+      <div class="key-hints"><kbd>A</kbd> prev · <kbd>D</kbd> next · <kbd>Space</kbd> advance</div>
+    </div>
+  </div>
+
+  <!-- CONSERVATION -->
+  <div id="conservation" class="section">
+    <div class="score-bar">
+      <span>Score: <span id="cons-score">0</span> / <span id="cons-total">0</span></span>
+      <span class="srs-info">Due: <span id="cons-due">0</span></span>
+      <button class="reset-btn" data-section="conservation">Reset</button>
+    </div>
+    <div class="card">
+      <span class="timer" id="cons-timer">0s</span>
+      <h3>Conservation &amp; Protected Species</h3>
+      <div class="question-text" id="cons-question"></div>
+      <div id="cons-view-img"></div>
+      <div class="options" id="cons-options"></div>
+      <div id="cons-dk-area"></div>
+      <div class="feedback" id="cons-feedback"></div>
+      <div class="skip-prompt" id="cons-skip-prompt">Press <kbd>D</kbd> again to skip</div>
+      <button class="next-btn" id="cons-next" style="display:none">Next Question</button>
+      <div class="key-hints"><kbd>A</kbd> prev · <kbd>D</kbd> next · <kbd>Space</kbd> advance</div>
+    </div>
+  </div>
+</main>
+
+<!-- TERM DEFINER PANEL -->
+<div class="term-panel" id="term-panel">
+  <button class="term-toggle" id="term-toggle-btn">Term Definer &#9650;</button>
+  <div class="term-panel-body">
+    <input type="text" class="term-search" id="term-search" placeholder="Search terms...">
+    <div class="term-list" id="term-list"></div>
+    <div class="term-add-form">
+      <input type="text" id="new-term" placeholder="New term">
+      <input type="text" id="new-def" placeholder="Definition">
+      <button id="add-term-btn">Add</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
