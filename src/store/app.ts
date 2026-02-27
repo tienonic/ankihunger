@@ -12,6 +12,7 @@ const [syncActivity, setSyncActivity] = createSignal(localStorage.getItem('sync-
 const [noteBoxVisible, setNoteBoxVisible] = createSignal(false);
 const [headerVisible, setHeaderVisible] = createSignal(false);
 const [termsOpen, setTermsOpen] = createSignal(false);
+const [headerLocked, setHeaderLocked] = createSignal(false);
 
 export {
   appPhase, setAppPhase,
@@ -23,6 +24,7 @@ export {
   noteBoxVisible, setNoteBoxVisible,
   headerVisible, setHeaderVisible,
   termsOpen, setTermsOpen,
+  headerLocked, setHeaderLocked,
 };
 
 export function toggleEasyMode() {

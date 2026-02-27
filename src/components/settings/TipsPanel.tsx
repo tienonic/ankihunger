@@ -1,8 +1,10 @@
 import { createSignal, For, Show, onMount, onCleanup } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import {
   type KeyAction, type KeyContext,
   keybinds,
 } from '../../store/keybinds.ts';
+import { setHeaderLocked } from '../../store/app.ts';
 
 const CONTEXT_ORDER: KeyContext[] = ['mcq', 'flashcard', 'math', 'global'];
 const CONTEXT_LABELS: Record<KeyContext, string> = {
@@ -40,15 +42,20 @@ const TIPS: Record<KeyContext, { action: string; keys: (map: Record<KeyAction, {
 export function TipsPanel() {
   const [open, setOpen] = createSignal(false);
 
+  function close() {
+    setOpen(false);
+    setHeaderLocked(false);
+  }
+
   function handleEscape(e: KeyboardEvent) {
     if (e.key === 'Escape' && open()) {
-      setOpen(false);
+      close();
     }
   }
 
   function handleBackdropClick(e: MouseEvent) {
     if ((e.target as HTMLElement).classList.contains('keybinds-overlay')) {
-      setOpen(false);
+      close();
     }
   }
 
@@ -57,35 +64,37 @@ export function TipsPanel() {
 
   return (
     <>
-      <button class="tips-btn" title="Show keyboard tips" onClick={() => setOpen(true)}>
+      <button class="tips-btn" title="Show keyboard tips" onClick={() => { setOpen(true); setHeaderLocked(true); }}>
         Tips
       </button>
       <Show when={open()}>
-        <div class="keybinds-overlay" onClick={handleBackdropClick}>
-          <div class="keybinds-modal">
-            <div class="keybinds-header">
-              <span>Tips</span>
-              <button class="keybinds-close" onClick={() => setOpen(false)}>&times;</button>
-            </div>
-            <div class="keybinds-body">
-              <For each={CONTEXT_ORDER}>
-                {(ctx) => (
-                  <div class="keybinds-group">
-                    <div class="keybinds-group-label">{CONTEXT_LABELS[ctx]}</div>
-                    <For each={TIPS[ctx]}>
-                      {(tip) => (
-                        <div class="keybinds-row">
-                          <span class="keybinds-action">{tip.action}</span>
-                          <kbd>{tip.keys(keybinds())}</kbd>
-                        </div>
-                      )}
-                    </For>
-                  </div>
-                )}
-              </For>
+        <Portal>
+          <div class="keybinds-overlay" onClick={handleBackdropClick}>
+            <div class="keybinds-modal">
+              <div class="keybinds-header">
+                <span>Tips</span>
+                <button class="keybinds-close" onClick={close}>&times;</button>
+              </div>
+              <div class="keybinds-body">
+                <For each={CONTEXT_ORDER}>
+                  {(ctx) => (
+                    <div class="keybinds-group">
+                      <div class="keybinds-group-label">{CONTEXT_LABELS[ctx]}</div>
+                      <For each={TIPS[ctx]}>
+                        {(tip) => (
+                          <div class="keybinds-row">
+                            <span class="keybinds-action">{tip.action}</span>
+                            <kbd>{tip.keys(keybinds())}</kbd>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  )}
+                </For>
+              </div>
             </div>
           </div>
-        </div>
+        </Portal>
       </Show>
     </>
   );

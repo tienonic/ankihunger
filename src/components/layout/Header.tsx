@@ -1,5 +1,5 @@
 import { For, onCleanup } from 'solid-js';
-import { activeProject, activeTab, setActiveTab, syncActivity, toggleSyncActivity, headerVisible, setHeaderVisible } from '../../store/app.ts';
+import { activeProject, activeTab, setActiveTab, syncActivity, toggleSyncActivity, headerVisible, setHeaderVisible, headerLocked } from '../../store/app.ts';
 import { goToLauncher } from '../../store/project.ts';
 import { SettingsPanel } from '../settings/SettingsPanel.tsx';
 import { KeybindsPanel } from '../settings/KeybindsPanel.tsx';
@@ -19,8 +19,10 @@ export function Header() {
   }
 
   function scheduleClose() {
+    if (headerLocked()) return;
     clearClose();
     closeTimer = setTimeout(() => {
+      if (headerLocked()) return;
       setHeaderVisible(false);
       closeTimer = undefined;
     }, 800);

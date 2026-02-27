@@ -1,9 +1,11 @@
 import { createSignal, For, Show, onMount, onCleanup } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import {
   keybinds, setKeybind, resetKeybinds, findConflict,
   ACTION_META, DEFAULT_KEYBINDS,
   type KeyAction, type Binding, type KeyContext,
 } from '../../store/keybinds.ts';
+import { setHeaderLocked } from '../../store/app.ts';
 
 const CONTEXT_ORDER: KeyContext[] = ['global', 'mcq', 'flashcard', 'math'];
 const CONTEXT_LABELS: Record<KeyContext, string> = {
@@ -32,9 +34,14 @@ export function KeybindsPanel() {
   const [capturing, setCapturing] = createSignal<KeyAction | null>(null);
   const [conflict, setConflict] = createSignal<{ action: KeyAction; existing: KeyAction } | null>(null);
 
+  function close() {
+    setOpen(false);
+    setHeaderLocked(false);
+  }
+
   function handleEscape(e: KeyboardEvent) {
     if (e.key === 'Escape' && open() && !capturing()) {
-      setOpen(false);
+      close();
     }
   }
 
@@ -44,7 +51,7 @@ export function KeybindsPanel() {
         setCapturing(null);
         setConflict(null);
       } else {
-        setOpen(false);
+        close();
       }
     }
   }
@@ -103,71 +110,73 @@ export function KeybindsPanel() {
 
   return (
     <>
-      <button class="tips-btn" title="Keyboard shortcuts" onClick={() => setOpen(true)}>
+      <button class="tips-btn" title="Keyboard shortcuts" onClick={() => { setOpen(true); setHeaderLocked(true); }}>
         Keys
       </button>
       <Show when={open()}>
-        <div class="keybinds-overlay" onClick={handleBackdropClick}>
-          <div class="keybinds-modal">
-            <div class="keybinds-header">
-              <span>Keyboard Shortcuts</span>
-              <button class="keybinds-close" onClick={() => setOpen(false)}>&times;</button>
-            </div>
-            <div class="keybinds-body">
-              <For each={CONTEXT_ORDER}>
-                {(ctx) => {
-                  const actions = () => groupedActions()[ctx];
-                  return (
-                    <Show when={actions().length > 0}>
-                      <div class="keybinds-group">
-                        <div class="keybinds-group-label">{CONTEXT_LABELS[ctx]}</div>
-                        <For each={actions()}>
-                          {(action) => {
-                            const b = () => keybinds()[action];
-                            const isDefault = () => {
-                              const d = DEFAULT_KEYBINDS[action];
-                              const c = b();
-                              return c.key === d.key && c.code === d.code;
-                            };
-                            const isCapturing = () => capturing() === action;
-                            const isConflictSource = () => conflict()?.existing === action;
+        <Portal>
+          <div class="keybinds-overlay" onClick={handleBackdropClick}>
+            <div class="keybinds-modal">
+              <div class="keybinds-header">
+                <span>Keyboard Shortcuts</span>
+                <button class="keybinds-close" onClick={close}>&times;</button>
+              </div>
+              <div class="keybinds-body">
+                <For each={CONTEXT_ORDER}>
+                  {(ctx) => {
+                    const actions = () => groupedActions()[ctx];
+                    return (
+                      <Show when={actions().length > 0}>
+                        <div class="keybinds-group">
+                          <div class="keybinds-group-label">{CONTEXT_LABELS[ctx]}</div>
+                          <For each={actions()}>
+                            {(action) => {
+                              const b = () => keybinds()[action];
+                              const isDefault = () => {
+                                const d = DEFAULT_KEYBINDS[action];
+                                const c = b();
+                                return c.key === d.key && c.code === d.code;
+                              };
+                              const isCapturing = () => capturing() === action;
+                              const isConflictSource = () => conflict()?.existing === action;
 
-                            return (
-                              <div class={`keybinds-row ${isConflictSource() ? 'keybinds-conflict' : ''}`}>
-                                <span class="keybinds-action">{ACTION_META[action].name}</span>
-                                <kbd class={isCapturing() ? 'keybinds-capture' : ''}>
-                                  {isCapturing() ? '...' : b().label}
-                                </kbd>
-                                <button
-                                  class="keybinds-rebind"
-                                  onClick={() => startCapture(action)}
-                                  disabled={!!capturing()}
-                                >
-                                  {isCapturing() ? 'press key' : 'rebind'}
-                                </button>
-                                <Show when={!isDefault()}>
-                                  <span class="keybinds-custom">&bull;</span>
-                                </Show>
-                              </div>
-                            );
-                          }}
-                        </For>
-                      </div>
-                    </Show>
-                  );
-                }}
-              </For>
-              <Show when={conflict()}>
-                <div class="keybinds-conflict-msg">
-                  Swapped with "{ACTION_META[conflict()!.existing].name}"
-                </div>
-              </Show>
-            </div>
-            <div class="keybinds-footer">
-              <button class="settings-save-btn" onClick={handleReset}>Reset All to Defaults</button>
+                              return (
+                                <div class={`keybinds-row ${isConflictSource() ? 'keybinds-conflict' : ''}`}>
+                                  <span class="keybinds-action">{ACTION_META[action].name}</span>
+                                  <kbd class={isCapturing() ? 'keybinds-capture' : ''}>
+                                    {isCapturing() ? '...' : b().label}
+                                  </kbd>
+                                  <button
+                                    class="keybinds-rebind"
+                                    onClick={() => startCapture(action)}
+                                    disabled={!!capturing()}
+                                  >
+                                    {isCapturing() ? 'press key' : 'rebind'}
+                                  </button>
+                                  <Show when={!isDefault()}>
+                                    <span class="keybinds-custom">&bull;</span>
+                                  </Show>
+                                </div>
+                              );
+                            }}
+                          </For>
+                        </div>
+                      </Show>
+                    );
+                  }}
+                </For>
+                <Show when={conflict()}>
+                  <div class="keybinds-conflict-msg">
+                    Swapped with "{ACTION_META[conflict()!.existing].name}"
+                  </div>
+                </Show>
+              </div>
+              <div class="keybinds-footer">
+                <button class="settings-save-btn" onClick={handleReset}>Reset All to Defaults</button>
+              </div>
             </div>
           </div>
-        </div>
+        </Portal>
       </Show>
     </>
   );
