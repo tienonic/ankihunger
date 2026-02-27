@@ -663,7 +663,7 @@ function renderMcForced(sectionId, idx, histEntry) {
     ratingUI.hide(sectionId);
     hideCardActions(sectionId);
     hideStateBadge(sectionId);
-    document.getElementById(sectionId + '-next').style.display = 'none';
+    document.getElementById(sectionId + '-next').classList.remove('show');
 
     // Show history hint
     const hintId = sectionId + '-history-hint';
@@ -783,7 +783,7 @@ function renderMc(sectionId, q) {
   hideCardActions(sectionId);
   hideStateBadge(sectionId);
 
-  document.getElementById(sectionId + '-next').style.display = 'none';
+  document.getElementById(sectionId + '-next').classList.remove('show');
 
   // Hide history hint if present
   const histHint = document.getElementById(sectionId + '-history-hint');
@@ -942,7 +942,7 @@ function handleRate(sectionId, rating) {
 
   ratingUI.hide(sectionId);
   hideCardActions(sectionId);
-  document.getElementById(sectionId + '-next').style.display = 'inline-block';
+  document.getElementById(sectionId + '-next').classList.add('show');
 
   state.save(cardMgr);
   updateAllDue();
@@ -1068,7 +1068,7 @@ function renderMathProblem(sectionId) {
   inp.value = '';
   inp.disabled = false;
   document.getElementById(sectionId + '-feedback').className = 'feedback';
-  document.getElementById(sectionId + '-next').style.display = 'none';
+  document.getElementById(sectionId + '-next').classList.remove('show');
   hideMathSteps(sectionId);
   pending[sectionId] = false;
   const sp = document.getElementById(sectionId + '-skip-prompt');
@@ -1122,7 +1122,7 @@ function checkMath(sectionId) {
 
   updateScore(sectionId);
   updateMathStreak(sectionId);
-  document.getElementById(sectionId + '-next').style.display = 'inline-block';
+  document.getElementById(sectionId + '-next').classList.add('show');
   state.save(cardMgr);
 }
 
@@ -1149,7 +1149,7 @@ function skipMath(sectionId) {
 
   updateScore(sectionId);
   updateMathStreak(sectionId);
-  document.getElementById(sectionId + '-next').style.display = 'inline-block';
+  document.getElementById(sectionId + '-next').classList.add('show');
   state.save(cardMgr);
 }
 

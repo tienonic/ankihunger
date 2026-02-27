@@ -322,6 +322,8 @@ h3 { font-size: 1.1rem; margin-bottom: 10px; }
   color: var(--text-light); border: 1px solid var(--border); border-radius: 2px;
   cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background 0.15s, color 0.15s;
 }
+.next-btn { visibility: hidden; }
+.next-btn.show { visibility: visible; }
 .next-btn:hover, .action-btn:hover { background: var(--bg); color: var(--text); }
 
 /* === 5. Quiz Elements === */
