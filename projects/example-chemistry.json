@@ -12,7 +12,6 @@
       "name": "Elements & Periodic Table",
       "type": "mc-quiz",
       "hasFlashcards": true,
-      "hasImages": false,
       "questions": [
         {
           "q": "What is the chemical symbol for Gold?",
@@ -39,42 +38,16 @@
           "explanation": "Noble gases (Group 18) have full outer electron shells."
         },
         {
-          "q": "Which element is the most abundant in Earth's atmosphere?",
-          "correct": "Nitrogen",
-          "wrong": ["Oxygen", "Carbon dioxide", "Argon"],
-          "explanation": "Nitrogen makes up about 78% of the atmosphere."
-        },
-        {
-          "q": "What is the atomic number of Oxygen?",
-          "correct": "8",
-          "wrong": ["6", "16", "10"],
-          "explanation": "Oxygen has 8 protons."
-        },
-        {
           "q": "Which element has the highest electronegativity?",
           "correct": "Fluorine",
           "wrong": ["Oxygen", "Chlorine", "Nitrogen"],
-          "explanation": "Fluorine (3.98) is the most electronegative element on the Pauling scale."
-        },
-        {
-          "q": "What is the lightest element?",
-          "correct": "Hydrogen",
-          "wrong": ["Helium", "Lithium", "Carbon"],
-          "explanation": "Hydrogen has an atomic mass of ~1.008 u."
+          "explanation": "Fluorine (3.98) is the most electronegative element."
         }
       ],
       "flashcards": [
         {
-          "front": "Hydrogen (H)",
-          "back": "<strong>Atomic #:</strong> 1<br><strong>Mass:</strong> 1.008<br><strong>Group:</strong> Nonmetal<br><strong>Note:</strong> Most abundant element in the universe"
-        },
-        {
           "front": "Carbon (C)",
           "back": "<strong>Atomic #:</strong> 6<br><strong>Mass:</strong> 12.011<br><strong>Group:</strong> Nonmetal<br><strong>Note:</strong> Basis of organic chemistry, 4 bonds"
-        },
-        {
-          "front": "Oxygen (O)",
-          "back": "<strong>Atomic #:</strong> 8<br><strong>Mass:</strong> 15.999<br><strong>Group:</strong> Nonmetal<br><strong>Note:</strong> Essential for combustion and respiration"
         },
         {
           "front": "Iron (Fe)",
@@ -90,12 +63,10 @@
       "id": "reactions",
       "name": "Chemical Reactions",
       "type": "passage-quiz",
-      "hasFlashcards": false,
-      "hasImages": false,
       "scenarios": [
         {
-          "passage": "In an exothermic reaction, energy is released to the surroundings, usually as heat. The products have less energy than the reactants. The enthalpy change (ΔH) is negative. Common examples include combustion (burning fuel), neutralization (acid + base), and rusting of iron. In contrast, endothermic reactions absorb energy — the products have more energy than the reactants, and ΔH is positive. Photosynthesis and melting ice are endothermic.",
-          "source": "General Chemistry, Ch. 5 — Thermochemistry",
+          "passage": "In an exothermic reaction, energy is released to the surroundings as heat. The products have less energy than the reactants and ΔH is negative. Examples: combustion, neutralization, rusting. Endothermic reactions absorb energy — ΔH is positive. Examples: photosynthesis, melting ice.",
+          "source": "General Chemistry, Ch. 5",
           "questions": [
             {
               "q": "In an exothermic reaction, the enthalpy change (ΔH) is:",
@@ -108,59 +79,31 @@
               "correct": "Melting ice",
               "wrong": ["Burning wood", "Rusting iron", "Neutralization"],
               "explanation": "Melting absorbs heat from surroundings."
-            },
-            {
-              "q": "In an exothermic reaction, the products have:",
-              "correct": "Less energy than the reactants",
-              "wrong": ["More energy than the reactants", "Equal energy to the reactants", "No energy"],
-              "explanation": "Energy was released, so products are lower energy."
-            },
-            {
-              "q": "Photosynthesis is classified as:",
-              "correct": "Endothermic",
-              "wrong": ["Exothermic", "Isothermic", "Adiabatic"],
-              "explanation": "Plants absorb light energy to build glucose."
             }
           ]
         },
         {
-          "passage": "Balancing chemical equations follows the Law of Conservation of Mass: atoms are neither created nor destroyed. The number of each type of atom must be equal on both sides. Steps: (1) Write the unbalanced equation. (2) Count atoms on each side. (3) Add coefficients (not subscripts) to balance. (4) Check your work. Example: H₂ + O₂ → H₂O becomes 2H₂ + O₂ → 2H₂O.",
-          "source": "General Chemistry, Ch. 3 — Stoichiometry",
+          "passage": "Balancing chemical equations follows the Law of Conservation of Mass: atoms are neither created nor destroyed. Add coefficients (not subscripts) to balance. Example: H₂ + O₂ → H₂O becomes 2H₂ + O₂ → 2H₂O.",
+          "source": "General Chemistry, Ch. 3",
           "questions": [
-            {
-              "q": "What law requires balancing chemical equations?",
-              "correct": "Law of Conservation of Mass",
-              "wrong": ["Law of Thermodynamics", "Avogadro's Law", "Hess's Law"],
-              "explanation": "Mass is conserved — atoms in = atoms out."
-            },
             {
               "q": "When balancing equations, you adjust:",
               "correct": "Coefficients",
               "wrong": ["Subscripts", "Atomic numbers", "Electron counts"],
               "explanation": "Changing subscripts would change the substance itself."
-            },
-            {
-              "q": "In 2H₂ + O₂ → 2H₂O, how many oxygen atoms are on each side?",
-              "correct": "2",
-              "wrong": ["1", "3", "4"],
-              "explanation": "O₂ has 2 oxygen atoms. 2H₂O also has 2 oxygen atoms."
             }
           ]
         }
       ],
       "tips": [
-        "Always check that atom counts match on both sides",
-        "Balance metals first, then nonmetals, then hydrogen, then oxygen",
-        "Coefficients multiply ALL atoms in a formula",
-        "Never change subscripts to balance — only coefficients"
+        "Balance metals first, then nonmetals, then H, then O",
+        "Coefficients multiply ALL atoms in a formula"
       ]
     },
     {
       "id": "bonding",
       "name": "Chemical Bonding",
       "type": "mc-quiz",
-      "hasFlashcards": false,
-      "hasImages": false,
       "questions": [
         {
           "q": "What type of bond forms between a metal and a nonmetal?",
@@ -171,32 +114,14 @@
         {
           "q": "In a covalent bond, electrons are:",
           "correct": "Shared between atoms",
-          "wrong": ["Transferred from one atom to another", "Destroyed", "Added from outside"],
+          "wrong": ["Transferred", "Destroyed", "Added from outside"],
           "explanation": "Covalent = co-valence = sharing electrons."
         },
         {
-          "q": "What is the shape of a methane (CH₄) molecule?",
-          "correct": "Tetrahedral",
-          "wrong": ["Linear", "Trigonal planar", "Bent"],
-          "explanation": "4 bonding pairs around carbon → tetrahedral (109.5°)."
-        },
-        {
-          "q": "Which type of intermolecular force is the weakest?",
+          "q": "Which intermolecular force is the weakest?",
           "correct": "London dispersion forces",
           "wrong": ["Hydrogen bonding", "Dipole-dipole", "Ion-dipole"],
           "explanation": "London forces are temporary induced dipoles — weakest IMF."
-        },
-        {
-          "q": "A polar molecule has:",
-          "correct": "An uneven distribution of electron density",
-          "wrong": ["Equal sharing of all electrons", "No electrons", "Only ionic bonds"],
-          "explanation": "Polar = asymmetric charge distribution."
-        },
-        {
-          "q": "How many covalent bonds does Nitrogen typically form?",
-          "correct": "3",
-          "wrong": ["1", "2", "4"],
-          "explanation": "N has 5 valence electrons, needs 3 more → 3 bonds."
         }
       ]
     },
@@ -204,31 +129,19 @@
       "id": "math",
       "name": "Chem Math",
       "type": "math-gen",
-      "hasFlashcards": false,
-      "hasImages": false,
       "generators": ["conversion", "percent", "average"]
     }
   ],
   "glossary": [
-    { "term": "Atom", "def": "Smallest unit of an element that retains its chemical properties. Made of protons, neutrons, electrons." },
-    { "term": "Molecule", "def": "Two or more atoms bonded together. Can be same element (O₂) or different (H₂O)." },
-    { "term": "Ion", "def": "Atom or molecule with a net electric charge due to gaining or losing electrons." },
-    { "term": "Cation", "def": "Positively charged ion (lost electrons). Example: Na⁺." },
-    { "term": "Anion", "def": "Negatively charged ion (gained electrons). Example: Cl⁻." },
-    { "term": "Isotope", "def": "Atoms of the same element with different numbers of neutrons. Same atomic #, different mass." },
-    { "term": "Electronegativity", "def": "Tendency of an atom to attract shared electrons in a bond. F is highest (3.98)." },
-    { "term": "Valence Electrons", "def": "Electrons in the outermost shell. Determine bonding behavior and chemical properties." },
-    { "term": "Ionic Bond", "def": "Bond formed by transfer of electrons from metal to nonmetal. Creates ions held by electrostatic attraction." },
-    { "term": "Covalent Bond", "def": "Bond formed by sharing electron pairs between nonmetal atoms." },
-    { "term": "Enthalpy (ΔH)", "def": "Heat content of a system. Negative ΔH = exothermic, positive ΔH = endothermic." },
-    { "term": "Exothermic", "def": "Reaction that releases energy (heat) to surroundings. ΔH < 0." },
-    { "term": "Endothermic", "def": "Reaction that absorbs energy from surroundings. ΔH > 0." },
-    { "term": "Catalyst", "def": "Substance that speeds up a reaction without being consumed. Lowers activation energy." },
-    { "term": "Mole", "def": "6.022 × 10²³ particles (Avogadro's number). Bridges atomic and macroscopic scales." },
+    { "term": "Atom", "def": "Smallest unit of an element. Made of protons, neutrons, electrons." },
+    { "term": "Ion", "def": "Atom with a net charge from gaining or losing electrons. Cation (+), Anion (−)." },
+    { "term": "Electronegativity", "def": "Tendency of an atom to attract shared electrons. Fluorine is highest (3.98)." },
+    { "term": "Ionic Bond", "def": "Bond formed by electron transfer from metal to nonmetal." },
+    { "term": "Covalent Bond", "def": "Bond formed by sharing electron pairs between nonmetals." },
+    { "term": "Enthalpy (ΔH)", "def": "Heat content. Negative = exothermic, positive = endothermic." },
+    { "term": "Catalyst", "def": "Speeds up a reaction without being consumed. Lowers activation energy." },
+    { "term": "Mole", "def": "6.022 × 10²³ particles (Avogadro's number)." },
     { "term": "Stoichiometry", "def": "Quantitative relationships between reactants and products in a balanced equation." },
-    { "term": "Oxidation", "def": "Loss of electrons (or increase in oxidation state). OIL RIG: Oxidation Is Loss." },
-    { "term": "Reduction", "def": "Gain of electrons (or decrease in oxidation state). OIL RIG: Reduction Is Gain." },
-    { "term": "pH", "def": "Measure of acidity/basicity. pH < 7 = acidic, pH = 7 = neutral, pH > 7 = basic." },
-    { "term": "Lewis Structure", "def": "Diagram showing bonding pairs and lone pairs of electrons around atoms in a molecule." }
+    { "term": "pH", "def": "Acidity measure. < 7 acidic, 7 neutral, > 7 basic." }
   ]
 }

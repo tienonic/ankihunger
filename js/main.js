@@ -450,6 +450,10 @@ function wireEvents() {
   if (syncToggle) {
     syncToggle.checked = syncActivity;
     syncToggle.addEventListener('change', () => {
+      if (!confirm('This will reset all activity data. Continue?')) {
+        syncToggle.checked = syncActivity; // revert
+        return;
+      }
       syncActivity = syncToggle.checked;
       localStorage.setItem('sync-activity', syncActivity);
       // Reset activity data on toggle
@@ -467,10 +471,40 @@ function wireEvents() {
   // Header pull tab
   const headerPull = document.getElementById('header-pull');
   const headerWrap = document.getElementById('header-wrap');
+  let headerCloseTimer = null;
   if (headerPull && headerWrap) {
+    const openHeader = () => {
+      if (headerCloseTimer) { clearTimeout(headerCloseTimer); headerCloseTimer = null; }
+      headerWrap.classList.add('header-visible');
+      headerPull.innerHTML = '&#9650;';
+      const togglesEl = document.getElementById('top-toggles');
+      if (togglesEl) togglesEl.classList.add('hidden');
+    };
     headerPull.addEventListener('click', () => {
-      headerWrap.classList.toggle('header-visible');
-      headerPull.innerHTML = headerWrap.classList.contains('header-visible') ? '&#9650;' : '&#9660;';
+      if (headerWrap.classList.contains('header-visible')) {
+        headerWrap.classList.remove('header-visible');
+        headerPull.innerHTML = '&#9660;';
+        const togglesEl = document.getElementById('top-toggles');
+        if (togglesEl) togglesEl.classList.remove('hidden');
+      } else {
+        openHeader();
+      }
+    });
+    headerPull.addEventListener('mouseenter', openHeader);
+
+    // Auto-close header dropdown when mouse leaves
+    headerWrap.addEventListener('mouseleave', () => {
+      if (headerWrap.classList.contains('header-visible')) {
+        headerCloseTimer = setTimeout(() => {
+          headerWrap.classList.remove('header-visible');
+          headerPull.innerHTML = '&#9660;';
+          const togglesEl = document.getElementById('top-toggles');
+          if (togglesEl) togglesEl.classList.remove('hidden');
+        }, 800);
+      }
+    });
+    headerWrap.addEventListener('mouseenter', () => {
+      if (headerCloseTimer) { clearTimeout(headerCloseTimer); headerCloseTimer = null; }
     });
   }
 
@@ -1037,7 +1071,16 @@ function renderFlashcard(sectionId) {
     back.innerHTML = showBack +
       (section.hasImages ? '<br><br>' + imgLink(imgSource, project.config.imageSearchSuffix) : '');
   }
-  if (flashcard) flashcard.classList.remove('flipped');
+  if (flashcard) {
+    flashcard.classList.remove('flipped');
+    // Set card height to fit the taller face content (min 180px)
+    requestAnimationFrame(() => {
+      const frontH = front ? front.scrollHeight : 0;
+      const backH = back ? back.scrollHeight : 0;
+      const needed = Math.max(180, frontH, backH);
+      flashcard.style.minHeight = needed + 'px';
+    });
+  }
   if (counter) counter.textContent = (fs.idx + 1) + ' / ' + section.flashcards.length;
 }
 
@@ -1259,7 +1302,11 @@ function updateAllDue() {
 
 // ===== KEYBOARD =====
 function handleKeyboard(e) {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+    // Allow Space to pass through when a flash-order checkbox is focused
+    // so the flashcard handler can preventDefault and just flip the card
+    if (!(e.target.id?.endsWith('-flash-order') && e.code === 'Space')) return;
+  }
   if (!activeTab || !project) return;
 
   const s = activeTab;
@@ -1306,16 +1353,19 @@ function handleFlashcardKeyboard(e, s, section) {
   if (!flashcard) return;
   const isFlipped = flashcard.classList.contains('flipped');
 
-  // Space/D: flip if unflipped, next if flipped
-  if (e.code === 'Space' || e.key === 'd' || e.key === 'D') {
+  // Space: flip only
+  if (e.code === 'Space') {
     e.preventDefault();
-    if (!isFlipped) {
-      flashcard.classList.add('flipped');
-    } else {
-      if (section.flashcards) {
-        flashState[s].idx = (flashState[s].idx + 1) % section.flashcards.length;
-        renderFlashcard(s);
-      }
+    flashcard.classList.toggle('flipped');
+    return;
+  }
+
+  // D: next card
+  if (e.key === 'd' || e.key === 'D') {
+    e.preventDefault();
+    if (section.flashcards) {
+      flashState[s].idx = (flashState[s].idx + 1) % section.flashcards.length;
+      renderFlashcard(s);
     }
     return;
   }

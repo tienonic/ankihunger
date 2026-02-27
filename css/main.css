@@ -580,20 +580,24 @@ h3 { font-size: 1.1rem; margin-bottom: 10px; }
 /* === 11. Flashcards === */
 .flashcard-container { perspective: 800px; margin: 20px auto; max-width: 420px; }
 .flashcard {
-  width: 100%; min-height: 220px; position: relative; cursor: pointer;
+  width: 100%; min-height: 180px; position: relative; cursor: pointer;
   transform-style: preserve-3d; transition: transform 0.5s;
 }
 .flashcard.flipped { transform: rotateY(180deg); }
 .flashcard-face {
   position: absolute; inset: 0; backface-visibility: hidden;
   border-radius: var(--radius); display: flex; flex-direction: column;
-  align-items: center; justify-content: center; padding: 28px;
+  align-items: center; justify-content: center; padding: 20px;
   text-align: center; box-shadow: var(--shadow);
+  overflow-y: auto; word-break: break-word;
 }
-.flashcard-front { background: var(--primary); color: #fff; font-size: 1.6rem; font-weight: 700; }
+.flashcard-front {
+  background: var(--primary); color: #fff;
+  font-size: 1.1rem; font-weight: 600; line-height: 1.4;
+}
 .flashcard-back {
   background: var(--card); transform: rotateY(180deg);
-  font-size: 1rem; line-height: 1.7; color: var(--text); border: 2px solid var(--primary);
+  font-size: 0.85rem; line-height: 1.5; color: var(--text); border: 2px solid var(--primary);
 }
 .flashcard-nav { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
 .flashcard-nav button {
@@ -978,7 +982,7 @@ h3 { font-size: 1.1rem; margin-bottom: 10px; }
   header h1 { font-size: 0.95rem; }
   .tab-btn { font-size: 0.7rem; padding: 8px 4px; }
   .card { padding: 16px; }
-  .flashcard-front { font-size: 1.3rem; }
+  .flashcard-front { font-size: 1rem; }
   .term-panel { width: 100%; top: 60px; }
   .term-add-form { flex-direction: column; }
   .term-add-form input { min-width: 0; }
