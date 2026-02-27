@@ -31,6 +31,15 @@ export function SettingsPanel() {
     setHeaderLocked(false);
   }
 
+  function handleEscape(e: KeyboardEvent) {
+    if (e.key === 'Escape' && open()) {
+      close();
+    }
+  }
+
+  onMount(() => document.addEventListener('keydown', handleEscape));
+  onCleanup(() => document.removeEventListener('keydown', handleEscape));
+
   function handleBackdropClick(e: MouseEvent) {
     if ((e.target as HTMLElement).classList.contains('settings-backdrop')) {
       close();

@@ -22,35 +22,46 @@ export function TermsDropdown() {
   function handleClickOutside(e: MouseEvent) {
     if (dropdownRef && !dropdownRef.contains(e.target as Node)) {
       setTermsOpen(false);
+      setSearchQuery('');
     }
   }
 
-  onMount(() => document.addEventListener('click', handleClickOutside, true));
-  onCleanup(() => document.removeEventListener('click', handleClickOutside, true));
+  function handleKey(e: KeyboardEvent) {
+    if (!termsOpen()) return;
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
+    if (e.key === 'Backspace') {
+      setSearchQuery(searchQuery().slice(0, -1));
+      return;
+    }
+    if (e.key === 'Escape') {
+      setSearchQuery('');
+      return;
+    }
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      setSearchQuery(searchQuery() + e.key);
+    }
+  }
+
+  onMount(() => {
+    document.addEventListener('click', handleClickOutside, true);
+    document.addEventListener('keydown', handleKey);
+  });
+  onCleanup(() => {
+    document.removeEventListener('click', handleClickOutside, true);
+    document.removeEventListener('keydown', handleKey);
+  });
 
   return (
     <div class="terms-dropdown" ref={dropdownRef}>
-      <button class="terms-toggle-btn" onClick={() => setTermsOpen(!termsOpen())}>
+      <button class="terms-toggle-btn" onClick={() => { setTermsOpen(!termsOpen()); setSearchQuery(''); }}>
         Terms {termsOpen() ? '\u25B2' : '\u25BC'}
       </button>
       <Show when={termsOpen()}>
         <div class="terms-list">
-          <div class="activity-terms">
-            <For each={getRelevantTerms()}>
-              {t => (
-                <a class="term-tag" href={googleUrl(t.term)} target="_blank" rel="noopener">
-                  {t.term}
-                </a>
-              )}
-            </For>
-          </div>
-          <input
-            class="term-search"
-            placeholder="Search terms..."
-            value={searchQuery()}
-            onInput={e => setSearchQuery(e.currentTarget.value)}
-          />
           <Show when={searchQuery()}>
+            <div class="term-filter">{searchQuery()}</div>
             <div class="term-list">
               <For each={filteredEntries()}>
                 {t => (
@@ -63,6 +74,17 @@ export function TermsDropdown() {
                     </Show>
                     <div class="term-def">{t.def}</div>
                   </div>
+                )}
+              </For>
+            </div>
+          </Show>
+          <Show when={!searchQuery()}>
+            <div class="activity-terms">
+              <For each={getRelevantTerms()}>
+                {t => (
+                  <a class="term-tag" href={googleUrl(t.term)} target="_blank" rel="noopener">
+                    {t.term}
+                  </a>
                 )}
               </For>
             </div>

@@ -1,5 +1,6 @@
 import { onMount, onCleanup } from 'solid-js';
-import { activeTab, activeProject, setNoteBoxVisible } from '../store/app.ts';
+import { activeTab, activeProject, setNoteBoxVisible, termsOpen } from '../store/app.ts';
+import { searchQuery } from '../store/glossary.ts';
 import { sectionHandlers } from '../store/quiz.ts';
 import { matchesKey } from '../store/keybinds.ts';
 import type { MathSession } from '../store/math.ts';
@@ -31,6 +32,10 @@ export function useKeyboard() {
     } else {
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
     }
+
+    // When terms panel is open, let the terms filter consume printable keys
+    if (termsOpen() && !e.ctrlKey && !e.metaKey && !e.altKey &&
+        (e.key.length === 1 || e.key === 'Backspace')) return;
 
     // Note key: toggle note box
     if (matchesKey(e, 'note') && !e.ctrlKey && !e.metaKey) {
@@ -163,12 +168,9 @@ function handleMcqKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typ
 
   // View image
   if (matchesKey(e, 'viewImage')) {
-    const q = session.question();
-    if (q) {
-      const imgName = q.imageName || q.cropName;
-      if (imgName) {
-        window.open('https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(imgName), '_blank');
-      }
+    const link = session.currentImageLink();
+    if (link) {
+      window.open(link, '_blank');
     }
     return;
   }
