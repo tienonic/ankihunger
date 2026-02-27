@@ -29,6 +29,7 @@ export class Project {
   _buildCardIds() {
     for (const section of this.sections) {
       section.cardIds = [];
+      section.flashCardIds = [];
 
       if (section.type === 'mc-quiz') {
         section.questions.forEach((_, i) => {
@@ -43,6 +44,13 @@ export class Project {
       } else if (section.type === 'math-gen') {
         // Math cards are generated, no fixed IDs
         section.cardIds = [];
+      }
+
+      // Flashcard IDs (separate FSRS deck)
+      if (section.flashcards) {
+        section.flashcards.forEach((_, i) => {
+          section.flashCardIds.push(section.id + '-flash-' + i);
+        });
       }
     }
   }

@@ -137,6 +137,22 @@ function initLauncher() {
     });
   }
 
+  // Connect folder button
+  const connectBtn = document.getElementById('connect-folder-btn');
+  if (connectBtn) {
+    if (State.hasAccess()) {
+      connectBtn.textContent = 'Folder Connected';
+      connectBtn.classList.add('connected');
+    }
+    connectBtn.addEventListener('click', async () => {
+      const ok = await State.requestAccess();
+      if (ok) {
+        connectBtn.textContent = 'Folder Connected';
+        connectBtn.classList.add('connected');
+      }
+    });
+  }
+
   renderRecentProjects();
 
   // Auto-load last project
@@ -186,7 +202,7 @@ function showLauncherError(msg) {
 }
 
 // ===== PROJECT LOADING =====
-function loadProject(data, isDefault) {
+async function loadProject(data, isDefault) {
   project = new Project(data);
 
   engine = new FSRSEngine({
@@ -200,9 +216,16 @@ function loadProject(data, isDefault) {
     newPerSession: project.config.new_per_session,
   });
 
-  state = new State(project.slug);
+  // Find folder name from registry, or use slug for custom projects
+  const registryEntry = projectRegistry.find(p => p.slug === project.slug);
+  const folder = registryEntry?.folder || project.slug;
+
+  state = new State(project.slug, folder);
   state.initScores(project.sections.map(s => s.id));
-  const cardData = state.load();
+
+  // Try filesystem first, fall back to localStorage
+  let cardData = await state.loadFromFile();
+  if (!cardData) cardData = state.load();
   if (cardData) cardMgr.fromJSON(cardData);
 
   if (!isDefault) State.saveProjectData(project.slug, data);
@@ -335,7 +358,7 @@ function initSectionState(sectionId) {
     if (histPos[sectionId] == null) histPos[sectionId] = -1;
     scenarioIdx[sectionId] = 0;
     scenarioQIdx[sectionId] = 0;
-    flashState[sectionId] = { idx: 0 };
+    flashState[sectionId] = { cardId: null };
   }
 }
 
@@ -353,14 +376,6 @@ function wireEvents() {
   const container = document.getElementById('sections-container');
 
   // ─── Shared events ───
-  container.addEventListener('click', (e) => {
-    const nextBtn = e.target.closest('.next-btn');
-    if (nextBtn) {
-      const section = nextBtn.closest('.section');
-      if (section) nextQ(section.id);
-    }
-  });
-
   container.addEventListener('click', (e) => {
     const resetBtn = e.target.closest('.reset-btn');
     if (resetBtn) resetSection(resetBtn.dataset.section);
@@ -394,26 +409,21 @@ function wireEvents() {
 
   container.addEventListener('click', (e) => {
     const flashcard = e.target.closest('.flashcard');
-    if (flashcard) flashcard.classList.toggle('flipped');
-
-    const flashNext = e.target.closest('[id$="-flash-next"]');
-    if (flashNext) {
-      const sectionId = flashNext.id.replace('-flash-next', '');
-      const sectionData = project.getSection(sectionId);
-      if (sectionData?.flashcards) {
-        flashState[sectionId].idx = (flashState[sectionId].idx + 1) % sectionData.flashcards.length;
-        renderFlashcard(sectionId);
-      }
-    }
-
-    const flashPrev = e.target.closest('[id$="-flash-prev"]');
-    if (flashPrev) {
-      const sectionId = flashPrev.id.replace('-flash-prev', '');
-      const sectionData = project.getSection(sectionId);
-      if (sectionData?.flashcards) {
-        const len = sectionData.flashcards.length;
-        flashState[sectionId].idx = (flashState[sectionId].idx - 1 + len) % len;
-        renderFlashcard(sectionId);
+    if (flashcard) {
+      flashcard.classList.toggle('flipped');
+      // Show rating buttons when flipped to back
+      const sectionEl = flashcard.closest('.section');
+      if (sectionEl) {
+        const sectionId = sectionEl.id;
+        const ratingArea = document.getElementById(sectionId + '-flash-rating');
+        const hint = document.getElementById(sectionId + '-flash-hint');
+        if (flashcard.classList.contains('flipped')) {
+          showFlashRating(sectionId);
+          if (hint) hint.textContent = '1-4 to rate';
+        } else {
+          if (ratingArea) ratingArea.style.display = 'none';
+          if (hint) hint.textContent = 'Flip to rate';
+        }
       }
     }
   });
@@ -598,6 +608,30 @@ function wireEvents() {
     renderSection(sectionId);
   });
 
+  // Note box (/ key)
+  const noteInput = document.getElementById('note-input');
+  const noteBox = document.getElementById('note-box');
+  if (noteInput && noteBox) {
+    noteInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && noteInput.value.trim()) {
+        if (state) state.saveNote(noteInput.value.trim());
+        noteInput.value = '';
+        noteInput.placeholder = 'saved';
+        setTimeout(() => {
+          noteBox.style.display = 'none';
+          noteInput.placeholder = 'note...';
+        }, 400);
+      } else if (e.key === 'Escape') {
+        noteInput.value = '';
+        noteBox.style.display = 'none';
+      }
+      e.stopPropagation();
+    });
+    noteInput.addEventListener('blur', () => {
+      noteBox.style.display = 'none';
+    });
+  }
+
   // Keyboard
   document.addEventListener('keydown', handleKeyboard);
 }
@@ -651,9 +685,6 @@ function renderMcForced(sectionId, idx, histEntry) {
     pending[sectionId] = false;
     timer.stop();
 
-    const sp = document.getElementById(sectionId + '-skip-prompt');
-    if (sp) sp.classList.remove('show');
-
     const questionEl = document.getElementById(sectionId + '-question');
     questionEl.textContent = q.q;
     renderLatex(questionEl);
@@ -697,8 +728,7 @@ function renderMcForced(sectionId, idx, histEntry) {
     ratingUI.hide(sectionId);
     hideCardActions(sectionId);
     hideStateBadge(sectionId);
-    document.getElementById(sectionId + '-next').classList.remove('show');
-
+  
     // Show history hint
     const hintId = sectionId + '-history-hint';
     let hint = document.getElementById(hintId);
@@ -764,9 +794,6 @@ function renderMc(sectionId, q) {
   quizState[sectionId] = 'answering';
   pending[sectionId] = false;
 
-  const sp = document.getElementById(sectionId + '-skip-prompt');
-  if (sp) sp.classList.remove('show');
-
   timer.start(sectionId);
 
   const questionEl = document.getElementById(sectionId + '-question');
@@ -802,7 +829,7 @@ function renderMc(sectionId, q) {
     dka.innerHTML = '';
     const dk = document.createElement('button');
     dk.className = 'dk-btn';
-    dk.textContent = "I Don't Know";
+    dk.textContent = "Skip";
     dk.addEventListener('click', () => doSkip(sectionId));
     dka.appendChild(dk);
   }
@@ -817,7 +844,6 @@ function renderMc(sectionId, q) {
   hideCardActions(sectionId);
   hideStateBadge(sectionId);
 
-  document.getElementById(sectionId + '-next').classList.remove('show');
 
   // Hide history hint if present
   const histHint = document.getElementById(sectionId + '-history-hint');
@@ -976,7 +1002,6 @@ function handleRate(sectionId, rating) {
 
   ratingUI.hide(sectionId);
   hideCardActions(sectionId);
-  document.getElementById(sectionId + '-next').classList.add('show');
 
   state.save(cardMgr);
   updateAllDue();
@@ -1049,12 +1074,31 @@ function renderFlashcard(sectionId) {
   if (!section?.flashcards || section.flashcards.length === 0) return;
 
   const fs = flashState[sectionId];
-  const card = section.flashcards[fs.idx];
+
+  // Pick next due flashcard via FSRS
+  const nextId = cardMgr.pickNext(section.flashCardIds);
+  if (!nextId) {
+    // All cards reviewed — show completion
+    const front = document.getElementById(sectionId + '-flash-front');
+    if (front) front.innerHTML = '<em>All flashcards reviewed!</em>';
+    const back = document.getElementById(sectionId + '-flash-back');
+    if (back) back.innerHTML = '';
+    const flashcard = document.getElementById(sectionId + '-flashcard');
+    if (flashcard) flashcard.classList.remove('flipped');
+    const ratingArea = document.getElementById(sectionId + '-flash-rating');
+    if (ratingArea) ratingArea.style.display = 'none';
+    updateFlashDueCount(sectionId);
+    return;
+  }
+
+  fs.cardId = nextId;
+  // Extract flashcard index from card ID: "sectionId-flash-N"
+  const idx = parseInt(nextId.split('-flash-')[1], 10);
+  const card = section.flashcards[idx];
 
   const front = document.getElementById(sectionId + '-flash-front');
   const back = document.getElementById(sectionId + '-flash-back');
   const flashcard = document.getElementById(sectionId + '-flashcard');
-  const counter = document.getElementById(sectionId + '-flash-counter');
 
   // Check if definition-first toggle is on
   const orderToggle = document.getElementById(sectionId + '-flash-order');
@@ -1063,25 +1107,83 @@ function renderFlashcard(sectionId) {
   const showFront = defFirst ? card.back : card.front;
   const showBack = defFirst ? card.front : card.back;
 
-  if (front) {
-    front.innerHTML = showFront;
-  }
+  if (front) front.innerHTML = showFront;
   if (back) {
-    const imgSource = defFirst ? card.back : card.front;
     back.innerHTML = showBack +
-      (section.hasImages ? '<br><br>' + imgLink(imgSource, project.config.imageSearchSuffix) : '');
+      (section.hasImages ? '<br><br>' + imgLink(defFirst ? card.back : card.front, project.config.imageSearchSuffix) : '');
   }
   if (flashcard) {
     flashcard.classList.remove('flipped');
-    // Set card height to fit the taller face content (min 180px)
     requestAnimationFrame(() => {
       const frontH = front ? front.scrollHeight : 0;
       const backH = back ? back.scrollHeight : 0;
-      const needed = Math.max(180, frontH, backH);
-      flashcard.style.minHeight = needed + 'px';
+      flashcard.style.minHeight = Math.max(180, frontH, backH) + 'px';
     });
   }
-  if (counter) counter.textContent = (fs.idx + 1) + ' / ' + section.flashcards.length;
+
+  // Hide rating until flipped
+  const ratingArea = document.getElementById(sectionId + '-flash-rating');
+  if (ratingArea) ratingArea.style.display = 'none';
+  const hint = document.getElementById(sectionId + '-flash-hint');
+  if (hint) hint.textContent = 'Flip to rate';
+
+  // Show state badge
+  const entry = cardMgr.getOrCreate(nextId);
+  const stateBadge = document.getElementById(sectionId + '-flash-state');
+  if (stateBadge) {
+    const stateNames = ['New', 'Learning', 'Review', 'Relearning'];
+    stateBadge.textContent = stateNames[entry.fsrsCard.state] || 'New';
+  }
+
+  updateFlashDueCount(sectionId);
+}
+
+function showFlashRating(sectionId) {
+  const fs = flashState[sectionId];
+  if (!fs?.cardId) return;
+
+  const ratingArea = document.getElementById(sectionId + '-flash-rating');
+  if (!ratingArea) return;
+
+  const intervals = cardMgr.getPreview(fs.cardId);
+  ratingArea.style.display = 'flex';
+  ratingArea.innerHTML = '';
+
+  for (const r of [Rating.Again, Rating.Hard, Rating.Good, Rating.Easy]) {
+    const btn = document.createElement('button');
+    btn.className = 'rating-btn ' + RatingUI.CSS_CLASSES[r];
+    btn.innerHTML = `<span class="rating-label">${RatingUI.LABELS[r]}</span><span class="rating-interval">${intervals[r]}</span>`;
+    btn.addEventListener('click', () => rateFlashcard(sectionId, r));
+    ratingArea.appendChild(btn);
+  }
+}
+
+function rateFlashcard(sectionId, rating) {
+  const fs = flashState[sectionId];
+  if (!fs?.cardId) return;
+
+  cardMgr.review(fs.cardId, rating);
+  stats.record(rating);
+
+  if (activityScore) {
+    activityScore.addEntry(rating, rating !== 1, sectionId);
+    activityScore.render();
+    state.saveActivity(activityScore.toJSON());
+  }
+
+  state.save(cardMgr);
+  renderFlashcard(sectionId);
+}
+
+function updateFlashDueCount(sectionId) {
+  const section = project.getSection(sectionId);
+  const counter = document.getElementById(sectionId + '-flash-counter');
+  const dueCount = document.getElementById(sectionId + '-flash-due-count');
+  if (!section?.flashCardIds) return;
+
+  const counts = cardMgr.countDue(section.flashCardIds);
+  if (counter) counter.textContent = counts.total + ' due';
+  if (dueCount) dueCount.textContent = section.flashCardIds.length + ' total';
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1111,19 +1213,16 @@ function renderMathProblem(sectionId) {
   inp.value = '';
   inp.disabled = false;
   document.getElementById(sectionId + '-feedback').className = 'feedback';
-  document.getElementById(sectionId + '-next').classList.remove('show');
   hideMathSteps(sectionId);
   pending[sectionId] = false;
-  const sp = document.getElementById(sectionId + '-skip-prompt');
-  if (sp) sp.classList.remove('show');
 
-  // "I Don't Know"
+  // "Skip"
   const dka = document.getElementById(sectionId + '-dk-area');
   if (dka) {
     dka.innerHTML = '';
     const dk = document.createElement('button');
     dk.className = 'dk-btn';
-    dk.textContent = "I Don't Know";
+    dk.textContent = "Skip";
     dk.addEventListener('click', () => skipMath(sectionId));
     dka.appendChild(dk);
   }
@@ -1165,7 +1264,6 @@ function checkMath(sectionId) {
 
   updateScore(sectionId);
   updateMathStreak(sectionId);
-  document.getElementById(sectionId + '-next').classList.add('show');
   state.save(cardMgr);
 }
 
@@ -1192,7 +1290,6 @@ function skipMath(sectionId) {
 
   updateScore(sectionId);
   updateMathStreak(sectionId);
-  document.getElementById(sectionId + '-next').classList.add('show');
   state.save(cardMgr);
 }
 
@@ -1302,11 +1399,26 @@ function updateAllDue() {
 
 // ===== KEYBOARD =====
 function handleKeyboard(e) {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-    // Allow Space to pass through when a flash-order checkbox is focused
-    // so the flashcard handler can preventDefault and just flip the card
-    if (!(e.target.id?.endsWith('-flash-order') && e.code === 'Space')) return;
+  // Block Space from toggling any checkbox — let our handlers deal with it
+  if (e.code === 'Space' && e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+    e.preventDefault();
+    // fall through to section handlers
+  } else if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+    return;
   }
+  // / key: open note box
+  if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
+    const noteBox = document.getElementById('note-box');
+    const noteInput = document.getElementById('note-input');
+    if (noteBox && noteInput) {
+      noteBox.style.display = '';
+      noteInput.value = '';
+      noteInput.focus();
+    }
+    return;
+  }
+
   if (!activeTab || !project) return;
 
   const s = activeTab;
@@ -1335,58 +1447,55 @@ function handleMathKeyboard(e, s) {
     } else if (quizState[s] === 'answering') {
       if (pending[s]) {
         pending[s] = false;
-        const sp = document.getElementById(s + '-skip-prompt');
-        if (sp) sp.classList.remove('show');
         skipMath(s);
       } else {
         pending[s] = true;
-        const sp = document.getElementById(s + '-skip-prompt');
-        if (sp) sp.classList.add('show');
       }
     }
   }
 }
 
-// ─── Flashcard keyboard: Space/D flip/next, A/ArrowLeft prev, ArrowRight next ───
+// ─── Flashcard keyboard: Space flip, 1-4 rate, F flip ───
 function handleFlashcardKeyboard(e, s, section) {
   const flashcard = document.getElementById(s + '-flashcard');
   if (!flashcard) return;
   const isFlipped = flashcard.classList.contains('flipped');
 
-  // Space: flip only
+  // Space: flip
   if (e.code === 'Space') {
     e.preventDefault();
     flashcard.classList.toggle('flipped');
+    if (!isFlipped) {
+      showFlashRating(s);
+      const hint = document.getElementById(s + '-flash-hint');
+      if (hint) hint.textContent = '1-4 to rate';
+    } else {
+      const ratingArea = document.getElementById(s + '-flash-rating');
+      if (ratingArea) ratingArea.style.display = 'none';
+      const hint = document.getElementById(s + '-flash-hint');
+      if (hint) hint.textContent = 'Flip to rate';
+    }
     return;
   }
 
-  // D: next card
+  // 1-4: rate (only when flipped)
+  if (isFlipped && e.key >= '1' && e.key <= '4') {
+    e.preventDefault();
+    const ratings = [Rating.Again, Rating.Hard, Rating.Good, Rating.Easy];
+    rateFlashcard(s, ratings[parseInt(e.key) - 1]);
+    return;
+  }
+
+  // D: rate Good shortcut when flipped, flip when not
   if (e.key === 'd' || e.key === 'D') {
     e.preventDefault();
-    if (section.flashcards) {
-      flashState[s].idx = (flashState[s].idx + 1) % section.flashcards.length;
-      renderFlashcard(s);
-    }
-    return;
-  }
-
-  // ArrowRight: next card
-  if (e.key === 'ArrowRight') {
-    e.preventDefault();
-    if (section.flashcards) {
-      flashState[s].idx = (flashState[s].idx + 1) % section.flashcards.length;
-      renderFlashcard(s);
-    }
-    return;
-  }
-
-  // A / ArrowLeft: previous card
-  if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
-    e.preventDefault();
-    if (section.flashcards) {
-      const len = section.flashcards.length;
-      flashState[s].idx = (flashState[s].idx - 1 + len) % len;
-      renderFlashcard(s);
+    if (isFlipped) {
+      rateFlashcard(s, Rating.Good);
+    } else {
+      flashcard.classList.add('flipped');
+      showFlashRating(s);
+      const hint = document.getElementById(s + '-flash-hint');
+      if (hint) hint.textContent = '1-4 to rate';
     }
     return;
   }
@@ -1395,6 +1504,16 @@ function handleFlashcardKeyboard(e, s, section) {
   if (e.key === 'f' || e.key === 'F') {
     e.preventDefault();
     flashcard.classList.toggle('flipped');
+    if (flashcard.classList.contains('flipped')) {
+      showFlashRating(s);
+      const hint = document.getElementById(s + '-flash-hint');
+      if (hint) hint.textContent = '1-4 to rate';
+    } else {
+      const ratingArea = document.getElementById(s + '-flash-rating');
+      if (ratingArea) ratingArea.style.display = 'none';
+      const hint = document.getElementById(s + '-flash-hint');
+      if (hint) hint.textContent = 'Flip to rate';
+    }
     return;
   }
 }
@@ -1434,13 +1553,9 @@ function handleMcqKeyboard(e, s, section) {
       // Must rate first (1-4)
     } else if (pending[s]) {
       pending[s] = false;
-      const sp = document.getElementById(s + '-skip-prompt');
-      if (sp) sp.classList.remove('show');
       doSkip(s);
     } else {
       pending[s] = true;
-      const sp = document.getElementById(s + '-skip-prompt');
-      if (sp) sp.classList.add('show');
     }
     return;
   }
@@ -1497,4 +1612,7 @@ function goToLauncher() {
 }
 
 // ===== INIT =====
-initLauncher();
+(async () => {
+  await State.restoreAccess();
+  initLauncher();
+})();

@@ -130,10 +130,8 @@ export class SectionRenderer {
     // State badge (MCQ only)
     html += `<span class="state-badge" id="${id}-state-badge"></span>`;
 
-    html += `<div class="skip-prompt" id="${id}-skip-prompt">Press <kbd>D</kbd> again to skip</div>`;
     html += `<div class="key-hints" style="display:none"><kbd>1-4</kbd> answer/rate \u00b7 <kbd>D</kbd> x2 skip \u00b7 <kbd>Z</kbd> undo \u00b7 <kbd>S</kbd> suspend \u00b7 <kbd>B</kbd> bury${hasImages ? ' \u00b7 <kbd>R</kbd> image' : ''}</div>`;
     html += '</div>';
-    html += `<button class="next-btn" id="${id}-next" ">next</button>`;
 
     return html;
   }
@@ -160,10 +158,8 @@ export class SectionRenderer {
       <div id="${id}-dk-area"></div>
       <div class="feedback" id="${id}-feedback"></div>
       <div class="math-steps" id="${id}-math-steps" style="display:none"></div>
-      <div class="skip-prompt" id="${id}-skip-prompt">Press <kbd>D</kbd> again to skip</div>
       <div class="key-hints" style="display:none"><kbd>Enter</kbd> submit \u00b7 <kbd>Space</kbd>/<kbd>D</kbd> next \u00b7 <kbd>D</kbd> x2 skip</div>
-    </div>
-    <button class="next-btn" id="${id}-next" ">New Problem</button>`;
+    </div>`;
 
     return html;
   }
@@ -182,11 +178,12 @@ export class SectionRenderer {
           <div class="flashcard-face flashcard-back" id="${id}-flash-back"></div>
         </div>
       </div>
-      <div class="flashcard-hint">Click card to flip</div>
+      <div class="flash-rating-area" id="${id}-flash-rating" style="display:none"></div>
+      <div class="flashcard-hint" id="${id}-flash-hint">Flip to rate</div>
       <div class="flashcard-nav">
-        <button id="${id}-flash-prev">Previous</button>
+        <span class="flash-state-badge" id="${id}-flash-state"></span>
         <span id="${id}-flash-counter"></span>
-        <button id="${id}-flash-next">Next</button>
+        <span id="${id}-flash-due-count"></span>
       </div>
     </div>`;
   }

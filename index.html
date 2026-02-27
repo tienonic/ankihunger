@@ -26,6 +26,7 @@
     <div class="drop-zone" id="drop-zone">
       <span class="drop-zone-text">or drag &amp; drop a .json project file here</span>
     </div>
+    <button class="launcher-btn launcher-btn-connect" id="connect-folder-btn" title="Grant access to the projects/ folder so state saves as files">Connect Folder</button>
     <div class="launcher-recent" id="launcher-recent"></div>
     <div class="launcher-error" id="launcher-error"></div>
   </div>
@@ -58,6 +59,10 @@
       <input type="checkbox" id="zen-mode-toggle">
       <span class="top-toggle-label">zen</span>
     </label>
+  </div>
+
+  <div class="note-box" id="note-box" style="display:none">
+    <input type="text" id="note-input" placeholder="note..." autocomplete="off">
   </div>
 
   <div class="sidebar-right" id="sidebar-right" style="display:none">

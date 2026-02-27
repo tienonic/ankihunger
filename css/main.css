@@ -119,6 +119,21 @@ body {
 }
 .launcher-btn-secondary:hover { background: var(--primary-light); }
 
+.launcher-btn-connect {
+  background: none;
+  color: var(--text-light);
+  border: 1px dashed var(--border);
+  font-size: 0.75rem;
+  padding: 6px 14px;
+  margin-top: 8px;
+}
+.launcher-btn-connect:hover { border-color: var(--primary); color: var(--primary); }
+.launcher-btn-connect.connected {
+  border-style: solid;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 .launcher-recent {
   margin-top: 24px;
 }
@@ -317,14 +332,12 @@ main { max-width: 820px; margin: 0 auto; padding: 20px 16px 70px; min-height: 10
 h2 { font-size: 1.3rem; margin-bottom: 16px; color: var(--primary-dark); }
 h3 { font-size: 1.1rem; margin-bottom: 10px; }
 
-.next-btn, .action-btn {
+.action-btn {
   margin-top: 14px; padding: 8px 20px; background: none;
   color: var(--text-light); border: 1px solid var(--border); border-radius: 2px;
   cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: background 0.15s, color 0.15s;
 }
-.next-btn { visibility: hidden; }
-.next-btn.show { visibility: visible; }
-.next-btn:hover, .action-btn:hover { background: var(--bg); color: var(--text); }
+.action-btn:hover { background: var(--bg); color: var(--text); }
 
 /* === 5. Quiz Elements === */
 .question-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -581,7 +594,7 @@ h3 { font-size: 1.1rem; margin-bottom: 10px; }
 .flashcard-container { perspective: 800px; margin: 20px auto; max-width: 420px; }
 .flashcard {
   width: 100%; min-height: 180px; position: relative; cursor: pointer;
-  transform-style: preserve-3d; transition: transform 0.5s;
+  transform-style: preserve-3d; transition: transform 0.15s;
 }
 .flashcard.flipped { transform: rotateY(180deg); }
 .flashcard-face {
@@ -604,6 +617,11 @@ h3 { font-size: 1.1rem; margin-bottom: 10px; }
   padding: 8px 20px; border: 1px solid var(--border); background: var(--card);
   border-radius: 2px; cursor: pointer; font-size: 0.95rem;
 }
+.flash-rating-area {
+  display: flex; justify-content: center; gap: 8px; margin-top: 12px;
+}
+.flash-state-badge { font-size: 0.65rem; font-weight: 600; color: var(--text-light); }
+.flash-due-count { font-size: 0.65rem; color: var(--text-light); }
 .flashcard-hint { text-align: center; color: var(--text-light); font-size: 0.85rem; margin-top: 8px; }
 .flash-order-toggle {
   display: flex; align-items: center; gap: 4px; justify-content: flex-end;
@@ -792,12 +810,6 @@ h3 { font-size: 1.1rem; margin-bottom: 10px; }
   padding: 1px 5px; font-size: 0.75rem; font-family: inherit;
 }
 
-.skip-prompt {
-  margin-top: 10px; padding: 10px 14px; background: var(--accent-light);
-  border: 1px solid var(--border); border-radius: 2px; color: var(--accent-dark);
-  font-size: 0.9rem; font-weight: 500; display: none;
-}
-.skip-prompt.show { display: block; }
 
 /* === 16. Sidebar Right (activity widget) === */
 .sidebar-right {
@@ -839,6 +851,25 @@ h3 { font-size: 1.1rem; margin-bottom: 10px; }
   overflow-y: auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
+.note-box {
+  position: fixed;
+  right: calc(50% + 420px);
+  top: 160px;
+  z-index: 150;
+  width: 185px;
+}
+.note-box input {
+  width: 100%;
+  padding: 6px 8px;
+  background: var(--card);
+  border: 2px solid var(--text);
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+  font-family: inherit;
+  color: var(--text);
+}
+.note-box input::placeholder { color: var(--text-light); }
+
 .activity-widget {
   background: var(--card);
   border: 2px solid var(--text);
@@ -965,7 +996,6 @@ h3 { font-size: 1.1rem; margin-bottom: 10px; }
 .zen .card {
   box-shadow: none;
   border: none;
-  background: transparent;
   max-width: 700px;
   width: 100%;
 }
