@@ -1,5 +1,6 @@
 import { Show } from 'solid-js';
 import { activeTab, activeProject, easyMode, zenMode, toggleEasyMode, toggleZenMode, headerVisible, termsOpen } from '../../store/app.ts';
+import { sectionHandlers } from '../../store/quiz.ts';
 
 export function TopToggles() {
   const isMath = () => {
@@ -10,8 +11,25 @@ export function TopToggles() {
     return section?.type === 'math-gen';
   };
 
+  const activeSession = () => {
+    const tab = activeTab();
+    return tab ? sectionHandlers.get(tab) : undefined;
+  };
+
+  const isFlashMode = () => activeSession()?.flashMode?.() ?? false;
+
   return (
     <div class={`top-toggles${headerVisible() || termsOpen() ? ' hidden' : ''}`}>
+      <Show when={isFlashMode()}>
+        <label class="top-toggle def-first-toggle" title="Show definition side first">
+          <input
+            type="checkbox"
+            checked={activeSession()?.flashDefFirst?.() ?? false}
+            onChange={(e) => activeSession()?.setFlashDefFirst?.(e.currentTarget.checked)}
+          />
+          <span class="top-toggle-label">def first</span>
+        </label>
+      </Show>
       <Show when={!isMath()}>
         <label class="top-toggle easy-toggle" title="Auto-rate by answer speed">
           <input type="checkbox" checked={easyMode()} onChange={toggleEasyMode} />

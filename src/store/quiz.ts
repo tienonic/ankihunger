@@ -60,6 +60,7 @@ export interface QuizSession {
   setFlashDefFirst: (v: boolean) => void;
   advanceFromHistory: () => void;
   goBackHistory: () => void;
+  shuffleFlash: () => Promise<void>;
   resetSection: () => Promise<void>;
   refreshDue: () => Promise<void>;
 
@@ -503,6 +504,28 @@ export function createQuizSession(section: Section): QuizSession {
     pickNextCard();
   }
 
+  async function shuffleFlashAction() {
+    if (!section.flashcards || section.flashCardIds.length === 0) return;
+    const idx = Math.floor(Math.random() * section.flashcards.length);
+    const card = section.flashcards[idx];
+    const fId = section.flashCardIds[idx];
+    if (!card || !fId) return;
+
+    const defFirst = flashDefFirst();
+    batch(() => {
+      setFlashCardId(fId);
+      setFlashFront(defFirst ? card.back : card.front);
+      setFlashBack(defFirst ? card.front : card.back);
+      setFlashFlipped(false);
+      setRatingLabels({});
+    });
+
+    setQuestionContext([card.front, card.back].join(' '));
+    const cs = await workerApi.getCardState(fId) as any;
+    if (cs) setCardState(cs.fsrs_state ?? 0);
+    await refreshDue();
+  }
+
   async function resetSectionAction() {
     const p = project();
     if (!p) return;
@@ -579,6 +602,7 @@ export function createQuizSession(section: Section): QuizSession {
     setFlashDefFirst: (v: boolean) => setFlashDefFirst(v),
     advanceFromHistory,
     goBackHistory,
+    shuffleFlash: shuffleFlashAction,
     resetSection: resetSectionAction,
     refreshDue,
 

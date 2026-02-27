@@ -20,6 +20,13 @@ export function StudyApp() {
     return project.sections.find(s => s.id === tab)?.type === 'math-gen';
   };
 
+  const activeSession = () => {
+    const tab = activeTab();
+    return tab ? sectionHandlers.get(tab) : null;
+  };
+
+  const isFlashMode = () => activeSession()?.flashMode?.() ?? false;
+
   let canvasRef: HTMLCanvasElement | undefined;
   const [activityScore, setActivityScore] = createSignal(0);
   const [reviewStats, setReviewStats] = createSignal({ reviews: 0, retention: '0%' });
@@ -269,6 +276,25 @@ export function StudyApp() {
               reset
             </button>
           </div>
+          <Show when={isFlashMode()}>
+            {(() => {
+              const s = activeSession()!;
+              const due = () => s.dueCount();
+              return (
+                <div class="flash-sidebar-controls">
+                  <div class="activity-stats">
+                    <span class="stat-item">new: <strong>{due().newCount}</strong></span>
+                    <span class="stat-item">due: <strong>{due().due}</strong></span>
+                    <span class="stat-item">total: <strong>{due().total}</strong></span>
+                  </div>
+                  <div class="flash-sidebar-btns">
+                    <button class="action-sm flash-nav-btn" onClick={() => s.shuffleFlash()} title="Random card">shuffle</button>
+                    <button class="action-sm flash-nav-btn" onClick={() => s.resetSection()} title="Reset flashcard progress">reset</button>
+                  </div>
+                </div>
+              );
+            })()}
+          </Show>
         </div>
       </Show>
 

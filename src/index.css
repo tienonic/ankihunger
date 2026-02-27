@@ -694,39 +694,36 @@ main {
   margin-top: 8px;
 }
 
-.flash-order-toggle {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  justify-content: flex-end;
-  cursor: pointer;
-  user-select: none;
-  margin-bottom: 6px;
-  opacity: 0.25;
-  transition: opacity 0.3s;
-}
-
-.flash-order-toggle:hover { opacity: 1; }
-
-.flash-order-toggle input[type="checkbox"] {
-  width: 11px;
-  height: 11px;
-  margin: 0;
-  cursor: pointer;
-  accent-color: var(--color-text-light);
-}
-
-.flash-order-toggle span {
-  font-size: 0.6rem;
-  font-weight: 500;
-  color: var(--color-text-light);
-}
 
 .flashcard-nav {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 12px;
   margin-top: 16px;
+}
+
+.flash-nav-btn {
+  padding: 3px 10px;
+  font-size: 0.65rem;
+}
+
+.flash-sidebar-controls {
+  border-top: 1px solid var(--color-border);
+  padding: 4px 8px;
+}
+
+.flash-sidebar-btns {
+  display: flex;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.flash-sidebar-btns .flash-nav-btn {
+  flex: 1;
+  text-align: center;
+  padding: 2px 6px;
+  font-size: 0.6rem;
 }
 
 

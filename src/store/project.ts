@@ -58,12 +58,15 @@ export function getProjectData(slug: string): ProjectData | null {
   } catch { return null; }
 }
 
-export async function openProject(data: ProjectData, isDefault: boolean) {
+export async function openProject(data: ProjectData, isDefault: boolean, registryFolder?: string) {
   setIsLoading(true);
   setLoadError(null);
 
   try {
     const project = loadProject(data);
+    if (registryFolder) {
+      project.sourceFolder = `src/projects/${registryFolder}`;
+    }
 
     if (!isDefault) saveProjectData(project.slug, data);
     setLastProject(project.slug);
@@ -106,7 +109,7 @@ export async function openRegistryProject(slug: string) {
     return;
   }
   const data = await entry.loader();
-  await openProject(data, true);
+  await openProject(data, true, entry.folder);
 }
 
 export function openRecentProject(slug: string) {

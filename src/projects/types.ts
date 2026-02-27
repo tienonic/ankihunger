@@ -57,6 +57,7 @@ export interface Project {
   config: ProjectConfig;
   sections: Section[];
   glossary: { term: string; def: string; hasImage?: boolean }[];
+  sourceFolder?: string;
 }
 
 export interface RegistryEntry {

@@ -11,15 +11,6 @@ export function FlashcardArea(props: { session: QuizSession; section: Section })
 
   return (
     <div>
-      <label class="flash-order-toggle">
-        <input
-          type="checkbox"
-          checked={s.flashDefFirst()}
-          onChange={(e) => s.setFlashDefFirst(e.currentTarget.checked)}
-        />
-        <span>definition first</span>
-      </label>
-
       <div class="flashcard-container" onClick={() => s.flipFlash()}>
         <div class={`flashcard ${s.flashFlipped() ? 'flipped' : ''}`}>
           <div class="flashcard-face flashcard-front">
@@ -57,8 +48,6 @@ export function FlashcardArea(props: { session: QuizSession; section: Section })
 
       <div class="flashcard-nav">
         <span class="flash-state-badge">{STATE_NAMES[s.cardState()] ?? 'New'}</span>
-        <span class="flash-due-count">{s.dueCount().due} due</span>
-        <span class="flash-due-count">{s.dueCount().total} total</span>
       </div>
     </div>
   );

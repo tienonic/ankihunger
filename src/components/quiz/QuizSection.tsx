@@ -1,6 +1,7 @@
 import { Show, onMount, onCleanup } from 'solid-js';
 import type { Section } from '../../projects/types.ts';
 import { createQuizSession, sectionHandlers } from '../../store/quiz.ts';
+import { activeProject } from '../../store/app.ts';
 import { McqCard } from './McqCard.tsx';
 import { FlashcardArea } from './FlashcardArea.tsx';
 
@@ -20,6 +21,12 @@ export function QuizSection(props: { section: Section }) {
 
   const hasFlash = () => props.section.hasFlashcards && (props.section.flashcards?.length ?? 0) > 0;
   const isPassage = () => props.section.type === 'passage-quiz';
+  const sourceFolder = () => activeProject()?.sourceFolder;
+
+  function openFolder() {
+    const folder = sourceFolder();
+    if (folder) fetch(`/__open-folder?path=${encodeURIComponent(folder)}`);
+  }
 
   return (
     <div>
@@ -42,6 +49,9 @@ export function QuizSection(props: { section: Section }) {
             <Show when={session.currentImageLink()}>
               <a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a>
             </Show>
+            <Show when={sourceFolder()}>
+              <button class="reset-btn" onClick={openFolder} title="Open project folder">Open</button>
+            </Show>
             <button
               class="reset-btn"
               onClick={() => session.resetSection()}
@@ -59,6 +69,9 @@ export function QuizSection(props: { section: Section }) {
           <span class="mode-toggle-actions">
             <Show when={session.currentImageLink()}>
               <a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a>
+            </Show>
+            <Show when={sourceFolder()}>
+              <button class="reset-btn" onClick={openFolder} title="Open project folder">Open</button>
             </Show>
             <button
               class="reset-btn"
