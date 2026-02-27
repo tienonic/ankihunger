@@ -136,7 +136,7 @@ src/
 |---------|---------|
 | [SolidJS](https://www.solidjs.com/) | Reactive UI framework |
 | [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) | FSRS spaced repetition algorithm |
-| [wa-sqlite](https://github.com/nicof/nicof) | SQLite compiled to WASM (IndexedDB VFS) |
+| [wa-sqlite](https://rhashimoto.github.io/wa-sqlite/) | SQLite compiled to WASM (IndexedDB VFS) |
 | [KaTeX](https://katex.org/) | LaTeX math rendering |
 | [Tailwind CSS v4](https://tailwindcss.com/) | Utility-first CSS |
 | [Vite](https://vite.dev/) | Build tool + dev server |
@@ -145,6 +145,3 @@ src/
 
 Requires a modern browser with Web Worker, SharedArrayBuffer, and IndexedDB support. The dev server sets the required COOP/COEP headers automatically.
 
-## License
-
-Private project.
