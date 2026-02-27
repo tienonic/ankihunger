@@ -1,15 +1,31 @@
-import { For, createSignal, onMount } from 'solid-js';
-import { activeProject, activeTab, setActiveTab, syncActivity, toggleSyncActivity, tipsVisible, setTipsVisible } from '../../store/app.ts';
+import { For, onMount, onCleanup } from 'solid-js';
+import { activeProject, activeTab, setActiveTab, syncActivity, toggleSyncActivity, tipsVisible, setTipsVisible, headerVisible, setHeaderVisible } from '../../store/app.ts';
 import { goToLauncher } from '../../store/project.ts';
 import { SettingsPanel } from '../settings/SettingsPanel.tsx';
+import { KeybindsPanel } from '../settings/KeybindsPanel.tsx';
 
 export function Header() {
-  const [visible, setVisible] = createSignal(false);
   const project = () => activeProject()!;
+  let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
-  function toggle() {
-    setVisible(!visible());
+  function open() {
+    if (closeTimer) { clearTimeout(closeTimer); closeTimer = undefined; }
+    setHeaderVisible(true);
   }
+
+  function scheduleClose() {
+    if (closeTimer) clearTimeout(closeTimer);
+    closeTimer = setTimeout(() => {
+      setHeaderVisible(false);
+      closeTimer = undefined;
+    }, 800);
+  }
+
+  function cancelClose() {
+    if (closeTimer) { clearTimeout(closeTimer); closeTimer = undefined; }
+  }
+
+  onCleanup(() => { if (closeTimer) clearTimeout(closeTimer); });
 
   // First-time tips: auto-show for 6 seconds
   onMount(() => {
@@ -31,7 +47,11 @@ export function Header() {
   }
 
   return (
-    <div class={`header-wrap ${visible() ? 'header-visible' : ''}`}>
+    <div
+      class={`header-wrap ${headerVisible() ? 'header-visible' : ''}`}
+      onMouseLeave={scheduleClose}
+      onMouseEnter={cancelClose}
+    >
       <header>
         <div class="header-top">
           <button class="back-btn" onClick={() => goToLauncher()} title="Back to launcher">
@@ -47,6 +67,7 @@ export function Header() {
             <span class="sync-toggle-label">sync graph</span>
           </label>
           <button class="tips-btn" title="Show keyboard shortcuts" onClick={handleTipsClick}>Tips</button>
+          <KeybindsPanel />
           <SettingsPanel />
         </div>
         <div class="tabs">
@@ -62,8 +83,8 @@ export function Header() {
           </For>
         </div>
       </header>
-      <div class="header-pull" onClick={toggle}>
-        {visible() ? '\u25B2' : '\u25BC'}
+      <div class="header-pull" onMouseEnter={open} onClick={() => setHeaderVisible(!headerVisible())}>
+        {headerVisible() ? '\u25B2' : '\u25BC'}
       </div>
     </div>
   );

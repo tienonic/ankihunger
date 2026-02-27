@@ -4,6 +4,7 @@ import { loadProject, validateProject } from '../projects/loader.ts';
 import { initWorker, workerApi } from '../hooks/useWorker.ts';
 import { setAppPhase, setActiveProject, setActiveTab, activeProject } from './app.ts';
 import { buildGlossary } from './glossary.ts';
+import { loadKeybinds } from './keybinds.ts';
 import type { Project, ProjectData } from '../projects/types.ts';
 
 interface RecentProject {
@@ -85,6 +86,7 @@ export async function openProject(data: ProjectData, isDefault: boolean) {
       }
     }
     await workerApi.loadProject(project.slug, sectionIds, cardRegs);
+    await loadKeybinds();
 
     setActiveProject(project);
     buildGlossary(project);

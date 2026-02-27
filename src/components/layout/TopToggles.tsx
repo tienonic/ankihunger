@@ -1,5 +1,5 @@
 import { Show } from 'solid-js';
-import { activeTab, activeProject, easyMode, zenMode, toggleEasyMode, toggleZenMode } from '../../store/app.ts';
+import { activeTab, activeProject, easyMode, zenMode, toggleEasyMode, toggleZenMode, headerVisible, termsOpen } from '../../store/app.ts';
 
 export function TopToggles() {
   const isMath = () => {
@@ -11,7 +11,7 @@ export function TopToggles() {
   };
 
   return (
-    <div class="top-toggles">
+    <div class={`top-toggles${headerVisible() || termsOpen() ? ' hidden' : ''}`}>
       <Show when={!isMath()}>
         <label class="top-toggle easy-toggle" title="Auto-rate by answer speed">
           <input type="checkbox" checked={easyMode()} onChange={toggleEasyMode} />

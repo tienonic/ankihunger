@@ -23,14 +23,6 @@ export function QuizSection(props: { section: Section }) {
 
   return (
     <div>
-      {/* Score bar */}
-      <div class="score-bar">
-        <span>{session.score().correct}/{session.score().attempted}</span>
-        <span class="srs-info">
-          {session.dueCount().due} due · {session.dueCount().total} total
-        </span>
-      </div>
-
       {/* Mode toggle (quiz/flash tabs + reset) */}
       <Show when={hasFlash()}>
         <div class="mode-toggle">
@@ -38,7 +30,7 @@ export function QuizSection(props: { section: Section }) {
             class={`mode-btn ${!session.flashMode() ? 'active' : ''}`}
             onClick={() => { if (session.flashMode()) session.toggleFlashMode(); }}
           >
-            Quiz
+            Quiz Mode
           </button>
           <button
             class={`mode-btn ${session.flashMode() ? 'active' : ''}`}
@@ -46,30 +38,36 @@ export function QuizSection(props: { section: Section }) {
           >
             Flashcards
           </button>
-          <div class="mode-toggle-actions">
+          <span class="mode-toggle-actions">
             <button
               class="reset-btn"
               onClick={() => session.resetSection()}
               title="Reset section progress"
             >
-              reset
+              Reset
             </button>
-          </div>
+            <Show when={session.currentImageLink()}>
+              <a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a>
+            </Show>
+          </span>
         </div>
       </Show>
 
       {/* Reset only (no flashcards) */}
       <Show when={!hasFlash()}>
-        <div class="mode-toggle" style="justify-content:flex-end">
-          <div class="mode-toggle-actions">
+        <div class="mode-toggle mode-toggle-actions-only">
+          <span class="mode-toggle-actions">
             <button
               class="reset-btn"
               onClick={() => session.resetSection()}
               title="Reset section progress"
             >
-              reset
+              Reset
             </button>
-          </div>
+            <Show when={session.currentImageLink()}>
+              <a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a>
+            </Show>
+          </span>
         </div>
       </Show>
 

@@ -5,6 +5,7 @@ import { sectionHandlers } from '../../store/quiz.ts';
 import { CATEGORY_LABELS } from '../../data/math.ts';
 import { tipsVisible } from '../../store/app.ts';
 import { renderLatex } from '../../hooks/useLatex.ts';
+import { getLabel } from '../../store/keybinds.ts';
 
 export function MathSection(props: { section: Section }) {
   const session = createMathSession(props.section);
@@ -80,25 +81,17 @@ export function MathSection(props: { section: Section }) {
 
   return (
     <div>
-      {/* Score bar */}
-      <div class="score-bar">
-        <span>{session.score().correct}/{session.score().attempted}</span>
-        <span class="srs-info">
-          streak: {session.streak()} · best: {session.bestStreak()}
-        </span>
-      </div>
-
       {/* Reset button */}
-      <div class="mode-toggle" style="justify-content:flex-end">
-        <div class="mode-toggle-actions">
+      <div class="mode-toggle mode-toggle-actions-only">
+        <span class="mode-toggle-actions">
           <button
             class="reset-btn"
             onClick={() => session.resetSection()}
             title="Reset score and streak"
           >
-            reset
+            Reset
           </button>
-        </div>
+        </span>
       </div>
 
       {/* Category filter buttons */}
@@ -126,8 +119,8 @@ export function MathSection(props: { section: Section }) {
         <div class="question-header">
           <span class="question-text" ref={questionRef} />
           <Show when={session.state() === 'answering'}>
-            <span class={`timer${session.timer.seconds() >= 15 ? ' red' : ''}`}>
-              {session.timer.seconds()}s
+            <span class={`timer${session.timer.seconds() >= 59 ? ' skull' : session.timer.seconds() >= 15 ? ' red' : ''}`}>
+              {session.timer.seconds() >= 59 ? '\u{1F480}' : session.timer.seconds() + 's'}
             </span>
           </Show>
         </div>
@@ -143,9 +136,7 @@ export function MathSection(props: { section: Section }) {
             />
             <button onClick={submitAnswer}>Submit</button>
           </div>
-          <button class="dk-btn" onClick={skip}>
-            {session.pendingSkip() ? 'Press again to skip' : 'Skip (D twice)'}
-          </button>
+          <button class="dk-btn" onClick={skip}>Skip</button>
         </Show>
 
         {/* Feedback */}
@@ -167,7 +158,7 @@ export function MathSection(props: { section: Section }) {
 
         <Show when={tipsVisible()}>
           <div class="key-hints">
-            <kbd>Enter</kbd> submit &middot; <kbd>D</kbd> skip/next &middot; <kbd>/</kbd> note
+            <kbd>Enter</kbd> submit &middot; <kbd>{getLabel('mathSubmit')}</kbd> skip/next &middot; <kbd>{getLabel('note')}</kbd> note
           </div>
         </Show>
       </div>

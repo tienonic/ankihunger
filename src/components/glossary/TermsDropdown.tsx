@@ -1,4 +1,4 @@
-import { createSignal, Show, For, onMount, onCleanup } from 'solid-js';
+import { Show, For, onMount, onCleanup } from 'solid-js';
 import {
   entries,
   getRelevantTerms,
@@ -6,6 +6,7 @@ import {
   searchQuery,
   setSearchQuery,
 } from '../../store/glossary.ts';
+import { termsOpen, setTermsOpen } from '../../store/app.ts';
 
 function googleUrl(term: string): string {
   return 'https://www.google.com/search?q=' + encodeURIComponent(term + ' definition');
@@ -16,12 +17,11 @@ function googleImgUrl(term: string): string {
 }
 
 export function TermsDropdown() {
-  const [open, setOpen] = createSignal(false);
   let dropdownRef: HTMLDivElement | undefined;
 
   function handleClickOutside(e: MouseEvent) {
     if (dropdownRef && !dropdownRef.contains(e.target as Node)) {
-      setOpen(false);
+      setTermsOpen(false);
     }
   }
 
@@ -30,10 +30,10 @@ export function TermsDropdown() {
 
   return (
     <div class="terms-dropdown" ref={dropdownRef}>
-      <button class="terms-toggle-btn" onClick={() => setOpen(!open())}>
-        Terms {open() ? '\u25B2' : '\u25BC'}
+      <button class="terms-toggle-btn" onClick={() => setTermsOpen(!termsOpen())}>
+        Terms {termsOpen() ? '\u25B2' : '\u25BC'}
       </button>
-      <Show when={open()}>
+      <Show when={termsOpen()}>
         <div class="terms-list">
           <div class="activity-terms">
             <For each={getRelevantTerms()}>

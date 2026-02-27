@@ -15,12 +15,12 @@ export function RecentProjects(props: RecentProjectsProps) {
   return (
     <Show when={props.projects.length > 0}>
       <div class="mt-6 text-left">
-        <h3 class="text-sm font-semibold text-text-light mb-2">Recent Projects</h3>
+        <h3 class="text-[0.85rem] uppercase tracking-wide text-text-light mb-2">Recent Projects</h3>
         <div class="flex flex-col gap-1">
           <For each={props.projects}>
             {(p) => (
               <button
-                class="w-full text-left py-2 px-3 rounded-sm text-sm text-primary bg-transparent border-0 cursor-pointer transition-colors hover:bg-primary-light"
+                class="w-full text-left py-2.5 px-4 rounded-sm text-[0.95rem] text-text bg-transparent border border-border cursor-pointer transition-colors hover:bg-primary-light"
                 onClick={() => props.onSelect(p.slug)}
               >
                 {p.name}

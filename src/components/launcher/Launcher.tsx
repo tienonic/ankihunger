@@ -38,8 +38,8 @@ export function Launcher() {
   return (
     <div class="flex items-center justify-center min-h-screen p-5">
       <div class="bg-card rounded-sm shadow-[0_4px_24px_rgba(0,0,0,0.12)] py-12 px-10 max-w-[460px] w-full text-center">
-        <h1 class="text-3xl font-bold text-text mb-1">Study Tool</h1>
-        <p class="text-text-light text-sm tracking-widest uppercase mb-8">
+        <h1 class="text-[1.8rem] font-bold text-primary-dark mb-1">Study Tool</h1>
+        <p class="text-[0.95rem] text-text-light mb-8">
           FSRS-Powered Spaced Repetition
         </p>
 
@@ -54,7 +54,7 @@ export function Launcher() {
           </For>
 
           <button
-            class="w-full py-3 px-4 rounded-sm border-2 border-border bg-card text-text font-semibold cursor-pointer transition-colors hover:border-primary hover:text-primary"
+            class="w-full py-3 px-4 rounded-sm border-2 border-primary bg-primary-light text-primary-dark font-semibold cursor-pointer transition-colors hover:bg-primary-dark hover:text-white"
             onClick={() => fileInput.click()}
           >
             Open Project File (.json)

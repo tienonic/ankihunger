@@ -1,6 +1,7 @@
 import { onMount, onCleanup } from 'solid-js';
 import { activeTab, activeProject, setNoteBoxVisible } from '../store/app.ts';
 import { sectionHandlers } from '../store/quiz.ts';
+import { matchesKey } from '../store/keybinds.ts';
 import type { MathSession } from '../store/math.ts';
 
 export function useKeyboard() {
@@ -25,16 +26,14 @@ export function useKeyboard() {
     // but block other keys from input/textarea
     if (section.type === 'math-gen') {
       if (tag === 'INPUT' || tag === 'TEXTAREA') {
-        // Only Enter is handled from input in math mode (component handles it via onKeyDown)
         return;
       }
     } else {
-      // Non-math: skip all input/textarea
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
     }
 
-    // / key: toggle note box
-    if (e.key === '/' && !e.ctrlKey && !e.metaKey) {
+    // Note key: toggle note box
+    if (matchesKey(e, 'note') && !e.ctrlKey && !e.metaKey) {
       e.preventDefault();
       setNoteBoxVisible(true);
       return;
@@ -57,12 +56,11 @@ export function useKeyboard() {
 }
 
 function handleMathKeyboard(e: KeyboardEvent, session: MathSession) {
-  if (e.code === 'Space' || e.key === 'd' || e.key === 'D' || e.key === 'Enter') {
+  if (e.code === 'Space' || matchesKey(e, 'mathSubmit') || e.key === 'Enter') {
     e.preventDefault();
     if (session.state() === 'revealed') {
       session.nextProblem();
     } else if (session.state() === 'answering') {
-      // armSkip: first press sets pending, second press skips
       session.armSkip();
     }
   }
@@ -71,23 +69,23 @@ function handleMathKeyboard(e: KeyboardEvent, session: MathSession) {
 function handleFlashcardKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typeof sectionHandlers.get>>) {
   const isFlipped = session.flashFlipped();
 
-  // Space: flip
-  if (e.code === 'Space') {
+  // Flip card (Space)
+  if (matchesKey(e, 'flipCard')) {
     e.preventDefault();
     session.flipFlash();
     return;
   }
 
   // 1-4: rate (only when flipped)
-  if (isFlipped && e.key >= '1' && e.key <= '4') {
-    e.preventDefault();
-    const ratings = [1, 2, 3, 4];
-    session.rateFlash(ratings[parseInt(e.key) - 1]);
-    return;
+  if (isFlipped) {
+    if (matchesKey(e, 'answer1')) { e.preventDefault(); session.rateFlash(1); return; }
+    if (matchesKey(e, 'answer2')) { e.preventDefault(); session.rateFlash(2); return; }
+    if (matchesKey(e, 'answer3')) { e.preventDefault(); session.rateFlash(3); return; }
+    if (matchesKey(e, 'answer4')) { e.preventDefault(); session.rateFlash(4); return; }
   }
 
-  // D: rate Good shortcut when flipped, flip when not
-  if (e.key === 'd' || e.key === 'D') {
+  // Skip key: rate Good shortcut when flipped, flip when not
+  if (matchesKey(e, 'skip')) {
     e.preventDefault();
     if (isFlipped) {
       session.rateFlash(3); // Good
@@ -97,8 +95,8 @@ function handleFlashcardKeyboard(e: KeyboardEvent, session: NonNullable<ReturnTy
     return;
   }
 
-  // F: flip
-  if (e.key === 'f' || e.key === 'F') {
+  // Flip alt (F)
+  if (matchesKey(e, 'flipAlt')) {
     e.preventDefault();
     session.flipFlash();
     return;
@@ -109,20 +107,22 @@ function handleMcqKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typ
   const st = session.state();
 
   // 1-4: answer or rate
-  if (e.key >= '1' && e.key <= '4') {
+  if (matchesKey(e, 'answer1') || matchesKey(e, 'answer2') || matchesKey(e, 'answer3') || matchesKey(e, 'answer4')) {
     e.preventDefault();
+    const answerActions = ['answer1', 'answer2', 'answer3', 'answer4'] as const;
+    const idx = answerActions.findIndex(a => matchesKey(e, a));
+    if (idx < 0) return;
     if (st === 'answering') {
       const opts = session.options();
-      const idx = parseInt(e.key) - 1;
       if (opts[idx]) session.answer(opts[idx]);
     } else if (st === 'revealed') {
-      session.rate(parseInt(e.key));
+      session.rate(idx + 1);
     }
     return;
   }
 
-  // Space/D: skip (double-tap) or advance
-  if (e.code === 'Space' || e.key === 'd' || e.key === 'D') {
+  // Skip/advance (Space or skip key)
+  if (e.code === 'Space' || matchesKey(e, 'skip')) {
     e.preventDefault();
     if (st === 'reviewing-history') {
       session.advanceFromHistory();
@@ -134,42 +134,35 @@ function handleMcqKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typ
       if (session.pending()) {
         session.skip();
       } else {
-        // Set pending — next press will skip
-        // We need a way to set pending. For now, use skip on double-tap.
-        // The pending signal is read-only from outside, but we can call skip directly
-        // Actually, in the old code, pending is toggled on first press, skip on second.
-        // We'll just call skip() which handles the flow correctly.
         session.skip();
       }
-    } else if (st === 'done') {
-      // No action
     }
     return;
   }
 
-  // Z — undo
-  if (e.key === 'z' || e.key === 'Z') {
+  // Undo
+  if (matchesKey(e, 'undo')) {
     e.preventDefault();
     session.undo();
     return;
   }
 
-  // S — suspend
-  if (e.key === 's' || e.key === 'S') {
+  // Suspend
+  if (matchesKey(e, 'suspend')) {
     e.preventDefault();
     session.suspend();
     return;
   }
 
-  // B — bury
-  if (e.key === 'b' || e.key === 'B') {
+  // Bury
+  if (matchesKey(e, 'bury')) {
     e.preventDefault();
     session.bury();
     return;
   }
 
-  // R — view image
-  if (e.key === 'r' || e.key === 'R') {
+  // View image
+  if (matchesKey(e, 'viewImage')) {
     const q = session.question();
     if (q) {
       const imgName = q.imageName || q.cropName;
@@ -180,15 +173,15 @@ function handleMcqKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typ
     return;
   }
 
-  // A — go back in history
-  if (e.key === 'a' || e.key === 'A') {
+  // Go back in history
+  if (matchesKey(e, 'goBack')) {
     e.preventDefault();
     session.goBackHistory();
     return;
   }
 
-  // ArrowRight — forward from history
-  if (e.key === 'ArrowRight') {
+  // Forward from history
+  if (matchesKey(e, 'forward')) {
     if (st === 'reviewing-history') {
       e.preventDefault();
       session.advanceFromHistory();

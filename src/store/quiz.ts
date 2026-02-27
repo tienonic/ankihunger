@@ -44,6 +44,7 @@ export interface QuizSession {
   leechWarning: () => boolean;
   ratingFlash: () => { rating: number; show: boolean };
   skipped: () => boolean;
+  currentImageLink: () => string;
 
   // Actions
   pickNextCard: () => Promise<void>;
@@ -530,6 +531,16 @@ export function createQuizSession(section: Section): QuizSession {
     }
   }
 
+  function currentImageLink(): string {
+    const q = question();
+    if (!q) return '';
+    const imgName = q.imageName || q.cropName;
+    if (!imgName) return '';
+    const suffix = project()?.config.imageSearchSuffix ?? '';
+    const query = suffix ? `${imgName} ${suffix}` : imgName;
+    return 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(query);
+  }
+
   return {
     state,
     cardId,
@@ -553,6 +564,7 @@ export function createQuizSession(section: Section): QuizSession {
     leechWarning,
     ratingFlash,
     skipped,
+    currentImageLink,
 
     pickNextCard,
     answer,

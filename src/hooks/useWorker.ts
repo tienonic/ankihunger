@@ -120,4 +120,10 @@ export const workerApi = {
 
   setFSRSParams: (projectId: string, weights: number[], retention: number) =>
     sendWorkerMessage({ type: 'SET_FSRS_PARAMS', projectId, weights, retention }),
+
+  getHotkeys: () =>
+    sendWorkerMessage<{ action: string; binding: string; context: string }[]>({ type: 'GET_HOTKEYS' }),
+
+  setHotkey: (action: string, binding: string, context: string) =>
+    sendWorkerMessage({ type: 'SET_HOTKEY', action, binding, context }),
 };

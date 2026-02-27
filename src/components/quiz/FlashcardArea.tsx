@@ -2,6 +2,7 @@ import { Show, For } from 'solid-js';
 import type { Section } from '../../projects/types.ts';
 import type { QuizSession } from '../../store/quiz.ts';
 import { tipsVisible } from '../../store/app.ts';
+import { getLabel } from '../../store/keybinds.ts';
 
 const RATING_CSS: Record<number, string> = { 1: 'rating-again', 2: 'rating-hard', 3: 'rating-good', 4: 'rating-easy' };
 const RATING_NAMES: Record<number, string> = { 1: 'Again', 2: 'Hard', 3: 'Good', 4: 'Easy' };
@@ -58,13 +59,14 @@ export function FlashcardArea(props: { session: QuizSession; section: Section })
 
       <Show when={tipsVisible()}>
         <div class="key-hints">
-          <kbd>Space</kbd>/<kbd>F</kbd> flip &middot; <kbd>1</kbd>-<kbd>4</kbd> rate &middot; <kbd>D</kbd> flip/good &middot; <kbd>/</kbd> note
+          <kbd>{getLabel('flipCard')}</kbd>/<kbd>{getLabel('flipAlt')}</kbd> flip &middot; <kbd>1</kbd>-<kbd>4</kbd> rate &middot; <kbd>{getLabel('skip')}</kbd> flip/good &middot; <kbd>{getLabel('note')}</kbd> note
         </div>
       </Show>
 
       <div class="flashcard-nav">
         <span class="flash-state-badge">{STATE_NAMES[s.cardState()] ?? 'New'}</span>
-        <span class="flash-due-count">{s.dueCount().due} due / {s.dueCount().total} total</span>
+        <span class="flash-due-count">{s.dueCount().due} due</span>
+        <span class="flash-due-count">{s.dueCount().total} total</span>
       </div>
     </div>
   );

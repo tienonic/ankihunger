@@ -1,6 +1,7 @@
 import { Show, For } from 'solid-js';
 import type { QuizSession } from '../../store/quiz.ts';
 import { easyMode, tipsVisible } from '../../store/app.ts';
+import { getLabel } from '../../store/keybinds.ts';
 
 const RATING_CSS: Record<number, string> = { 1: 'rating-again', 2: 'rating-hard', 3: 'rating-good', 4: 'rating-easy' };
 const RATING_NAMES: Record<number, string> = { 1: 'Again', 2: 'Hard', 3: 'Good', 4: 'Easy' };
@@ -64,7 +65,9 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
         <div class="question-header">
           <span class="question-text">{s.question()!.q}</span>
           <Show when={s.state() === 'answering'}>
-            <span class="timer">{s.timer.seconds()}s</span>
+            <span class={`timer${s.timer.seconds() >= 59 ? ' skull' : s.timer.seconds() >= 15 ? ' red' : ''}`}>
+              {s.timer.seconds() >= 59 ? '\u{1F480}' : s.timer.seconds() + 's'}
+            </span>
           </Show>
         </div>
       </Show>
@@ -140,7 +143,7 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
       {/* History hint */}
       <Show when={s.state() === 'reviewing-history'}>
         <div class="key-hints" style="margin-top:12px">
-          Reviewing previous — press <kbd>D</kbd> or <kbd>&rarr;</kbd> for next
+          Reviewing previous — press <kbd>{getLabel('skip')}</kbd> or <kbd>{getLabel('forward')}</kbd> for next
         </div>
       </Show>
 
@@ -148,7 +151,7 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
       {/* Tips overlay */}
       <Show when={tipsVisible()}>
         <div class="key-hints" style="margin-top:12px">
-          <kbd>1</kbd>-<kbd>4</kbd> answer/rate &middot; <kbd>D</kbd> skip/next &middot; <kbd>Z</kbd> undo &middot; <kbd>S</kbd> suspend &middot; <kbd>B</kbd> bury &middot; <kbd>R</kbd> image &middot; <kbd>A</kbd> back &middot; <kbd>/</kbd> note
+          <kbd>1-4</kbd> answer/rate &middot; <kbd>{getLabel('skip')}</kbd> x2 skip &middot; <kbd>{getLabel('undo')}</kbd> undo &middot; <kbd>{getLabel('suspend')}</kbd> suspend &middot; <kbd>{getLabel('bury')}</kbd> bury &middot; <kbd>{getLabel('goBack')}</kbd> back &middot; <kbd>{getLabel('note')}</kbd> note
         </div>
       </Show>
 

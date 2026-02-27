@@ -255,8 +255,8 @@ export function StudyApp() {
                 <span class="stat-item">retention: <strong>{reviewStats().retention}</strong></span>
               </div>
               <div class="activity-stats">
-                <span class="stat-item">score: <strong>{sidebarScore().correct}/{sidebarScore().attempted}</strong></span>
-                <span class="stat-item">due: <strong>{sidebarScore().due}/{sidebarScore().total}</strong></span>
+                <span class="stat-item">score: <strong>{sidebarScore().correct} / {sidebarScore().attempted}</strong></span>
+                <span class="stat-item">due: <strong>{sidebarScore().due} / {sidebarScore().total}</strong></span>
               </div>
             </div>
             <button
