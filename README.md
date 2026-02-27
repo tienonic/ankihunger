@@ -1,101 +1,150 @@
-# Study Tool — FSRS Spaced Repetition
+# Study Tool
 
-Load any subject as a JSON file. Uses the FSRS algorithm (same as Anki) for scheduling MCQ and flashcard decks.
+Spaced repetition study app using the FSRS algorithm (same scheduling as Anki). Load any subject as a JSON file and study with MCQ quizzes, flashcards, and math drills. All card state persists locally in an IndexedDB-backed SQLite database.
+
+Built with SolidJS, TypeScript, Tailwind CSS v4, and Vite.
 
 ## Quick Start
 
 ```bash
-npx serve .
-# or: python -m http.server 8000
+npm install
+npm run dev
 ```
 
-Open `http://localhost:3000`. Click "Connect Folder" on the launcher to save state as files in each project's directory.
+Open `http://localhost:3000`. Pick a built-in project or drop a JSON file onto the launcher.
 
-## Modes
+## Scripts
 
-### MCQ (mc-quiz / passage-quiz)
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Vite dev server (port 3000, HMR) |
+| `npm run build` | TypeScript check + production build |
+| `npm run preview` | Serve the production build locally |
 
-FSRS spaced repetition with rating, card actions, and leech detection.
+## Features
 
-| Key | Action |
-|-----|--------|
-| `1-4` | Select answer / Rate |
-| `D` x2 | Skip (rates as Again) |
-| `Space` | Advance |
-| `Z` | Undo |
+- **FSRS spaced repetition** — cards are scheduled using the Free Spaced Repetition Scheduler algorithm via ts-fsrs
+- **Multiple quiz modes** — MCQ, passage-based reading comprehension, flashcards with 3D flip, and random math drills
+- **Offline-first** — SQLite database runs in a Web Worker (wa-sqlite with IndexedDB backing). No server required
+- **Activity tracking** — per-section or combined activity chart in the sidebar
+- **Glossary** — context-aware term panel with relevance scoring and search
+- **Notes** — quick timestamped notes per project (press `/`)
+- **Customizable keybinds** — rebind any keyboard shortcut from the Keys panel
+- **Settings** — tune FSRS parameters (desired retention, new cards per session, leech threshold)
+- **Easy mode** — auto-rates cards as Good for faster review
+- **Zen mode** — hides score bar and progress indicators
+- **Custom projects** — create your own subjects as JSON files (see `projects/README.md`)
+
+## Keyboard Shortcuts
+
+All shortcuts can be rebound via the **Keys** button in the header.
+
+### MCQ / Quiz
+
+| Default Key | Action |
+|-------------|--------|
+| `1`-`4` | Select answer / Rate card |
+| `D` | Skip (double-tap) / Next |
+| `Z` | Undo last action |
 | `S` | Suspend card |
-| `B` | Bury card (until tomorrow) |
+| `B` | Bury card (skip until tomorrow) |
 | `R` | View image |
-| `A` | Previous question |
+| `A` | Go back to previous question |
 
 ### Flashcards
 
-FSRS-scheduled flashcard deck. Flip to reveal, then rate.
-
-| Key | Action |
-|-----|--------|
+| Default Key | Action |
+|-------------|--------|
 | `Space` / `F` | Flip card |
-| `1-4` | Rate Again/Hard/Good/Easy (when flipped) |
+| `1`-`4` | Rate (Again / Hard / Good / Easy) |
 | `D` | Flip or rate Good |
 
-### Math (math-gen)
+### Math
 
-Random drills with streak tracking and step-by-step solutions.
-
-| Key | Action |
-|-----|--------|
-| `Enter` | Submit |
-| `Space` / `D` | Next problem |
-| `D` x2 | Skip |
+| Default Key | Action |
+|-------------|--------|
+| `Enter` | Submit answer |
+| `D` | Skip / Next problem |
 
 ### Global
 
-| Key | Action |
-|-----|--------|
-| `/` | Quick note (saved per-project with timestamp) |
-
-## Data Storage
-
-Click "Connect Folder" to grant filesystem access to the `projects/` directory. State saves as `state.json` inside each project's folder (cards, scores, glossary, notes, activity). Falls back to localStorage if not connected.
+| Default Key | Action |
+|-------------|--------|
+| `/` | Open quick note |
 
 ## Adding Projects
 
-1. Create a `.json` file following the format in `projects/README.md`
-2. Load via "Open Project File" or drag & drop
-3. See `projects/example-chemistry.json` for a working example
+1. Create a `.json` file following the format in [`projects/README.md`](projects/README.md)
+2. Drop it onto the launcher or use "Open Project File"
+3. See [`projects/example-chemistry.json`](projects/example-chemistry.json) for a working example
 
-## Project Structure
+Custom projects are stored in localStorage.
+
+## Architecture
 
 ```
-study-tool/
-├── index.html
-├── css/main.css
-├── js/
-│   ├── main.js                 # App orchestrator
-│   ├── classes/
-│   │   ├── FSRS.js             # ts-fsrs wrapper
-│   │   ├── CardManager.js      # Card state, suspend/bury/leech
-│   │   ├── Project.js          # Project loading + validation
-│   │   ├── SectionRenderer.js  # DOM generation
-│   │   ├── RatingUI.js         # Again/Hard/Good/Easy buttons
-│   │   ├── Stats.js            # Session stats
-│   │   ├── State.js            # Per-project state (filesystem + localStorage)
-│   │   ├── Timer.js            # Per-question timer
-│   │   ├── Glossary.js         # Term panel + relevance sorting
-│   │   ├── ActivityScore.js    # Activity trendline
-│   │   ├── Migration.js        # SM-2 → FSRS migration
-│   │   └── Utils.js            # shuffle, pick, imgLink, round2
-│   └── data/
-│       └── math.js             # Math problem generators
-└── projects/
-    ├── README.md               # Project file format docs
-    ├── example-chemistry.json  # Example project
-    ├── registry.js             # Built-in project registry
-    └── ag-inspector/           # Built-in Ag Inspector project
-        ├── builder.js          # Assembles project from raw data
-        ├── crops-raw.js        # Crop/tree identification
-        ├── conservation-raw.js # Protected species
-        ├── maps-raw.js         # Map drawing scenarios
-        ├── reading-raw.js      # Reading comprehension
-        └── terms-raw.js        # Glossary terms
+src/
+├── App.tsx                          # Root: launcher or study phase
+├── main.tsx                         # Entry point
+├── index.css                        # Tailwind v4 + theme tokens + component styles
+├── components/
+│   ├── launcher/                    # Project selection, file drop, recent projects
+│   ├── layout/                      # StudyApp shell, Header, TopToggles, SectionsContainer
+│   ├── quiz/                        # McqCard, FlashcardArea, QuizSection
+│   ├── math/                        # MathSection (KaTeX rendering)
+│   ├── glossary/                    # TermsDropdown (sidebar)
+│   ├── notes/                       # NoteBox (/ key input)
+│   └── settings/                    # SettingsPanel, KeybindsPanel, TipsPanel
+├── store/                           # Module-level SolidJS signals (no context providers)
+│   ├── app.ts                       # Phase, active project/tab, toggles
+│   ├── project.ts                   # Project loading, registry, worker registration
+│   ├── quiz.ts                      # Per-section quiz session factory
+│   ├── math.ts                      # Per-section math session factory
+│   ├── glossary.ts                  # Glossary entries, relevance scoring, search
+│   └── keybinds.ts                  # Customizable keyboard bindings
+├── hooks/
+│   ├── useWorker.ts                 # Worker communication + typed API
+│   ├── useKeyboard.ts               # Global keydown routing
+│   ├── useTimer.ts                  # Per-question reactive timer
+│   └── useLatex.ts                  # KaTeX rendering hook
+├── workers/
+│   ├── db.worker.ts                 # SQLite + FSRS engine (wa-sqlite, Web Worker)
+│   └── protocol.ts                  # Typed request/response messages
+├── projects/
+│   ├── types.ts                     # Project/section type definitions
+│   ├── loader.ts                    # JSON → project with card ID generation
+│   ├── registry.ts                  # Built-in project registry
+│   └── ag-inspector/                # Built-in project data + builder
+├── data/
+│   └── math.ts                      # Math problem generators
+├── db/
+│   ├── schema.sql                   # SQLite schema
+│   └── types.ts                     # DB row types
+└── utils/                           # shuffle, formatting, ID helpers
 ```
+
+### Key Design Decisions
+
+- **Two-phase UI**: `appPhase` signal switches between `'launcher'` and `'study'` — no router needed
+- **Worker-based persistence**: All database operations run in a Web Worker. Messages are serialized via a promise chain to prevent race conditions
+- **Session factories**: `createQuizSession()` and `createMathSession()` produce independent signal bundles per section, stored in a `sectionHandlers` Map for keyboard routing
+- **Module-level state**: Stores export signals directly rather than using context providers — simpler for a single-page app with no nested routing
+
+## Tech Stack
+
+| Library | Purpose |
+|---------|---------|
+| [SolidJS](https://www.solidjs.com/) | Reactive UI framework |
+| [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) | FSRS spaced repetition algorithm |
+| [wa-sqlite](https://github.com/nicof/nicof) | SQLite compiled to WASM (IndexedDB VFS) |
+| [KaTeX](https://katex.org/) | LaTeX math rendering |
+| [Tailwind CSS v4](https://tailwindcss.com/) | Utility-first CSS |
+| [Vite](https://vite.dev/) | Build tool + dev server |
+
+## Browser Requirements
+
+Requires a modern browser with Web Worker, SharedArrayBuffer, and IndexedDB support. The dev server sets the required COOP/COEP headers automatically.
+
+## License
+
+Private project.
