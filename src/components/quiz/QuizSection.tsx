@@ -39,6 +39,9 @@ export function QuizSection(props: { section: Section }) {
             Flashcards
           </button>
           <span class="mode-toggle-actions">
+            <Show when={session.currentImageLink()}>
+              <a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a>
+            </Show>
             <button
               class="reset-btn"
               onClick={() => session.resetSection()}
@@ -46,9 +49,6 @@ export function QuizSection(props: { section: Section }) {
             >
               Reset
             </button>
-            <Show when={session.currentImageLink()}>
-              <a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a>
-            </Show>
           </span>
         </div>
       </Show>
@@ -57,6 +57,9 @@ export function QuizSection(props: { section: Section }) {
       <Show when={!hasFlash()}>
         <div class="mode-toggle mode-toggle-actions-only">
           <span class="mode-toggle-actions">
+            <Show when={session.currentImageLink()}>
+              <a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a>
+            </Show>
             <button
               class="reset-btn"
               onClick={() => session.resetSection()}
@@ -64,9 +67,6 @@ export function QuizSection(props: { section: Section }) {
             >
               Reset
             </button>
-            <Show when={session.currentImageLink()}>
-              <a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a>
-            </Show>
           </span>
         </div>
       </Show>
