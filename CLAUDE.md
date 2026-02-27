@@ -2,38 +2,46 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Running
+## Commands
 
-Static site — requires a local server for ES modules:
 ```bash
-npx serve .
+npm run dev          # Vite dev server (port 3000, HMR)
+npm run build        # tsc -b && vite build (typecheck + production bundle)
+npm run preview      # Preview production build
 ```
-Opens at `http://localhost:3000`. No build step, no dependencies to install.
+
+No test runner configured. Verify changes with `npm run build` (catches all TS errors).
 
 ## Architecture
 
-**main.js** is the sole orchestrator (~1500 lines). It imports all classes, manages global state (`project`, `engine`, `cardMgr`, `state`, `timer`, `glossary`, `stats`, `ratingUI`), and handles two completely separate execution paths:
+SolidJS + TypeScript app with Vite. FSRS spaced repetition for flashcards/MCQ via ts-fsrs running inside a Web Worker with wa-sqlite (IndexedDB-backed).
 
-- **MCQ mode** (mc-quiz / passage-quiz): FSRS spaced repetition, 4-point rating, card actions (undo/suspend/bury), leech detection
-- **Math mode** (math-gen): streak tracking, category filters, step-by-step solutions — no FSRS
+### Two-Phase UI
 
-**Flashcards** are a sub-mode of MCQ sections with their own FSRS deck (`flashCardIds` separate from `cardIds`).
+`store/app.ts` has `appPhase` signal: `'launcher'` → `'study'`.
+- **Launcher** (`components/launcher/`): project selection from registry or file drop
+- **Study** (`components/layout/StudyApp.tsx`): header, tabs, sidebar, quiz/math sections
 
-### Key Flow
+### Worker Architecture
 
-1. `initLauncher()` → user picks project (registry or file drop)
-2. `loadProject(data)` → creates Project, FSRSEngine, CardManager, State
-3. `State.loadFromFile()` (filesystem) or `state.load()` (localStorage fallback)
-4. `SectionRenderer.render()` builds all section DOM dynamically
-5. `wireEvents()` sets up delegated click/keyboard handlers
-6. `activateTab(sectionId)` switches between sections
+`workers/db.worker.ts` — SQLite database in a Web Worker using wa-sqlite with IDBBatchAtomicVFS. All FSRS card state, scores, activity, notes, and review logs live in SQLite. Communication via typed request/response protocol (`workers/protocol.ts`). The hook `hooks/useWorker.ts` provides `workerApi` with typed methods and promise-based messaging.
 
-### Dual Storage (State.js)
+Vite requires COOP/COEP headers for SharedArrayBuffer (wa-sqlite). These are set in `vite.config.ts`.
 
-Primary: File System Access API → `projects/<folder>/state.json`
-Fallback: localStorage (always written as sync backup)
+The WASM file must be at `public/wa-sqlite-async.wasm` — the worker locates it via `'/' + file`.
 
-`save()` writes both. `loadFromFile()` tries filesystem first. Directory handle persisted in IndexedDB across sessions via `requestAccess()`/`restoreAccess()`.
+### State & Stores
+
+Module-level signals (not context providers). Each store file exports signals and functions directly:
+- `store/app.ts` — appPhase, activeProject, activeTab, easyMode, zenMode, syncActivity, noteBoxVisible, tipsVisible
+- `store/project.ts` — project loading, registry/recent projects, worker card registration
+- `store/quiz.ts` — `createQuizSession(section)` factory producing per-section quiz state. `sectionHandlers` Map stores active sessions for keyboard routing.
+- `store/math.ts` — `createMathSession(section)` factory for math mode
+- `store/glossary.ts` — glossary entries, relevance scoring, search filtering
+
+### Quiz Session Pattern
+
+`createQuizSession()` returns a bag of signals + async actions (pickNextCard, answer, rate, undo, suspend, bury, flashcard operations). Each section gets its own session instance stored in `sectionHandlers` Map keyed by section ID.
 
 ### Card ID Scheme
 
@@ -44,33 +52,20 @@ Fallback: localStorage (always written as sync backup)
 | flashcards | `{sectionId}-flash-{cardIndex}` |
 | math-gen | None (generated dynamically) |
 
-Built by `Project._buildCardIds()` at load time. `section.cardIds` = MCQ cards, `section.flashCardIds` = flashcard deck.
-
-### CardManager Priority Queue (pickNext)
-
-1. Learning/Relearning due (oldest first)
-2. Review due (oldest first)
-3. New cards (capped at `newPerSession`, default 20)
-4. Weakest card (lowest stability)
+Built by the project loader at load time. `section.cardIds` = MCQ cards, `section.flashCardIds` = flashcard deck.
 
 ### Keyboard Routing
 
-`handleKeyboard()` → checks mode → delegates to `handleMcqKeyboard()`, `handleFlashcardKeyboard()`, or `handleMathKeyboard()`. Space on checkboxes is globally blocked (preventDefault) to avoid accidental toggles.
+`hooks/useKeyboard.ts` — global keydown handler checks section type, delegates to MCQ/flashcard/math handlers. `/` opens note box. Space on checkboxes is blocked globally.
 
-### Event Wiring
+### Project Data
 
-All section events use delegated listeners on `#sections-container` with `data-*` attributes (`data-action`, `data-section`, `data-mode`). No per-element listeners on dynamic content.
-
-## Project Registry
-
-Built-in projects live in `projects/<folder>/` with a `builder.js` that assembles from raw data modules. Registry entries in `projects/registry.js` map `slug` → `folder` → `loader()`.
-
-Custom projects are loaded via file picker/drag-drop and stored in localStorage (`proj-data-<slug>`). Their FSRS state saves to `projects/<slug>/state.json` when filesystem is connected.
+Built-in projects in `projects/<folder>/` with a `builder.ts` assembling from raw data modules. Registry in `projects/registry.ts`. Custom projects loaded via file drop, stored in localStorage as `proj-data-<slug>`.
 
 ## Conventions
 
-- All CSS in single `css/main.css` with numbered section comments
-- CSS variables defined in `:root` for theming (warm beige palette)
-- No framework — vanilla JS with ES modules
-- Scores compressed as `{c, a}` (correct, attempted) in storage
-- Activity entries capped at 200 per project
+- CSS in `src/index.css` using Tailwind v4 with `@theme` block for design tokens (warm beige palette). Old class names preserved (`.card`, `.option-btn`, `.rating-btn`, `.mode-toggle`, `.score-bar`).
+- ts-fsrs `repeat()` returns `IPreview` — needs `as unknown as Record<number, ...>` cast for rating enum indexing.
+- Worker messages serialize via promise chain — INIT must complete before LOAD_PROJECT.
+- Activity entries capped at 200 per project.
+- `index.old.html` and `js/` are the old vanilla JS codebase kept for reference.

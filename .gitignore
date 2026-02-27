@@ -1,4 +1,8 @@
 node_modules/
+dist/
+.claude/
+.env
+.env.*
 .DS_Store
 Thumbs.db
 *.log
