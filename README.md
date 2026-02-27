@@ -1,141 +1,130 @@
-# Sacramento County Ag Inspector — Study Tool
+# Study Tool — FSRS-Powered Spaced Repetition
 
-Interactive study tool for Sacramento County Agricultural Inspector exam prep. Features spaced repetition (SM-2), a term definer, keyboard shortcuts, and timed questions.
+A project-based study platform powered by the FSRS algorithm (same as Anki). Load any subject as a JSON project file, or use the built-in Sac County Ag Inspector deck.
 
 ## Quick Start
 
-ES modules require a local server (won't work via `file://`). Pick one:
+ES modules require a local server:
 
 ```bash
-# Option A: npx (no install)
 npx serve .
-
-# Option B: Python
-python -m http.server 8000
-
-# Option C: VS Code Live Server extension
-# Right-click index.html → "Open with Live Server"
+# or: python -m http.server 8000
+# or: VS Code Live Server extension
 ```
 
-Then open `http://localhost:3000` (or whatever port).
+Open `http://localhost:3000`.
+
+## Two Modes
+
+### MCQ Mode (mc-quiz / passage-quiz)
+Full FSRS spaced repetition with card scheduling.
+
+- **FSRS algorithm** — cards are scheduled based on your recall strength
+- **Rating** — Again / Hard / Good / Easy with interval preview
+- **Easy Mode** — toggle auto-rates by answer speed (< 3s Easy, < 8s Good, 40s+ Hard, 59s Again)
+- **Card actions** — Undo (Z), Suspend (S), Bury (B)
+- **State badges** — NEW / LEARNING / REVIEW / RELEARNING
+- **Terms panel** — glossary sidebar with relevance sorting per question
+- **Flashcards** — flip-card mode for sections that include them
+- **Leech detection** — flags cards you keep forgetting
+
+| Key | Action |
+|-----|--------|
+| `1-4` | Select answer A-D (answering) / Rate Again-Easy (revealed) |
+| `D` x2 | Skip ("I Don't Know") — auto-rates as Again |
+| `Space` | Advance after rating |
+| `Z` | Undo last review |
+| `S` | Suspend card |
+| `B` | Bury card (until tomorrow) |
+| `R` | View image (if available) |
+| `A` | Previous question |
+
+### Math Mode (math-gen)
+Practice drills with streak tracking. No FSRS (problems are randomly generated).
+
+- **Category filters** — focus on conversions, averages, percentages, or decimals
+- **Streak tracking** — current streak and best streak displayed
+- **Step-by-step solutions** — shown on wrong answers and skips
+- **Timer** — per-question timer
+
+| Key | Action |
+|-----|--------|
+| `Enter` | Submit answer |
+| `Space` / `D` | Next problem |
+| `D` x2 | Skip ("I Don't Know") |
+
+## Adding Projects
+
+1. Create a `.json` file following the schema in `projects/README.md`
+2. Load it via the launcher: click "Open Project File" or drag & drop
+3. See `projects/example-chemistry.json` for a complete example
+
+Progress is saved per-project in localStorage. The last project auto-loads on refresh.
 
 ## Project Structure
 
 ```
 study-tool/
-├── index.html              # HTML structure (no inline JS/CSS)
-├── css/
-│   └── main.css            # All styles, organized by section
+├── index.html                  # Launcher + study app shell
+├── css/main.css                # All styles (warm beige theme)
 ├── js/
-│   ├── main.js             # Entry point — imports, wires up, initializes
+│   ├── main.js                 # Orchestrator — two-mode architecture
 │   ├── classes/
-│   │   ├── Utils.js         # shuffle, pick, round2, imgLink, domPrefix
-│   │   ├── SRS.js           # SM-2 spaced repetition engine
-│   │   ├── State.js         # localStorage persistence
-│   │   ├── Timer.js         # Per-question countdown timer
-│   │   └── Glossary.js      # Term definer + invisible weighting
+│   │   ├── FSRS.js             # ts-fsrs CDN wrapper
+│   │   ├── CardManager.js      # Card state, suspend/bury/leech, pickNext
+│   │   ├── Project.js          # Project loading + validation
+│   │   ├── SectionRenderer.js  # Dynamic DOM generation (MCQ vs Math)
+│   │   ├── RatingUI.js         # Again/Hard/Good/Easy button strip
+│   │   ├── Stats.js            # Session tracking (reviews, retention)
+│   │   ├── State.js            # Per-project localStorage
+│   │   ├── Timer.js            # Per-question timer
+│   │   ├── Glossary.js         # Term panel + relevance sorting
+│   │   ├── Migration.js        # One-time SM-2 → FSRS migration
+│   │   └── Utils.js            # shuffle, pick, imgLink, round2
 │   └── data/
-│       ├── crops.js         # Crop/tree identification data + questions
-│       ├── maps.js          # Map drawing scenarios
-│       ├── math.js          # Math problem generators
-│       ├── reading.js       # Reading comprehension passages
-│       ├── conservation.js  # Protected species data
-│       └── terms.js         # Curated glossary terms
+│       ├── default-project.js  # Builds Ag Inspector project from raw data
+│       ├── crops-raw.js        # Crop/tree identification data
+│       ├── conservation-raw.js # Protected species data
+│       ├── maps-raw.js         # Map drawing scenarios
+│       ├── reading-raw.js      # Reading comprehension passages
+│       ├── terms-raw.js        # Curated glossary terms
+│       └── math.js             # Math problem generators (with steps)
+└── projects/
+    ├── README.md               # Project file schema documentation
+    └── example-chemistry.json  # Example project file
 ```
-
-## Adding Content
-
-### Add a new crop/tree
-
-Edit `js/data/crops.js` — append to the `crops` array:
-
-```js
-{ name: 'Fig', category: 'Tree fruit', leaf: '...', bark: '...', distinguish: '...' }
-```
-
-Quiz questions are auto-generated from this data.
-
-### Add a comparison question
-
-Append to `extraCropQuestions` in `js/data/crops.js`:
-
-```js
-{ q: 'Your question?', correct: 'Answer', wrong: ['A', 'B', 'C'], cropName: 'Fig', explanation: 'Brief reason.' }
-```
-
-### Add a reading passage
-
-Edit `js/data/reading.js` — append to `readPassages`:
-
-```js
-{ text: 'Passage text...', source: 'Cal. Code §...', questions: [ { q: '...', correct: '...', wrong: ['...'], explanation: '...' } ] }
-```
-
-### Add a conservation species
-
-Edit `js/data/conservation.js` — append to `conservationSpecies`:
-
-```js
-{ name: '...', scientific: '...', status: '...', habitat: '...', id_features: '...', inspector_action: '...', distinguish: '...' }
-```
-
-### Add a glossary term
-
-Edit `js/data/terms.js` — append to `curatedTerms`:
-
-```js
-{ term: 'Term Name', def: 'Definition text.' }
-```
-
-Users can also add terms at runtime via the Term Definer panel.
-
-### Add a math category
-
-Edit `js/data/math.js` — create a generator function and add it to `mathGenerators`:
-
-```js
-function genGeometry() {
-  // return { q, a, u, ex }
-}
-export const mathGenerators = { ..., geometry: genGeometry };
-```
-
-Then add a button in `index.html` inside `#math-cats`.
-
-## Features
-
-| Feature | Description |
-|---------|-------------|
-| **SM-2 Spaced Repetition** | Questions you miss come back sooner. Mastered ones fade. |
-| **Term Definer** | Collapsible bottom panel. Search 50+ ag terms. Add your own. |
-| **Invisible Weighting** | Looking up a term silently penalizes related questions in SRS. |
-| **Don't Know Button** | Skip without guessing. Shows correct answer, SRS quality = 0. |
-| **Question Timer** | Counts up per question. Red after 15s. Stops at 59s. Visual only. |
-| **Keyboard Shortcuts** | `A` = back, `D` = forward/skip, `Space` = advance after answer. |
-| **View Image** | Google Images link for crop/species identification. |
-| **LocalStorage** | Scores, SRS state, and custom terms persist across sessions. |
-
-## Sections
-
-1. **Crop & Tree ID** — 15 crops, 57+ questions, flashcard mode
-2. **Map Drawing** — 4 spatial reasoning scenarios with tips
-3. **Math Practice** — Unit conversions, averages, percentages, decimals
-4. **Reading Comp** — Legal/regulatory passages with cited CA code sources
-5. **Conservation** — 6 protected Sacramento County species
 
 ## Architecture
 
 ```
-State (localStorage) ←→ SRS (SM-2 engine)
-                           ↑
-                     QuizEngine (main.js)
-                      ↗    ↑    ↘
-               Glossary  Timer  Data files
+Launcher → Project.js (load/validate JSON)
+              ↓
+         loadProject()
+         ┌────┴────┐
+     MCQ Mode    Math Mode
+     ┌───────┐   ┌──────────┐
+     │ FSRS  │   │ Streaks  │
+     │ Cards │   │ Steps    │
+     │ Terms │   │ Category │
+     │ Easy  │   │ Filters  │
+     └───┬───┘   └────┬─────┘
+         └─────┬──────┘
+          Shared Layer
+        ┌──────────────┐
+        │ Timer, Score  │
+        │ Skip, Next    │
+        │ State (LS)    │
+        └──────────────┘
 ```
 
-- **SRS.js** — Pure algorithm, no DOM. Testable independently.
-- **State.js** — Serialization layer. Knows about SRS + scores.
-- **Glossary.js** — Manages terms + invisible weighting + panel UI.
-- **Timer.js** — Lightweight interval wrapper.
-- **main.js** — Orchestrator. All DOM wiring happens here.
-- **data/** — Pure data exports. Edit these to change content.
+## Modifying the Default Project
+
+The built-in Sac County Ag Inspector project is assembled from raw data files in `js/data/`. To modify:
+
+- **Crops**: Edit `js/data/crops-raw.js` — questions auto-generate from crop data
+- **Conservation**: Edit `js/data/conservation-raw.js` — 4 questions per species
+- **Reading**: Edit `js/data/reading-raw.js` — passage-based scenarios
+- **Maps**: Edit `js/data/maps-raw.js` — spatial reasoning scenarios
+- **Math**: Edit `js/data/math.js` — generator functions with step-by-step solutions
+- **Terms**: Edit `js/data/terms-raw.js` — curated glossary entries
+- **Assembly**: Edit `js/data/default-project.js` — builds the project from raw data

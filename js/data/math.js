@@ -1,25 +1,102 @@
 /**
  * Math problem generators.
  *
- * Each generator returns { q, a, u, ex } where:
- *   q  = question string
- *   a  = numeric answer (rounded to 2 decimals)
- *   u  = unit label ('' if unitless)
- *   ex = short explanation string
- *
- * To add a category: create a new generator function and register it in `mathGenerators`.
+ * Each generator returns { q, a, u, ex, steps } where:
+ *   q     = question string
+ *   a     = numeric answer (rounded to 2 decimals)
+ *   u     = unit label ('' if unitless)
+ *   ex    = short explanation string
+ *   steps = array of strings showing work step-by-step
  */
 
 import { pick, round2 } from '../classes/Utils.js';
 
 function genConversion() {
   const types = [
-    () => { const oz = pick([8,12,16,24,32,48,64,80,96]); return { q: `Convert ${oz} ounces to pounds.`, a: round2(oz/16), u: 'lb', ex: `16 oz = 1 lb. ${oz}/16 = ${round2(oz/16)}` }; },
-    () => { const lb = pick([1.5,2,2.5,3,4,5,6.25,7.5,10]); return { q: `Convert ${lb} pounds to ounces.`, a: round2(lb*16), u: 'oz', ex: `1 lb = 16 oz. ${lb} \u00d7 16 = ${round2(lb*16)}` }; },
-    () => { const ft = pick([5280,10560,2640,1320,7920,15840,26400]); return { q: `Convert ${ft.toLocaleString()} feet to miles.`, a: round2(ft/5280), u: 'mi', ex: `5,280 ft = 1 mi. ${ft.toLocaleString()}/5280 = ${round2(ft/5280)}` }; },
-    () => { const mi = pick([0.25,0.5,1,1.5,2,3,5]); return { q: `Convert ${mi} miles to feet.`, a: round2(mi*5280), u: 'ft', ex: `1 mi = 5,280 ft. ${mi} \u00d7 5280 = ${round2(mi*5280)}` }; },
-    () => { const sqft = pick([43560,87120,21780,10890,130680,217800,65340]); return { q: `Convert ${sqft.toLocaleString()} sq ft to acres. (1 acre = 43,560 sq ft)`, a: round2(sqft/43560), u: 'acres', ex: `${sqft.toLocaleString()} / 43,560 = ${round2(sqft/43560)}` }; },
-    () => { const ac = pick([0.25,0.5,1,1.5,2,3,5,10]); return { q: `Convert ${ac} acres to sq ft. (1 acre = 43,560 sq ft)`, a: round2(ac*43560), u: 'sq ft', ex: `${ac} \u00d7 43,560 = ${round2(ac*43560)}` }; },
+    () => {
+      const oz = pick([8, 12, 16, 24, 32, 48, 64, 80, 96]);
+      const ans = round2(oz / 16);
+      return {
+        q: `Convert $${oz}$ ounces to pounds.`, a: ans, u: 'lb',
+        ex: `$16$ oz $= 1$ lb. $\\frac{${oz}}{16} = ${ans}$`,
+        steps: [
+          'We need to convert ounces to pounds',
+          '$1$ pound $= 16$ ounces',
+          `Divide ounces by $16$: $\\frac{${oz}}{16} = ${ans}$`,
+          `Answer: $${ans}$ lb`,
+        ],
+      };
+    },
+    () => {
+      const lb = pick([1.5, 2, 2.5, 3, 4, 5, 6.25, 7.5, 10]);
+      const ans = round2(lb * 16);
+      return {
+        q: `Convert $${lb}$ pounds to ounces.`, a: ans, u: 'oz',
+        ex: `$1$ lb $= 16$ oz. $${lb} \\times 16 = ${ans}$`,
+        steps: [
+          'We need to convert pounds to ounces',
+          '$1$ pound $= 16$ ounces',
+          `Multiply pounds by $16$: $${lb} \\times 16 = ${ans}$`,
+          `Answer: $${ans}$ oz`,
+        ],
+      };
+    },
+    () => {
+      const ft = pick([5280, 10560, 2640, 1320, 7920, 15840, 26400]);
+      const ans = round2(ft / 5280);
+      return {
+        q: `Convert $${ft.toLocaleString()}$ feet to miles.`, a: ans, u: 'mi',
+        ex: `$5{,}280$ ft $= 1$ mi. $\\frac{${ft.toLocaleString()}}{5{,}280} = ${ans}$`,
+        steps: [
+          'We need to convert feet to miles',
+          '$1$ mile $= 5{,}280$ feet',
+          `Divide feet by $5{,}280$: $\\frac{${ft.toLocaleString()}}{5{,}280} = ${ans}$`,
+          `Answer: $${ans}$ mi`,
+        ],
+      };
+    },
+    () => {
+      const mi = pick([0.25, 0.5, 1, 1.5, 2, 3, 5]);
+      const ans = round2(mi * 5280);
+      return {
+        q: `Convert $${mi}$ miles to feet.`, a: ans, u: 'ft',
+        ex: `$1$ mi $= 5{,}280$ ft. $${mi} \\times 5{,}280 = ${ans.toLocaleString()}$`,
+        steps: [
+          'We need to convert miles to feet',
+          '$1$ mile $= 5{,}280$ feet',
+          `Multiply miles by $5{,}280$: $${mi} \\times 5{,}280 = ${ans.toLocaleString()}$`,
+          `Answer: $${ans.toLocaleString()}$ ft`,
+        ],
+      };
+    },
+    () => {
+      const sqft = pick([43560, 87120, 21780, 10890, 130680, 217800, 65340]);
+      const ans = round2(sqft / 43560);
+      return {
+        q: `Convert $${sqft.toLocaleString()}$ sq ft to acres. ($1$ acre $= 43{,}560$ sq ft)`, a: ans, u: 'acres',
+        ex: `$\\frac{${sqft.toLocaleString()}}{43{,}560} = ${ans}$`,
+        steps: [
+          'We need to convert square feet to acres',
+          '$1$ acre $= 43{,}560$ square feet',
+          `Divide sq ft by $43{,}560$: $\\frac{${sqft.toLocaleString()}}{43{,}560} = ${ans}$`,
+          `Answer: $${ans}$ acres`,
+        ],
+      };
+    },
+    () => {
+      const ac = pick([0.25, 0.5, 1, 1.5, 2, 3, 5, 10]);
+      const ans = round2(ac * 43560);
+      return {
+        q: `Convert $${ac}$ acres to sq ft. ($1$ acre $= 43{,}560$ sq ft)`, a: ans, u: 'sq ft',
+        ex: `$${ac} \\times 43{,}560 = ${ans.toLocaleString()}$`,
+        steps: [
+          'We need to convert acres to square feet',
+          '$1$ acre $= 43{,}560$ square feet',
+          `Multiply acres by $43{,}560$: $${ac} \\times 43{,}560 = ${ans.toLocaleString()}$`,
+          `Answer: $${ans.toLocaleString()}$ sq ft`,
+        ],
+      };
+    },
   ];
   return pick(types)();
 }
@@ -30,11 +107,20 @@ function genAverage() {
   const sum = round2(vals.reduce((s, v) => s + v, 0));
   const avg = round2(sum / n);
   const q = pick([
-    `You weigh ${n} samples. Weights (lbs): ${vals.join(', ')}. Average weight?`,
-    `Inspector takes ${n} temp readings (\u00b0F): ${vals.join(', ')}. Average?`,
-    `Trap counts over ${n} days: ${vals.join(', ')} insects. Average daily count?`,
+    `You weigh $${n}$ samples. Weights (lbs): $${vals.join(', ')}$. Average weight?`,
+    `You record $${n}$ temperature readings (\u00b0F): $${vals.join(', ')}$. Average?`,
+    `Counts over $${n}$ days: $${vals.join(', ')}$. Average daily count?`,
   ]);
-  return { q, a: avg, u: '', ex: `Sum / count = ${sum} / ${n} = ${avg}` };
+  return {
+    q, a: avg, u: '',
+    ex: `$\\frac{${sum}}{${n}} = ${avg}$`,
+    steps: [
+      `We have $${n}$ values: $${vals.join(', ')}$`,
+      `Add them up: $${vals.join(' + ')} = ${sum}$`,
+      `Divide by the count: $\\frac{${sum}}{${n}} = ${avg}$`,
+      `Answer: $${avg}$`,
+    ],
+  };
 }
 
 function genPercent() {
@@ -42,19 +128,82 @@ function genPercent() {
   const damaged = Math.floor(Math.random() * (total * 0.6)) + 1;
   const pct = round2((damaged / total) * 100);
   const q = pick([
-    `Out of ${total} apples, ${damaged} show pest damage. Percentage damaged?`,
-    `Sample of ${total} plants, ${damaged} diseased. Percentage affected?`,
-    `Inspector examines ${total} boxes. ${damaged} fail quality. Percent failed?`,
+    `Out of $${total}$ items, $${damaged}$ are defective. Percentage defective?`,
+    `Sample of $${total}$ items, $${damaged}$ are affected. Percentage affected?`,
+    `You examine $${total}$ batches. $${damaged}$ fail quality. Percent failed?`,
   ]);
-  return { q, a: pct, u: '%', ex: `(${damaged}/${total}) \u00d7 100 = ${pct}%` };
+  return {
+    q, a: pct, u: '%',
+    ex: `$\\frac{${damaged}}{${total}} \\times 100 = ${pct}\\%$`,
+    steps: [
+      `We need to find what percentage $${damaged}$ is of $${total}$`,
+      `Set up the fraction: $\\frac{${damaged}}{${total}}$`,
+      `Divide: $\\frac{${damaged}}{${total}} = ${round2(damaged / total)}$`,
+      `Multiply by $100$: $${round2(damaged / total)} \\times 100 = ${pct}\\%$`,
+      `Answer: $${pct}\\%$`,
+    ],
+  };
 }
 
 function genDecimal() {
   const ops = [
-    () => { const a = round2(Math.random()*10+1), b = round2(Math.random()*10+1); return { q: `${a} + ${b} = ?`, a: round2(a+b), u: '', ex: `${a} + ${b} = ${round2(a+b)}` }; },
-    () => { let a = round2(Math.random()*15+5), b = round2(Math.random()*5+0.5); if (b>a)[a,b]=[b,a]; return { q: `${a} \u2212 ${b} = ?`, a: round2(a-b), u: '', ex: `${a} \u2212 ${b} = ${round2(a-b)}` }; },
-    () => { const a = round2(Math.random()*8+1), b = round2(Math.random()*8+1); return { q: `Crates weigh ${a} lbs and ${b} lbs. Total?`, a: round2(a+b), u: 'lbs', ex: `${a} + ${b} = ${round2(a+b)}` }; },
-    () => { const w = [round2(Math.random()*5+1),round2(Math.random()*5+1),round2(Math.random()*5+1)]; return { q: `Three samples: ${w.join(', ')} lbs. Total?`, a: round2(w.reduce((s,v)=>s+v,0)), u: 'lbs', ex: `${w.join(' + ')} = ${round2(w.reduce((s,v)=>s+v,0))}` }; },
+    () => {
+      const a = round2(Math.random() * 10 + 1), b = round2(Math.random() * 10 + 1);
+      const ans = round2(a + b);
+      return {
+        q: `$${a} + ${b} = \\;?$`, a: ans, u: '',
+        ex: `$${a} + ${b} = ${ans}$`,
+        steps: [
+          `Add the two numbers: $${a} + ${b}$`,
+          `Line up the decimal points and add`,
+          `$${a} + ${b} = ${ans}$`,
+          `Answer: $${ans}$`,
+        ],
+      };
+    },
+    () => {
+      let a = round2(Math.random() * 15 + 5), b = round2(Math.random() * 5 + 0.5);
+      if (b > a) [a, b] = [b, a];
+      const ans = round2(a - b);
+      return {
+        q: `$${a} - ${b} = \\;?$`, a: ans, u: '',
+        ex: `$${a} - ${b} = ${ans}$`,
+        steps: [
+          `Subtract: $${a} - ${b}$`,
+          `Line up the decimal points and subtract`,
+          `$${a} - ${b} = ${ans}$`,
+          `Answer: $${ans}$`,
+        ],
+      };
+    },
+    () => {
+      const a = round2(Math.random() * 8 + 1), b = round2(Math.random() * 8 + 1);
+      const ans = round2(a + b);
+      return {
+        q: `Crates weigh $${a}$ lbs and $${b}$ lbs. Total?`, a: ans, u: 'lbs',
+        ex: `$${a} + ${b} = ${ans}$`,
+        steps: [
+          `We need the total weight of two crates`,
+          `Crate 1: $${a}$ lbs, Crate 2: $${b}$ lbs`,
+          `Add: $${a} + ${b} = ${ans}$`,
+          `Answer: $${ans}$ lbs`,
+        ],
+      };
+    },
+    () => {
+      const w = [round2(Math.random() * 5 + 1), round2(Math.random() * 5 + 1), round2(Math.random() * 5 + 1)];
+      const ans = round2(w.reduce((s, v) => s + v, 0));
+      return {
+        q: `Three samples: $${w.join(', ')}$ lbs. Total?`, a: ans, u: 'lbs',
+        ex: `$${w.join(' + ')} = ${ans}$`,
+        steps: [
+          `We need the total of three samples`,
+          `Samples: $${w.join(', ')}$ lbs`,
+          `Add: $${w.join(' + ')} = ${ans}$`,
+          `Answer: $${ans}$ lbs`,
+        ],
+      };
+    },
   ];
   return pick(ops)();
 }
@@ -62,7 +211,7 @@ function genDecimal() {
 /** Map of category name -> generator function */
 export const mathGenerators = {
   conversion: genConversion,
-  average:    genAverage,
-  percent:    genPercent,
-  decimal:    genDecimal,
+  average: genAverage,
+  percent: genPercent,
+  decimal: genDecimal,
 };

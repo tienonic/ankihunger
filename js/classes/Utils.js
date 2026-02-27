@@ -23,15 +23,18 @@ export function round2(n) {
 }
 
 /** Build a Google Images search URL for a term */
-export function imgLink(name) {
+export function imgLink(name, searchSuffix = '') {
+  const q = searchSuffix ? name + ' ' + searchSuffix : name;
   const url = 'https://www.google.com/search?tbm=isch&q=' +
-    encodeURIComponent(name + ' plant identification');
+    encodeURIComponent(q);
   return `<a class="view-img" href="${url}" target="_blank" rel="noopener">View Image</a>`;
 }
 
-/** Get the DOM id prefix for a section name */
-export function domPrefix(section) {
-  if (section === 'reading') return 'read';
-  if (section === 'conservation') return 'cons';
-  return section;
+/** Format an interval in days to human readable text */
+export function formatInterval(days) {
+  if (days < 1 / 24) return Math.max(1, Math.round(days * 24 * 60)) + 'm';
+  if (days < 1) return Math.round(days * 24) + 'h';
+  if (days < 30) return Math.round(days) + 'd';
+  if (days < 365) return Math.round(days / 30) + 'mo';
+  return (days / 365).toFixed(1).replace(/\.0$/, '') + 'y';
 }

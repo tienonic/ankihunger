@@ -1,17 +1,8 @@
 /**
  * Term Definer & Invisible Weighting system.
  *
- * Manages the glossary (auto-extracted + curated + user terms),
- * the term panel UI, search/filter, and the invisible lookup penalty.
- *
- * When a user looks up a term, questions containing that term get a
- * reduced ease factor in the SRS — they'll appear more often for review
- * without the user knowing they were penalized.
+ * Decoupled from hardcoded imports — accepts glossary data from project.
  */
-
-import { crops } from '../data/crops.js';
-import { conservationSpecies } from '../data/conservation.js';
-import { curatedTerms } from '../data/terms.js';
 
 export class Glossary {
   /**
@@ -19,47 +10,29 @@ export class Glossary {
    */
   constructor(state) {
     this.state = state;
-    /** @type {Array<{term: string, def: string, source: string, isCrop?: boolean}>} */
+    /** @type {Array<{term: string, def: string, source: string, hasImage?: boolean}>} */
     this.entries = [];
     /** @type {Array<{term: string, ts: number}>} */
     this.lookupLog = [];
     this.LOOKUP_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
   }
 
-  /** Build the full glossary from all sources */
-  build() {
+  /**
+   * Build the full glossary from project glossary data + user terms.
+   * @param {Array<{term: string, def: string, hasImage?: boolean}>} projectGlossary
+   */
+  build(projectGlossary = []) {
     this.entries = [];
-    const catDefs = {
-      'Tree nut':              'Nut growing on a tree in a hard shell (almond, walnut, pistachio).',
-      'Stone fruit':           'Drupe with fleshy fruit and a hard pit/stone (peach, plum, cherry).',
-      'Pome fruit':            'Fruit with fleshy outer part and seeded core (apple, pear).',
-      'Citrus':                'Evergreen tree producing acidic juicy fruit with leathery rind.',
-      'Vine crop':             'Crop growing on woody/herbaceous vines, often trellised (grape).',
-      'Vegetable (fruit crop)':'Botanically fruit, culinarily vegetable. Herbaceous annual (tomato).',
-      'Small fruit':           'Low-growing fruit crop, often herbaceous (strawberry).',
-    };
-    const seenCats = {};
 
-    // Auto-extract from crops
-    for (const c of crops) {
-      this.entries.push({ term: c.name, def: c.category + '. ' + c.distinguish, source: 'auto', isCrop: true });
-      if (!seenCats[c.category] && catDefs[c.category]) {
-        this.entries.push({ term: c.category, def: catDefs[c.category], source: 'auto' });
-        seenCats[c.category] = true;
-      }
+    for (const t of projectGlossary) {
+      this.entries.push({
+        term: t.term,
+        def: t.def,
+        source: 'project',
+        hasImage: t.hasImage || t.isCrop || false,
+      });
     }
 
-    // Auto-extract from conservation species
-    for (const sp of conservationSpecies) {
-      this.entries.push({ term: sp.name, def: sp.status + '. ' + sp.id_features, source: 'auto', isCrop: true });
-    }
-
-    // Curated terms
-    for (const t of curatedTerms) {
-      this.entries.push({ term: t.term, def: t.def, source: 'curated' });
-    }
-
-    // User terms
     for (const t of this.state.userTerms) {
       this.entries.push({ term: t.term, def: t.def, source: 'user' });
     }
@@ -71,14 +44,14 @@ export class Glossary {
   addUserTerm(term, def) {
     if (!term || !def) return;
     this.state.userTerms.push({ term, def });
-    this.build();
+    this._rebuildWithUserTerms();
     this.state.save();
   }
 
   /** Remove a user-defined term by name */
   removeUserTerm(termName) {
     this.state.userTerms = this.state.userTerms.filter(t => t.term !== termName);
-    this.build();
+    this._rebuildWithUserTerms();
     this.state.save();
   }
 
@@ -90,7 +63,7 @@ export class Glossary {
 
   /**
    * Check if a question was "assisted" by recent lookups.
-   * @param {string} questionText — question + answer text to match against
+   * @param {string} questionText
    * @returns {boolean}
    */
   checkAssisted(questionText) {
@@ -112,83 +85,91 @@ export class Glossary {
     );
   }
 
+  /**
+   * Sort entries so terms relevant to the given question text appear first.
+   * @param {string} questionContext — question + answer text to match against
+   * @returns {Array} sorted copy of entries
+   */
+  sortByRelevance(questionContext) {
+    if (!questionContext) return this.entries;
+    const ctx = questionContext.toLowerCase();
+    const scored = this.entries.map(t => {
+      const term = t.term.toLowerCase();
+      const words = term.split(/\s+/).filter(w => w.length >= 3);
+      let score = 0;
+      if (ctx.includes(term)) score += 10;
+      for (const w of words) {
+        if (ctx.includes(w)) score += 3;
+      }
+      return { entry: t, score };
+    });
+    scored.sort((a, b) => b.score - a.score || a.entry.term.localeCompare(b.entry.term));
+    return scored.map(s => s.entry);
+  }
+
+  /**
+   * Set the current question context for relevance sorting.
+   * Call this whenever a new question is shown.
+   * @param {string} text — question + answer text
+   */
+  setQuestionContext(text) {
+    this._questionContext = text || '';
+  }
+
+  _getContextTerms() {
+    if (this._questionContext) {
+      return this.sortByRelevance(this._questionContext);
+    }
+    return this.entries;
+  }
+
   _pruneLog() {
     const cutoff = Date.now() - this.LOOKUP_WINDOW_MS;
     this.lookupLog = this.lookupLog.filter(l => l.ts > cutoff);
   }
 
+  _rebuildWithUserTerms() {
+    // Keep non-user entries, add fresh user entries
+    this.entries = this.entries.filter(e => e.source !== 'user');
+    for (const t of this.state.userTerms) {
+      this.entries.push({ term: t.term, def: t.def, source: 'user' });
+    }
+    this.entries.sort((a, b) => a.term.localeCompare(b.term));
+  }
+
   // === UI Methods ===
 
-  /** Render a list of terms into the #term-list element */
-  renderList(terms) {
-    const container = document.getElementById('term-list');
+  /**
+   * Render context-relevant terms as horizontal clickable tags.
+   * Each tag links to a Google search definition.
+   * @param {HTMLElement} container - #activity-terms element
+   */
+  renderContextTags(container) {
     if (!container) return;
     container.innerHTML = '';
 
-    for (const t of terms.slice(0, 50)) {
-      const div = document.createElement('div');
-      div.className = 'term-item';
-      let html = '<span class="term-actions">';
-      if (t.isCrop) {
-        const url = 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(t.term + ' plant identification');
-        html += `<a class="term-img-link" href="${url}" target="_blank" rel="noopener">View</a>`;
-      }
-      if (t.source === 'user') {
-        html += `<button class="term-remove" data-term="${t.term.replace(/"/g, '&quot;')}">&times;</button>`;
-      }
-      html += `</span><strong>${t.term}</strong><div class="term-def">${t.def}</div>`;
-      div.innerHTML = html;
-      div.addEventListener('click', (e) => {
-        if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'A') {
-          this.logLookup(t.term);
-        }
-      });
-      container.appendChild(div);
-    }
+    const relevant = this._getContextTerms().filter(t => {
+      if (!this._questionContext) return false;
+      const ctx = this._questionContext.toLowerCase();
+      const term = t.term.toLowerCase();
+      const words = term.split(/\s+/).filter(w => w.length >= 3);
+      return ctx.includes(term) || words.some(w => ctx.includes(w));
+    }).slice(0, 6);
 
-    // Delegated click for remove buttons
-    container.querySelectorAll('.term-remove').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.removeUserTerm(btn.dataset.term);
-        this.renderList(this.entries);
-      });
-    });
-  }
+    if (relevant.length === 0) return;
 
-  /** Initialize the panel UI event listeners */
-  initPanel() {
-    const toggleBtn = document.getElementById('term-toggle-btn');
-    const panel = document.getElementById('term-panel');
-    const searchInput = document.getElementById('term-search');
-    const addBtn = document.getElementById('add-term-btn');
-
-    if (toggleBtn) {
-      toggleBtn.addEventListener('click', () => {
-        panel.classList.toggle('open');
-        toggleBtn.innerHTML = panel.classList.contains('open')
-          ? 'Term Definer &#9660;' : 'Term Definer &#9650;';
-        if (panel.classList.contains('open')) this.renderList(this.entries);
-      });
-    }
-
-    if (searchInput) {
-      searchInput.addEventListener('input', () => {
-        const q = searchInput.value;
-        this.renderList(this.filter(q));
-        if (q.length >= 3) this.logLookup(q);
-      });
-    }
-
-    if (addBtn) {
-      addBtn.addEventListener('click', () => {
-        const ti = document.getElementById('new-term');
-        const di = document.getElementById('new-def');
-        this.addUserTerm(ti.value.trim(), di.value.trim());
-        ti.value = '';
-        di.value = '';
-        this.renderList(this.entries);
-      });
+    for (const t of relevant) {
+      const a = document.createElement('a');
+      a.className = 'term-tag';
+      a.textContent = t.term;
+      a.href = 'https://www.google.com/search?q=' + encodeURIComponent(t.term + ' definition');
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.addEventListener('click', () => this.logLookup(t.term));
+      container.appendChild(a);
     }
   }
+
+  /** Initialize (no panel needed anymore) */
+  initPanel() {}
 }
