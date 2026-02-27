@@ -4,7 +4,6 @@ import type { QuizSession } from '../../store/quiz.ts';
 
 const RATING_CSS: Record<number, string> = { 1: 'rating-again', 2: 'rating-hard', 3: 'rating-good', 4: 'rating-easy' };
 const RATING_NAMES: Record<number, string> = { 1: 'Again', 2: 'Hard', 3: 'Good', 4: 'Easy' };
-const STATE_NAMES: Record<number, string> = { 0: 'New', 1: 'Learning', 2: 'Review', 3: 'Relearning' };
 
 export function FlashcardArea(props: { session: QuizSession; section: Section }) {
   const s = props.session;
@@ -46,9 +45,6 @@ export function FlashcardArea(props: { session: QuizSession; section: Section })
         <p class="flashcard-hint">1-4 to rate</p>
       </Show>
 
-      <div class="flashcard-nav">
-        <span class="flash-state-badge">{STATE_NAMES[s.cardState()] ?? 'New'}</span>
-      </div>
     </div>
   );
 }

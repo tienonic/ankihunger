@@ -381,19 +381,9 @@ export function createQuizSession(section: Section): QuizSession {
     const p = project();
     if (!p || !section.flashcards || section.flashCardIds.length === 0) return;
 
-    const result = await workerApi.pickNext(p.slug, [section.id], p.config.new_per_session);
-    // pickNext returns from all card types for section — need flashcard-specific pick
-    // Actually the worker filters by sectionIds, and flashcards have section.id too
-    // But flashcards and MCQ cards share section.id — we need to pick only from flashCardIds
-    // The worker doesn't distinguish, so we may need to filter or use a different approach
-    // For now, let's keep it simple: pickNext from the section, and check if it's a flash card
-    // Actually, looking at the worker code, it picks from all cards in the section
-    // We need a way to pick only flash cards. Let's use a sub-section approach:
-    // We'll filter by checking if the returned cardId is in flashCardIds
+    const result = await workerApi.pickNext(p.slug, [section.id], p.config.new_per_session, 'flashcard');
 
-    if (!result.cardId || !section.flashCardIds.includes(result.cardId)) {
-      // Try to find a flash card specifically - check all flash card IDs
-      // Since worker doesn't distinguish, we'll pick the first due flash card
+    if (!result.cardId) {
       setFlashCardId(null);
       setFlashFront('All flashcards reviewed!');
       setFlashBack('');

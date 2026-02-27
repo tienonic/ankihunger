@@ -187,10 +187,6 @@ main {
   max-width: 820px;
   margin: 0 auto;
   padding: 20px 16px 70px;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
 
 /* === Top toggles === */
@@ -676,36 +672,11 @@ main {
   margin-top: 12px;
 }
 
-.flash-state-badge {
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--color-text-light);
-}
-
-.flash-due-count {
-  font-size: 0.65rem;
-  color: var(--color-text-light);
-}
-
 .flashcard-hint {
   text-align: center;
   color: var(--color-text-light);
   font-size: 0.85rem;
   margin-top: 8px;
-}
-
-
-.flashcard-nav {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.flash-nav-btn {
-  padding: 3px 10px;
-  font-size: 0.65rem;
 }
 
 .flash-sidebar-controls {
@@ -985,7 +956,6 @@ main {
 .zen .view-img { display: none; }
 .zen .timer { display: none; }
 .zen .rating-flash { display: none; }
-.zen .flashcard-nav { display: none; }
 .zen .flashcard-hint { display: none; }
 .zen .feedback { display: none !important; }
 .zen .option-feedback { display: none; }

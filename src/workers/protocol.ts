@@ -3,7 +3,7 @@
 export type WorkerRequest =
   | { type: 'INIT' }
   | { type: 'LOAD_PROJECT'; projectId: string; sectionIds: string[]; cardIds: { sectionId: string; cardId: string; cardType: 'mcq' | 'passage' | 'flashcard' }[] }
-  | { type: 'PICK_NEXT'; projectId: string; sectionIds: string[]; newPerSession: number }
+  | { type: 'PICK_NEXT'; projectId: string; sectionIds: string[]; newPerSession: number; cardType?: 'mcq' | 'passage' | 'flashcard' }
   | { type: 'PREVIEW_RATINGS'; cardId: string; retention?: number }
   | { type: 'REVIEW_CARD'; cardId: string; projectId: string; sectionId: string; rating: number; elapsedMs: number; retention?: number }
   | { type: 'UNDO_REVIEW'; cardId: string }

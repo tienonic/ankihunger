@@ -53,8 +53,8 @@ export const workerApi = {
   loadProject: (projectId: string, sectionIds: string[], cardIds: { sectionId: string; cardId: string; cardType: 'mcq' | 'passage' | 'flashcard' }[]) =>
     sendWorkerMessage({ type: 'LOAD_PROJECT', projectId, sectionIds, cardIds }),
 
-  pickNext: (projectId: string, sectionIds: string[], newPerSession: number) =>
-    sendWorkerMessage<{ cardId: string | null }>({ type: 'PICK_NEXT', projectId, sectionIds, newPerSession }),
+  pickNext: (projectId: string, sectionIds: string[], newPerSession: number, cardType?: 'mcq' | 'passage' | 'flashcard') =>
+    sendWorkerMessage<{ cardId: string | null }>({ type: 'PICK_NEXT', projectId, sectionIds, newPerSession, cardType }),
 
   previewRatings: (cardId: string) =>
     sendWorkerMessage<{ labels: Record<number, string> }>({ type: 'PREVIEW_RATINGS', cardId }),

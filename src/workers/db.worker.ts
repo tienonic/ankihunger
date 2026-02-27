@@ -280,18 +280,20 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
 
     case 'PICK_NEXT': {
       await checkNewDay();
-      const { projectId, sectionIds, newPerSession } = request;
+      const { projectId, sectionIds, newPerSession, cardType } = request;
       const placeholders = sectionIds.map(() => '?').join(',');
       const now = new Date().toISOString();
+      const typeFilter = cardType ? ' AND card_type = ?' : '';
+      const typeParam = cardType ? [cardType] : [];
 
       // 1. Learning/Relearning due (oldest)
       let row = await queryOne(
         `SELECT card_id FROM cards
          WHERE project_id = ? AND section_id IN (${placeholders})
          AND suspended = 0 AND buried = 0
-         AND fsrs_state IN (1, 3) AND due <= ?
+         AND fsrs_state IN (1, 3) AND due <= ?${typeFilter}
          ORDER BY due ASC LIMIT 1`,
-        [projectId, ...sectionIds, now]
+        [projectId, ...sectionIds, now, ...typeParam]
       );
       if (row) return { cardId: row.card_id };
 
@@ -300,9 +302,9 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
         `SELECT card_id FROM cards
          WHERE project_id = ? AND section_id IN (${placeholders})
          AND suspended = 0 AND buried = 0
-         AND fsrs_state = 2 AND due <= ?
+         AND fsrs_state = 2 AND due <= ?${typeFilter}
          ORDER BY due ASC LIMIT 1`,
-        [projectId, ...sectionIds, now]
+        [projectId, ...sectionIds, now, ...typeParam]
       );
       if (row) return { cardId: row.card_id };
 
@@ -312,9 +314,9 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
           `SELECT card_id FROM cards
            WHERE project_id = ? AND section_id IN (${placeholders})
            AND suspended = 0 AND buried = 0
-           AND fsrs_state = 0
+           AND fsrs_state = 0${typeFilter}
            ORDER BY RANDOM() LIMIT 1`,
-          [projectId, ...sectionIds]
+          [projectId, ...sectionIds, ...typeParam]
         );
         if (row) {
           newToday++;
@@ -326,9 +328,9 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
       row = await queryOne(
         `SELECT card_id FROM cards
          WHERE project_id = ? AND section_id IN (${placeholders})
-         AND suspended = 0 AND buried = 0
+         AND suspended = 0 AND buried = 0${typeFilter}
          ORDER BY stability ASC LIMIT 1`,
-        [projectId, ...sectionIds]
+        [projectId, ...sectionIds, ...typeParam]
       );
       return row ? { cardId: row.card_id } : { cardId: null };
     }
