@@ -1,6 +1,6 @@
 import { Show, For } from 'solid-js';
 import type { QuizSession } from '../../store/quiz.ts';
-import { easyMode, tipsVisible } from '../../store/app.ts';
+import { easyMode } from '../../store/app.ts';
 import { getLabel } from '../../store/keybinds.ts';
 
 const RATING_CSS: Record<number, string> = { 1: 'rating-again', 2: 'rating-hard', 3: 'rating-good', 4: 'rating-easy' };
@@ -98,11 +98,6 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
         </For>
       </div>
 
-      {/* Skip */}
-      <Show when={s.state() === 'answering'}>
-        <button class="dk-btn" onClick={() => s.skip()}>Skip</button>
-      </Show>
-
       {/* Rating bar */}
       <Show when={showRating()}>
         <div class="rating-area">
@@ -147,13 +142,6 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
         </div>
       </Show>
 
-
-      {/* Tips overlay */}
-      <Show when={tipsVisible()}>
-        <div class="key-hints" style="margin-top:12px">
-          <kbd>1-4</kbd> answer/rate &middot; <kbd>{getLabel('skip')}</kbd> x2 skip &middot; <kbd>{getLabel('undo')}</kbd> undo &middot; <kbd>{getLabel('suspend')}</kbd> suspend &middot; <kbd>{getLabel('bury')}</kbd> bury &middot; <kbd>{getLabel('goBack')}</kbd> back &middot; <kbd>{getLabel('note')}</kbd> note
-        </div>
-      </Show>
 
       {/* Done */}
       <Show when={s.state() === 'done'}>

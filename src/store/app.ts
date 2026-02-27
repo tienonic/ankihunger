@@ -10,7 +10,6 @@ const [easyMode, setEasyMode] = createSignal(localStorage.getItem('easy-mode') !
 const [zenMode, setZenMode] = createSignal(localStorage.getItem('zen-mode') === 'true');
 const [syncActivity, setSyncActivity] = createSignal(localStorage.getItem('sync-activity') !== 'false');
 const [noteBoxVisible, setNoteBoxVisible] = createSignal(false);
-const [tipsVisible, setTipsVisible] = createSignal(false);
 const [headerVisible, setHeaderVisible] = createSignal(false);
 const [termsOpen, setTermsOpen] = createSignal(false);
 
@@ -22,7 +21,6 @@ export {
   zenMode, setZenMode,
   syncActivity, setSyncActivity,
   noteBoxVisible, setNoteBoxVisible,
-  tipsVisible, setTipsVisible,
   headerVisible, setHeaderVisible,
   termsOpen, setTermsOpen,
 };
@@ -45,6 +43,3 @@ export function toggleSyncActivity() {
   localStorage.setItem('sync-activity', String(next));
 }
 
-export function toggleTipsVisible() {
-  setTipsVisible(!tipsVisible());
-}

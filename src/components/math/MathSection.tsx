@@ -3,9 +3,7 @@ import type { Section } from '../../projects/types.ts';
 import { createMathSession } from '../../store/math.ts';
 import { sectionHandlers } from '../../store/quiz.ts';
 import { CATEGORY_LABELS } from '../../data/math.ts';
-import { tipsVisible } from '../../store/app.ts';
 import { renderLatex } from '../../hooks/useLatex.ts';
-import { getLabel } from '../../store/keybinds.ts';
 
 export function MathSection(props: { section: Section }) {
   const session = createMathSession(props.section);
@@ -156,11 +154,6 @@ export function MathSection(props: { section: Section }) {
           </div>
         </Show>
 
-        <Show when={tipsVisible()}>
-          <div class="key-hints">
-            <kbd>Enter</kbd> submit &middot; <kbd>{getLabel('mathSubmit')}</kbd> skip/next &middot; <kbd>{getLabel('note')}</kbd> note
-          </div>
-        </Show>
       </div>
     </div>
   );

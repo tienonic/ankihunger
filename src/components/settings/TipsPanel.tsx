@@ -1,0 +1,92 @@
+import { createSignal, For, Show, onMount, onCleanup } from 'solid-js';
+import {
+  type KeyAction, type KeyContext,
+  keybinds,
+} from '../../store/keybinds.ts';
+
+const CONTEXT_ORDER: KeyContext[] = ['mcq', 'flashcard', 'math', 'global'];
+const CONTEXT_LABELS: Record<KeyContext, string> = {
+  global: 'Global',
+  mcq: 'MCQ / Quiz',
+  flashcard: 'Flashcard',
+  math: 'Math',
+};
+
+const TIPS: Record<KeyContext, { action: string; keys: (map: Record<KeyAction, { label: string }>) => string }[]> = {
+  mcq: [
+    { action: 'Answer / Rate', keys: (m) => `${m.answer1.label}-${m.answer4.label}` },
+    { action: 'Skip / Next', keys: (m) => m.skip.label },
+    { action: 'Undo', keys: (m) => m.undo.label },
+    { action: 'Suspend', keys: (m) => m.suspend.label },
+    { action: 'Bury', keys: (m) => m.bury.label },
+    { action: 'Go Back', keys: (m) => m.goBack.label },
+    { action: 'View Image', keys: (m) => m.viewImage.label },
+    { action: 'Forward', keys: (m) => m.forward.label },
+  ],
+  flashcard: [
+    { action: 'Flip Card', keys: (m) => `${m.flipCard.label} / ${m.flipAlt.label}` },
+    { action: 'Rate', keys: (m) => `${m.answer1.label}-${m.answer4.label}` },
+    { action: 'Flip / Rate Good', keys: (m) => m.skip.label },
+  ],
+  math: [
+    { action: 'Submit', keys: () => 'Enter' },
+    { action: 'Skip / Next', keys: (m) => m.mathSubmit.label },
+  ],
+  global: [
+    { action: 'Open Note', keys: (m) => m.note.label },
+  ],
+};
+
+export function TipsPanel() {
+  const [open, setOpen] = createSignal(false);
+
+  function handleEscape(e: KeyboardEvent) {
+    if (e.key === 'Escape' && open()) {
+      setOpen(false);
+    }
+  }
+
+  function handleBackdropClick(e: MouseEvent) {
+    if ((e.target as HTMLElement).classList.contains('keybinds-overlay')) {
+      setOpen(false);
+    }
+  }
+
+  onMount(() => document.addEventListener('keydown', handleEscape));
+  onCleanup(() => document.removeEventListener('keydown', handleEscape));
+
+  return (
+    <>
+      <button class="tips-btn" title="Show keyboard tips" onClick={() => setOpen(true)}>
+        Tips
+      </button>
+      <Show when={open()}>
+        <div class="keybinds-overlay" onClick={handleBackdropClick}>
+          <div class="keybinds-modal">
+            <div class="keybinds-header">
+              <span>Tips</span>
+              <button class="keybinds-close" onClick={() => setOpen(false)}>&times;</button>
+            </div>
+            <div class="keybinds-body">
+              <For each={CONTEXT_ORDER}>
+                {(ctx) => (
+                  <div class="keybinds-group">
+                    <div class="keybinds-group-label">{CONTEXT_LABELS[ctx]}</div>
+                    <For each={TIPS[ctx]}>
+                      {(tip) => (
+                        <div class="keybinds-row">
+                          <span class="keybinds-action">{tip.action}</span>
+                          <kbd>{tip.keys(keybinds())}</kbd>
+                        </div>
+                      )}
+                    </For>
+                  </div>
+                )}
+              </For>
+            </div>
+          </div>
+        </div>
+      </Show>
+    </>
+  );
+}
