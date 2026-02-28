@@ -1,5 +1,5 @@
 import { onMount, onCleanup } from 'solid-js';
-import { activeTab, activeProject, setNoteBoxVisible, termsOpen } from '../store/app.ts';
+import { activeTab, activeProject, setNoteBoxVisible, termsOpen, easyMode } from '../store/app.ts';
 import { searchQuery } from '../store/glossary.ts';
 import { sectionHandlers } from '../store/quiz.ts';
 import { matchesKey } from '../store/keybinds.ts';
@@ -134,7 +134,9 @@ function handleMcqKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typ
     } else if (st === 'rated') {
       session.pickNextCard();
     } else if (st === 'revealed') {
-      // Must rate first in manual mode
+      if (easyMode()) {
+        session.rate(session.isCorrect() ? 3 : 1);
+      }
     } else if (st === 'answering') {
       if (session.pending()) {
         session.skip();
