@@ -29,6 +29,7 @@ export function NoteBox() {
       }
     } else if (e.key === 'Escape') {
       if (inputRef) inputRef.value = '';
+      setPlaceholder('note...');
       setNoteBoxVisible(false);
     }
   }

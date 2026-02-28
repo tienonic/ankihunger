@@ -84,7 +84,7 @@ export function SettingsPanel() {
                   max="0.99"
                   step="0.01"
                   value={retention()}
-                  onInput={e => setRetention(parseFloat(e.currentTarget.value) || 0.9)}
+                  onInput={e => { const v = parseFloat(e.currentTarget.value); setRetention(isNaN(v) ? 0.9 : v); }}
                 />
               </label>
               <label class="settings-field">
@@ -95,7 +95,7 @@ export function SettingsPanel() {
                   max="100"
                   step="1"
                   value={newPerSession()}
-                  onInput={e => setNewPerSession(parseInt(e.currentTarget.value) || 20)}
+                  onInput={e => { const v = parseInt(e.currentTarget.value, 10); setNewPerSession(isNaN(v) ? 20 : v); }}
                 />
               </label>
               <label class="settings-field">
@@ -106,7 +106,7 @@ export function SettingsPanel() {
                   max="30"
                   step="1"
                   value={leechThreshold()}
-                  onInput={e => setLeechThreshold(parseInt(e.currentTarget.value) || 8)}
+                  onInput={e => { const v = parseInt(e.currentTarget.value, 10); setLeechThreshold(isNaN(v) ? 8 : v); }}
                 />
               </label>
               <button class="settings-save-btn" onClick={handleSave}>

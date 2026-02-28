@@ -142,6 +142,13 @@ export function MathSection(props: { section: Section }) {
           <div class={feedbackClass()} ref={feedbackRef} />
         </Show>
 
+        {/* Next button */}
+        <Show when={session.state() === 'revealed'}>
+          <button class="action-btn" onClick={() => session.nextProblem()}>
+            Next Problem
+          </button>
+        </Show>
+
         {/* Steps */}
         <Show when={session.showSteps() && (session.problem()?.steps.length ?? 0) > 0}>
           <div class="math-steps" ref={stepsRef}>

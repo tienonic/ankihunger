@@ -128,7 +128,8 @@ export function createQuizSession(section: Section): QuizSession {
 
   function lookupQuestion(cId: string): { question: Question; scenarioIdx?: number; questionIdx?: number; passage?: string } | null {
     if (section.type === 'mc-quiz' && section.questions) {
-      const idx = parseInt(cId.split('-').pop()!);
+      const idx = parseInt(cId.slice(section.id.length + 1), 10);
+      if (isNaN(idx)) return null;
       const q = section.questions[idx];
       return q ? { question: q } : null;
     }
@@ -136,8 +137,10 @@ export function createQuizSession(section: Section): QuizSession {
       // Card ID format: sectionId-scenarioIdx-questionIdx
       const suffix = cId.slice(section.id.length + 1); // remove "sectionId-"
       const parts = suffix.split('-');
-      const si = parseInt(parts[0]);
-      const qi = parseInt(parts[1]);
+      if (parts.length < 2) return null;
+      const si = parseInt(parts[0], 10);
+      const qi = parseInt(parts[1], 10);
+      if (isNaN(si) || isNaN(qi)) return null;
       const scenario = section.scenarios[si];
       if (!scenario) return null;
       const q = scenario.questions[qi];
@@ -269,7 +272,7 @@ export function createQuizSession(section: Section): QuizSession {
       const autoRating = correct ? timeToRating(elapsed) : 1;
       setRatingFlash({ rating: autoRating, show: true });
       setTimeout(() => setRatingFlash({ rating: 0, show: false }), 1600);
-      await doRate(cId, autoRating);
+      await doRate(cId, autoRating, elapsed * 1000);
     } else {
       // Preview intervals for rating bar
       const preview = await workerApi.previewRatings(cId);
@@ -282,7 +285,7 @@ export function createQuizSession(section: Section): QuizSession {
 
   async function doSkip() {
     if (state() !== 'answering') return;
-    timer.stop();
+    const elapsed = timer.stop();
     const q = question();
     const cId = cardId();
     const p = project();
@@ -312,14 +315,14 @@ export function createQuizSession(section: Section): QuizSession {
     // Auto-rate Again
     setRatingFlash({ rating: 1, show: true });
     setTimeout(() => setRatingFlash({ rating: 0, show: false }), 1600);
-    await doRate(cId, 1);
+    await doRate(cId, 1, elapsed * 1000);
   }
 
-  async function doRate(cId: string, rating: number) {
+  async function doRate(cId: string, rating: number, elapsedMs?: number) {
     const p = project();
     if (!p) return;
 
-    const result = await workerApi.reviewCard(cId, p.slug, section.id, rating, timer.seconds() * 1000);
+    const result = await workerApi.reviewCard(cId, p.slug, section.id, rating, elapsedMs ?? timer.seconds() * 1000);
     await workerApi.addActivity(p.slug, section.id, rating, rating !== 1);
 
     if (result.isLeech) setLeechWarning(true);
@@ -392,9 +395,20 @@ export function createQuizSession(section: Section): QuizSession {
       return;
     }
 
-    const idx = parseInt(result.cardId.split('-flash-')[1], 10);
+    const flashParts = result.cardId.split('-flash-');
+    if (flashParts.length !== 2) return;
+    const idx = parseInt(flashParts[1], 10);
+    if (isNaN(idx)) return;
     const card = section.flashcards![idx];
-    if (!card) return;
+    if (!card) {
+      batch(() => {
+        setFlashCardId(null);
+        setFlashFront('Card data mismatch');
+        setFlashBack('');
+        setFlashFlipped(false);
+      });
+      return;
+    }
 
     const defFirst = flashDefFirst();
     batch(() => {

@@ -37,6 +37,7 @@ export function TermsDropdown() {
     }
     if (e.key === 'Escape') {
       setSearchQuery('');
+      setTermsOpen(false);
       return;
     }
     if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {

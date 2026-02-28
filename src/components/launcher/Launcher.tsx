@@ -5,6 +5,7 @@ import {
   openRecentProject,
   validateAndOpenFile,
   loadError,
+  setLoadError,
   isLoading,
   getRecentProjects,
 } from '../../store/project.ts';
@@ -15,24 +16,27 @@ import { RecentProjects } from './RecentProjects.tsx';
 export function Launcher() {
   let fileInput!: HTMLInputElement;
 
+  function readFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      validateAndOpenFile(ev.target?.result as string);
+    };
+    reader.onerror = () => {
+      setLoadError('Failed to read file');
+    };
+    reader.readAsText(file);
+  }
+
   function handleFileSelect(e: Event) {
     const input = e.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      validateAndOpenFile(ev.target?.result as string);
-    };
-    reader.readAsText(file);
+    readFile(file);
     input.value = '';
   }
 
   function handleDrop(file: File) {
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      validateAndOpenFile(ev.target?.result as string);
-    };
-    reader.readAsText(file);
+    readFile(file);
   }
 
   return (

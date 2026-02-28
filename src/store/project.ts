@@ -16,7 +16,7 @@ interface RecentProject {
 const [isLoading, setIsLoading] = createSignal(false);
 const [loadError, setLoadError] = createSignal<string | null>(null);
 
-export { isLoading, loadError };
+export { isLoading, loadError, setLoadError };
 
 export function getRecentProjects(): RecentProject[] {
   try {
@@ -115,7 +115,9 @@ export async function openRegistryProject(slug: string) {
 export function openRecentProject(slug: string) {
   const entry = projectRegistry.find(p => p.slug === slug);
   if (entry) {
-    entry.loader().then(data => openProject(data, true));
+    entry.loader()
+      .then(data => openProject(data, true))
+      .catch(err => setLoadError('Failed to load project: ' + (err instanceof Error ? err.message : String(err))));
   } else {
     const saved = getProjectData(slug);
     if (saved) openProject(saved, false);
