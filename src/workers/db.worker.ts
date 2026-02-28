@@ -125,6 +125,48 @@ CREATE TABLE IF NOT EXISTS undo_stack (
 );
 `;
 
+// Migration system
+const SCHEMA_VERSION = 1;
+
+const migrations: Record<number, () => Promise<void>> = {
+  // Future migrations go here, e.g.:
+  // 2: async () => { await sqlite3.exec(db, 'ALTER TABLE cards ADD COLUMN ...'); },
+};
+
+async function applyMigrations() {
+  // Read current schema version
+  const rows: unknown[][] = [];
+  await sqlite3.exec(db, 'PRAGMA user_version', (row: unknown[]) => rows.push(row));
+  const currentVersion = rows.length > 0 ? (rows[0][0] as number) : 0;
+
+  if (currentVersion === SCHEMA_VERSION) return;
+
+  if (currentVersion === 0) {
+    // Fresh database — apply full schema
+    const statements = SCHEMA.split(';').map(s => s.trim()).filter(s => s.length > 0);
+    for (const stmt of statements) {
+      await sqlite3.exec(db, stmt + ';');
+    }
+    await sqlite3.exec(db, `PRAGMA user_version = ${SCHEMA_VERSION}`);
+    return;
+  }
+
+  // Incremental migrations
+  for (let v = currentVersion + 1; v <= SCHEMA_VERSION; v++) {
+    const migrate = migrations[v];
+    if (!migrate) throw new Error(`Missing migration for version ${v}`);
+    await sqlite3.exec(db, 'BEGIN');
+    try {
+      await migrate();
+      await sqlite3.exec(db, `PRAGMA user_version = ${v}`);
+      await sqlite3.exec(db, 'COMMIT');
+    } catch (err) {
+      await sqlite3.exec(db, 'ROLLBACK');
+      throw err;
+    }
+  }
+}
+
 // FSRS engine
 let fsrsEngine: FSRS | null = null;
 let leechThreshold = 8;
@@ -251,11 +293,7 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
       sqlite3.vfs_register(vfs, true);
       db = await sqlite3.open_v2('study-tool.db');
 
-      // Apply schema - split by semicolons and run each statement
-      const statements = SCHEMA.split(';').map(s => s.trim()).filter(s => s.length > 0);
-      for (const stmt of statements) {
-        await sqlite3.exec(db, stmt + ';');
-      }
+      await applyMigrations();
 
       initFSRS();
       return { ok: true };
