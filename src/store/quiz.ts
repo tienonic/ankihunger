@@ -118,6 +118,10 @@ export function createQuizSession(section: Section): QuizSession {
   let currentScenarioIdx = 0;
   let currentScenarioQIdx = 0;
 
+  function setFlashError(msg = 'Card data mismatch') {
+    batch(() => { setFlashCardId(null); setFlashFront(msg); setFlashBack(''); setFlashFlipped(false); });
+  }
+
   function getCardIds(): string[] {
     return flashMode() ? section.flashCardIds : section.cardIds;
   }
@@ -268,11 +272,11 @@ export function createQuizSession(section: Section): QuizSession {
       setTimeout(() => setRatingFlash({ rating: 0, show: false }), 1600);
       await doRate(cId, autoRating);
     } else {
-      // Preview intervals for rating bar
-      const preview = await workerApi.previewRatings(cId);
+      const [preview, cs] = await Promise.all([
+        workerApi.previewRatings(cId),
+        workerApi.getCardState(cId) as Promise<any>,
+      ]);
       setRatingLabels(preview.labels);
-      // Get card state for badge
-      const cs = await workerApi.getCardState(cId) as any;
       if (cs) setCardState(cs.fsrs_state ?? 0);
     }
   }
@@ -318,8 +322,10 @@ export function createQuizSession(section: Section): QuizSession {
     const p = project();
     if (!p) return;
 
-    const result = await workerApi.reviewCard(cId, p.slug, section.id, rating, lastElapsedMs);
-    await workerApi.addActivity(p.slug, section.id, rating, rating !== 1);
+    const [result] = await Promise.all([
+      workerApi.reviewCard(cId, p.slug, section.id, rating, lastElapsedMs),
+      workerApi.addActivity(p.slug, section.id, rating, rating !== 1),
+    ]);
 
     if (result.isLeech) setLeechWarning(true);
 
@@ -394,23 +400,18 @@ export function createQuizSession(section: Section): QuizSession {
     const flashParts = result.cardId.split('-flash-');
     if (flashParts.length !== 2) {
       console.warn('pickNextFlash: unexpected card ID format', result.cardId);
-      batch(() => { setFlashCardId(null); setFlashFront('Card data mismatch'); setFlashBack(''); setFlashFlipped(false); });
+      setFlashError();
       return;
     }
     const idx = parseInt(flashParts[1], 10);
     if (isNaN(idx)) {
       console.warn('pickNextFlash: failed to parse card index', result.cardId);
-      batch(() => { setFlashCardId(null); setFlashFront('Card data mismatch'); setFlashBack(''); setFlashFlipped(false); });
+      setFlashError();
       return;
     }
     const card = section.flashcards![idx];
     if (!card) {
-      batch(() => {
-        setFlashCardId(null);
-        setFlashFront('Card data mismatch');
-        setFlashBack('');
-        setFlashFlipped(false);
-      });
+      setFlashError();
       return;
     }
 
