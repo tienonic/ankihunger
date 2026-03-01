@@ -7,3 +7,8 @@ CLAUDE.md
 .DS_Store
 Thumbs.db
 *.log
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__/
