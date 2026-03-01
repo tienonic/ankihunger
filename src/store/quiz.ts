@@ -108,6 +108,7 @@ export function createQuizSession(section: Section): QuizSession {
   const [skipped, setSkipped] = createSignal(false);
 
   const timer = useTimer();
+  let lastElapsedMs = 0;
 
   // History tracking
   let history: HistoryEntry[] = [];
@@ -165,14 +166,6 @@ export function createQuizSession(section: Section): QuizSession {
     setDueCount(result);
   }
 
-  async function refreshScore() {
-    const p = project();
-    if (!p) return;
-    const scores = await workerApi.getScores(p.slug);
-    const s = scores.find((sc: any) => sc.section_id === section.id);
-    if (s) setScore({ correct: s.correct, attempted: s.attempted });
-  }
-
   async function pickNextCard() {
     const p = project();
     if (!p) return;
@@ -215,7 +208,7 @@ export function createQuizSession(section: Section): QuizSession {
     history = history.slice(0, histPos);
     history.push({
       idx: section.type === 'mc-quiz'
-        ? parseInt(result.cardId!.split('-').pop()!)
+        ? (parseInt(result.cardId!.slice(section.id.length + 1), 10) || 0)
         : 0,
       scenarioIdx: lookup.scenarioIdx,
       questionIdx: lookup.questionIdx,
@@ -240,6 +233,7 @@ export function createQuizSession(section: Section): QuizSession {
   async function answer(option: string) {
     if (state() !== 'answering') return;
     const elapsed = timer.stop();
+    lastElapsedMs = elapsed * 1000;
     const q = question();
     const cId = cardId();
     const p = project();
@@ -254,9 +248,9 @@ export function createQuizSession(section: Section): QuizSession {
       setSkipped(false);
     });
 
-    // Update score in worker
-    await workerApi.updateScore(p.slug, section.id, correct);
-    await refreshScore();
+    // Update score in worker and use result directly
+    const s = await workerApi.updateScore(p.slug, section.id, correct);
+    setScore({ correct: s.correct, attempted: s.attempted });
 
     // Save to history
     const entry = history[histPos];
@@ -272,7 +266,7 @@ export function createQuizSession(section: Section): QuizSession {
       const autoRating = correct ? timeToRating(elapsed) : 1;
       setRatingFlash({ rating: autoRating, show: true });
       setTimeout(() => setRatingFlash({ rating: 0, show: false }), 1600);
-      await doRate(cId, autoRating, elapsed * 1000);
+      await doRate(cId, autoRating);
     } else {
       // Preview intervals for rating bar
       const preview = await workerApi.previewRatings(cId);
@@ -286,6 +280,7 @@ export function createQuizSession(section: Section): QuizSession {
   async function doSkip() {
     if (state() !== 'answering') return;
     const elapsed = timer.stop();
+    lastElapsedMs = elapsed * 1000;
     const q = question();
     const cId = cardId();
     const p = project();
@@ -298,8 +293,9 @@ export function createQuizSession(section: Section): QuizSession {
       setSkipped(true);
     });
 
-    await workerApi.updateScore(p.slug, section.id, false);
-    await refreshScore();
+    // Update score in worker and use result directly
+    const s = await workerApi.updateScore(p.slug, section.id, false);
+    setScore({ correct: s.correct, attempted: s.attempted });
 
     // Save skip to history
     const entry = history[histPos];
@@ -315,14 +311,14 @@ export function createQuizSession(section: Section): QuizSession {
     // Auto-rate Again
     setRatingFlash({ rating: 1, show: true });
     setTimeout(() => setRatingFlash({ rating: 0, show: false }), 1600);
-    await doRate(cId, 1, elapsed * 1000);
+    await doRate(cId, 1);
   }
 
-  async function doRate(cId: string, rating: number, elapsedMs?: number) {
+  async function doRate(cId: string, rating: number) {
     const p = project();
     if (!p) return;
 
-    const result = await workerApi.reviewCard(cId, p.slug, section.id, rating, elapsedMs ?? timer.seconds() * 1000);
+    const result = await workerApi.reviewCard(cId, p.slug, section.id, rating, lastElapsedMs);
     await workerApi.addActivity(p.slug, section.id, rating, rating !== 1);
 
     if (result.isLeech) setLeechWarning(true);
@@ -396,9 +392,17 @@ export function createQuizSession(section: Section): QuizSession {
     }
 
     const flashParts = result.cardId.split('-flash-');
-    if (flashParts.length !== 2) return;
+    if (flashParts.length !== 2) {
+      console.warn('pickNextFlash: unexpected card ID format', result.cardId);
+      batch(() => { setFlashCardId(null); setFlashFront('Card data mismatch'); setFlashBack(''); setFlashFlipped(false); });
+      return;
+    }
     const idx = parseInt(flashParts[1], 10);
-    if (isNaN(idx)) return;
+    if (isNaN(idx)) {
+      console.warn('pickNextFlash: failed to parse card index', result.cardId);
+      batch(() => { setFlashCardId(null); setFlashFront('Card data mismatch'); setFlashBack(''); setFlashFlipped(false); });
+      return;
+    }
     const card = section.flashcards![idx];
     if (!card) {
       batch(() => {

@@ -65,7 +65,7 @@ export function validateProject(data: unknown): string[] {
   if (!Array.isArray(d.sections) || d.sections.length === 0) {
     errors.push('No sections defined');
   } else {
-    const VALID_TYPES = ['mc-quiz', 'passage-quiz', 'math-gen', 'flashcards'];
+    const VALID_TYPES: Section['type'][] = ['mc-quiz', 'passage-quiz', 'math-gen'];
     const seenIds = new Set<string>();
     for (const s of d.sections as Record<string, unknown>[]) {
       if (!s.id) errors.push('Section missing id');
@@ -74,7 +74,7 @@ export function validateProject(data: unknown): string[] {
       if (!s.name) errors.push('Section missing name');
       if (!s.type) {
         errors.push(`Section "${s.name || s.id}" missing type`);
-      } else if (!VALID_TYPES.includes(s.type as string)) {
+      } else if (!VALID_TYPES.includes(s.type as Section['type'])) {
         errors.push(`Section "${s.name || s.id}" has invalid type: "${s.type}"`);
       }
       if (s.type === 'mc-quiz' && (!Array.isArray(s.questions) || (s.questions as unknown[]).length === 0)) {
