@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import { exec } from 'child_process';
 import { resolve } from 'path';
@@ -73,5 +74,9 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
+  },
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
   },
 });
