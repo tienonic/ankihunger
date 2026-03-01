@@ -3,6 +3,7 @@ import { exec } from 'child_process';
 import { resolve } from 'path';
 import solid from 'vite-plugin-solid';
 import tailwindcss from '@tailwindcss/vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 function openFolderPlugin() {
   return {
@@ -29,14 +30,43 @@ function openFolderPlugin() {
   };
 }
 
+const coopCoepHeaders = {
+  'Cross-Origin-Opener-Policy': 'same-origin',
+  'Cross-Origin-Embedder-Policy': 'require-corp',
+};
+
 export default defineConfig({
-  plugins: [solid(), tailwindcss(), openFolderPlugin()],
+  plugins: [
+    solid(),
+    tailwindcss(),
+    openFolderPlugin(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,woff2,wasm,png,svg}'],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+      },
+      manifest: {
+        name: 'Study Tool',
+        short_name: 'Study',
+        description: 'Spaced repetition flashcards and quizzes',
+        theme_color: '#4a7fb5',
+        background_color: '#f5f0e8',
+        display: 'standalone',
+        icons: [
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+    }),
+  ],
   server: {
     port: 3000,
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp',
-    },
+    headers: coopCoepHeaders,
+  },
+  preview: {
+    headers: coopCoepHeaders,
   },
   build: {
     target: 'esnext',
