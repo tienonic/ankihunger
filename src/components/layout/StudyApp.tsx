@@ -3,7 +3,7 @@ import { activeProject, activeTab, zenMode, syncActivity } from '../../store/app
 import { useKeyboard } from '../../hooks/useKeyboard.ts';
 import { workerApi } from '../../hooks/useWorker.ts';
 import { entries as glossaryEntries } from '../../store/glossary.ts';
-import { sectionHandlers } from '../../store/quiz.ts';
+import { sectionHandlers, handlerVersion } from '../../store/quiz.ts';
 import { Header } from './Header.tsx';
 import { TopToggles } from './TopToggles.tsx';
 import { SectionsContainer } from './SectionsContainer.tsx';
@@ -21,6 +21,7 @@ export function StudyApp() {
   };
 
   const activeSession = () => {
+    handlerVersion(); // subscribe to handler changes
     const tab = activeTab();
     return tab ? sectionHandlers.get(tab) : null;
   };
@@ -75,14 +76,15 @@ export function StudyApp() {
     const section = project.sections.find(s => s.id === tab);
     if (!section || section.type === 'math-gen') return;
 
+    const cardType = section.type === 'passage-quiz' ? 'passage' as const : 'mcq' as const;
     const scores = await workerApi.getScores(project.slug);
     const s = scores.find((sc: any) => sc.section_id === tab);
-    const dueResult = await workerApi.countDue(project.slug, [tab]);
+    const dueResult = await workerApi.countDue(project.slug, [tab], cardType);
     setSidebarScore({
       correct: s?.correct ?? 0,
       attempted: s?.attempted ?? 0,
       due: dueResult.due + dueResult.newCount,
-      total: section.cardIds.length,
+      total: dueResult.total,
     });
   }
 

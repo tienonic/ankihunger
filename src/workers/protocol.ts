@@ -10,7 +10,7 @@ export type WorkerRequest =
   | { type: 'SUSPEND_CARD'; cardId: string }
   | { type: 'BURY_CARD'; cardId: string }
   | { type: 'UNBURY_ALL'; projectId: string }
-  | { type: 'COUNT_DUE'; projectId: string; sectionIds: string[] }
+  | { type: 'COUNT_DUE'; projectId: string; sectionIds: string[]; cardType?: 'mcq' | 'passage' | 'flashcard' }
   | { type: 'UPDATE_SCORE'; projectId: string; sectionId: string; correct: boolean }
   | { type: 'GET_SCORES'; projectId: string }
   | { type: 'RESET_SECTION'; projectId: string; sectionId: string }

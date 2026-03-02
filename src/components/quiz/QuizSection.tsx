@@ -1,6 +1,6 @@
 import { Show, onMount, onCleanup } from 'solid-js';
 import type { Section } from '../../projects/types.ts';
-import { createQuizSession, sectionHandlers } from '../../store/quiz.ts';
+import { createQuizSession, sectionHandlers, bumpHandlerVersion } from '../../store/quiz.ts';
 import { activeProject } from '../../store/app.ts';
 import { McqCard } from './McqCard.tsx';
 import { FlashcardArea } from './FlashcardArea.tsx';
@@ -10,6 +10,7 @@ export function QuizSection(props: { section: Section }) {
 
   onMount(() => {
     sectionHandlers.set(props.section.id, session);
+    bumpHandlerVersion();
     if (!session.flashMode()) {
       session.pickNextCard();
     }
@@ -17,6 +18,7 @@ export function QuizSection(props: { section: Section }) {
 
   onCleanup(() => {
     sectionHandlers.delete(props.section.id);
+    bumpHandlerVersion();
   });
 
   const hasFlash = () => props.section.hasFlashcards && (props.section.flashcards?.length ?? 0) > 0;

@@ -71,6 +71,10 @@ export interface QuizSession {
 // Global handler registry for keyboard routing (stores QuizSession or MathSession)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const sectionHandlers = new Map<string, any>();
+// Version signal to make sectionHandlers reads reactive in SolidJS
+const [handlerVersion, setHandlerVersion] = createSignal(0);
+export { handlerVersion };
+export function bumpHandlerVersion() { setHandlerVersion(v => v + 1); }
 
 function timeToRating(seconds: number): number {
   if (seconds >= 59) return 1; // Again
@@ -126,6 +130,11 @@ export function createQuizSession(section: Section): QuizSession {
     return flashMode() ? section.flashCardIds : section.cardIds;
   }
 
+  function getCardType(): 'mcq' | 'passage' | 'flashcard' {
+    if (flashMode()) return 'flashcard';
+    return section.type === 'passage-quiz' ? 'passage' : 'mcq';
+  }
+
   function getSectionIds(): string[] {
     // For passage-quiz, the worker needs the section IDs
     return [section.id];
@@ -165,8 +174,7 @@ export function createQuizSession(section: Section): QuizSession {
     if (!p) return;
     const ids = flashMode() ? section.flashCardIds : section.cardIds;
     if (ids.length === 0) return;
-    // The sectionIds for the worker call: we derive which section IDs are in play
-    const result = await workerApi.countDue(p.slug, [section.id]);
+    const result = await workerApi.countDue(p.slug, [section.id], getCardType());
     setDueCount(result);
   }
 
@@ -184,7 +192,8 @@ export function createQuizSession(section: Section): QuizSession {
       return;
     }
 
-    const result = await workerApi.pickNext(p.slug, [section.id], p.config.new_per_session);
+    const cardType = getCardType();
+    const result = await workerApi.pickNext(p.slug, [section.id], p.config.new_per_session, cardType);
     if (!result.cardId) {
       setState('done');
       return;
@@ -455,6 +464,7 @@ export function createQuizSession(section: Section): QuizSession {
   function toggleFlashMode() {
     const next = !flashMode();
     setFlashMode(next);
+    bumpHandlerVersion();
     if (next) {
       pickNextFlash();
     } else {
@@ -492,6 +502,11 @@ export function createQuizSession(section: Section): QuizSession {
     if (histPos < history.length - 1) {
       histPos++;
       const entry = history[histPos];
+      // Skip unanswered entries (the current card that hasn't been answered yet)
+      if (entry && entry.selected === null && !entry.skipped) {
+        pickNextCard();
+        return;
+      }
       if (entry && section.type === 'mc-quiz' && section.questions) {
         const q = section.questions[entry.idx];
         if (q) {

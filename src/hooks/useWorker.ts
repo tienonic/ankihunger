@@ -79,8 +79,8 @@ export const workerApi = {
   buryCard: (cardId: string) =>
     sendWorkerMessage({ type: 'BURY_CARD', cardId }),
 
-  countDue: (projectId: string, sectionIds: string[]) =>
-    sendWorkerMessage<{ due: number; newCount: number; total: number }>({ type: 'COUNT_DUE', projectId, sectionIds }),
+  countDue: (projectId: string, sectionIds: string[], cardType?: 'mcq' | 'passage' | 'flashcard') =>
+    sendWorkerMessage<{ due: number; newCount: number; total: number }>({ type: 'COUNT_DUE', projectId, sectionIds, cardType }),
 
   updateScore: (projectId: string, sectionId: string, correct: boolean) =>
     sendWorkerMessage<{ correct: number; attempted: number }>({ type: 'UPDATE_SCORE', projectId, sectionId, correct }),

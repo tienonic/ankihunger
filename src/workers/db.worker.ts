@@ -491,28 +491,30 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
     }
 
     case 'COUNT_DUE': {
-      const { projectId, sectionIds } = request;
+      const { projectId, sectionIds, cardType } = request;
       const placeholders = sectionIds.map(() => '?').join(',');
       const now = new Date().toISOString();
+      const typeFilter = cardType ? ' AND card_type = ?' : '';
+      const typeParam = cardType ? [cardType] : [];
 
       const dueRow = await queryOne(
         `SELECT COUNT(*) as cnt FROM cards
          WHERE project_id = ? AND section_id IN (${placeholders})
          AND suspended = 0 AND buried = 0
-         AND ((fsrs_state IN (1,3) AND due <= ?) OR (fsrs_state = 2 AND due <= ?))`,
-        [projectId, ...sectionIds, now, now]
+         AND ((fsrs_state IN (1,3) AND due <= ?) OR (fsrs_state = 2 AND due <= ?))${typeFilter}`,
+        [projectId, ...sectionIds, now, now, ...typeParam]
       );
       const newRow = await queryOne(
         `SELECT COUNT(*) as cnt FROM cards
          WHERE project_id = ? AND section_id IN (${placeholders})
-         AND suspended = 0 AND buried = 0 AND fsrs_state = 0`,
-        [projectId, ...sectionIds]
+         AND suspended = 0 AND buried = 0 AND fsrs_state = 0${typeFilter}`,
+        [projectId, ...sectionIds, ...typeParam]
       );
       const totalRow = await queryOne(
         `SELECT COUNT(*) as cnt FROM cards
          WHERE project_id = ? AND section_id IN (${placeholders})
-         AND suspended = 0 AND buried = 0`,
-        [projectId, ...sectionIds]
+         AND suspended = 0 AND buried = 0${typeFilter}`,
+        [projectId, ...sectionIds, ...typeParam]
       );
 
       return {
