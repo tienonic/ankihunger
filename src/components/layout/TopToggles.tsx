@@ -1,6 +1,6 @@
 import { Show } from 'solid-js';
-import { activeTab, activeProject, easyMode, zenMode, toggleEasyMode, toggleZenMode, headerVisible, termsOpen } from '../../store/app.ts';
-import { sectionHandlers } from '../../store/quiz.ts';
+import { activeTab, activeProject, easyMode, zenMode, toggleEasyMode, toggleZenMode, headerVisible, termsOpen } from '../../core/store/app.ts';
+import { sectionHandlers } from '../../core/store/sections.ts';
 
 export function TopToggles() {
   const isMath = () => {

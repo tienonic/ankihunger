@@ -1,0 +1,506 @@
+/* === Card === */
+.card {
+  background: var(--color-card);
+  border-radius: 6px;
+  padding: 24px;
+  margin-bottom: 20px;
+  position: relative;
+  border: 1px solid var(--color-border);
+  min-height: 320px;
+}
+
+/* === Score Bar === */
+.score-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 14px;
+  background: transparent;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 16px;
+  font-weight: 500;
+  font-size: 0.8rem;
+  flex-wrap: wrap;
+  color: var(--color-text-light);
+}
+
+.score-bar .srs-info {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--color-text-light);
+}
+
+.score-bar .reset-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-light);
+  padding: 3px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+/* === Mode Toggle === */
+.mode-toggle {
+  display: flex;
+  gap: 0;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mode-btn {
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  margin-bottom: -1px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  cursor: pointer;
+  font-weight: 500;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.mode-btn:hover { opacity: 1; }
+
+.mode-btn.active {
+  color: var(--color-text);
+  border-bottom-color: transparent;
+  font-weight: 600;
+  opacity: 1;
+}
+
+.mode-toggle-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 1px;
+}
+
+.mode-toggle-actions .reset-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-light);
+  padding: 3px 10px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.mode-toggle-actions .view-img {
+  display: inline-block;
+  padding: 3px 10px;
+  background: none;
+  color: var(--color-text-light);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  cursor: pointer;
+}
+
+.mode-toggle:hover .view-img { opacity: 0.5; }
+.view-img:hover { opacity: 1 !important; background: var(--color-bg); }
+
+.mode-toggle-actions-only { display: flex; margin-bottom: 12px; border: none; }
+
+/* === Quiz Elements === */
+.question-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.question-text {
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-btn {
+  text-align: left;
+  padding: 14px 18px;
+  background: var(--color-card);
+  border: 2px solid var(--color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: border-color 0.15s, background 0.15s;
+  line-height: 1.4;
+  position: relative;
+}
+
+.option-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.option-btn.correct {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.option-btn.wrong {
+  border-color: var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+.option-btn:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+/* Option feedback overlays */
+.option-feedback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 10px 18px;
+  border-radius: 2px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.option-feedback.correct-fb {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+.option-feedback.wrong-fb {
+  background: var(--color-danger-light);
+  color: var(--color-danger-dark);
+}
+
+.option-feedback.skip-fb {
+  background: var(--color-info-light);
+  color: var(--color-info);
+}
+
+.option-feedback .explanation {
+  font-weight: 400;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+/* Skip button */
+.dk-btn {
+  margin-top: 12px;
+  padding: 12px 18px;
+  background: transparent;
+  border: 2px dashed var(--color-border);
+  border-radius: 2px;
+  color: var(--color-text-light);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  width: 100%;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.dk-btn:hover:not(:disabled) {
+  border-color: var(--color-text-light);
+  color: var(--color-text);
+}
+
+.dk-btn:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* === Rating UI === */
+.rating-area {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.rating-btn {
+  flex: 1;
+  min-width: 70px;
+  padding: 10px 8px;
+  border: 2px solid var(--color-border);
+  border-radius: 2px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.9rem;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  background: var(--color-card);
+}
+
+.rating-btn:hover { transform: translateY(-1px); }
+.rating-btn:active { transform: translateY(0); }
+
+.rating-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.rating-interval {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+}
+
+.rating-again { border-color: var(--color-danger); }
+.rating-again:hover { background: var(--color-danger-light); }
+.rating-again .rating-label { color: var(--color-danger); }
+
+.rating-hard { border-color: var(--color-accent); }
+.rating-hard:hover { background: var(--color-accent-light); }
+.rating-hard .rating-label { color: var(--color-accent-dark); }
+
+.rating-good { border-color: var(--color-primary); }
+.rating-good:hover { background: var(--color-primary-light); }
+.rating-good .rating-label { color: var(--color-primary); }
+
+.rating-easy { border-color: var(--color-info); }
+.rating-easy:hover { background: var(--color-info-light); }
+.rating-easy .rating-label { color: var(--color-info); }
+
+/* === Card Actions & State Badge === */
+.card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.action-sm {
+  padding: 6px 14px;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-light);
+  transition: background 0.15s, color 0.15s;
+}
+
+.action-sm:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.done-screen {
+  text-align: center;
+  padding: 32px 16px;
+}
+.done-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 16px;
+}
+.done-stats {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+.done-stat {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+.done-due {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  font-size: 0.85rem;
+  color: var(--color-text-light);
+  margin-bottom: 20px;
+}
+.done-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.state-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 2px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 8px;
+}
+
+.state-badge.state-new { background: var(--color-info-light); color: var(--color-info); }
+.state-badge.state-learning { background: var(--color-accent-light); color: var(--color-accent-dark); }
+.state-badge.state-review { background: var(--color-primary-light); color: var(--color-primary); }
+.state-badge.state-relearning { background: var(--color-danger-light); color: var(--color-danger); }
+
+/* === Rating Flash === */
+.rating-flash {
+  position: absolute;
+  top: 12px;
+  right: 80px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 2px 12px;
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+
+.rating-flash.show {
+  animation: ratingFlashFade 1.6s ease-out forwards;
+}
+
+.rating-flash.flash-easy { background: var(--color-info-light); color: var(--color-info); }
+.rating-flash.flash-good { background: var(--color-success-light); color: var(--color-success); }
+.rating-flash.flash-hard { background: var(--color-accent-light); color: var(--color-accent-dark); }
+.rating-flash.flash-again { background: var(--color-danger-light); color: var(--color-danger); }
+
+@keyframes ratingFlashFade {
+  0% { opacity: 1; }
+  70% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* === Timer === */
+.timer {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text-light);
+  padding: 0;
+  background: none;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.timer.red { color: var(--color-danger); background: var(--color-danger-light); }
+.timer.skull { font-size: 1.4rem; background: none; }
+
+/* === Passage === */
+.passage {
+  background: var(--color-card);
+  border-left: 4px solid var(--color-primary);
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  line-height: 1.7;
+  border-radius: 0 2px 2px 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.passage .source {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--color-text-light);
+  font-style: italic;
+}
+
+/* === Flashcards === */
+.flashcard-container {
+  perspective: 800px;
+  margin: 20px auto;
+  max-width: 420px;
+}
+
+.flashcard {
+  width: 100%;
+  min-height: 180px;
+  position: relative;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.15s;
+}
+
+.flashcard.flipped { transform: rotateY(180deg); }
+
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  overflow-y: auto;
+  word-break: break-word;
+  box-shadow: 0 2px 8px rgba(45, 42, 38, 0.07);
+}
+
+.flashcard-front {
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.flashcard-back {
+  background: var(--color-card);
+  transform: rotateY(180deg);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--color-text);
+  border: 2px solid var(--color-primary);
+}
+
+.flash-rating-area {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.flashcard-hint {
+  text-align: center;
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+  margin-top: 8px;
+}
+
+.flash-sidebar-controls {
+  border-top: 1px solid var(--color-border);
+  padding: 4px 8px;
+}
+
+.flash-sidebar-btns {
+  display: flex;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.flash-sidebar-btns .flash-nav-btn {
+  flex: 1;
+  text-align: center;
+  padding: 2px 6px;
+  font-size: 0.6rem;
+}

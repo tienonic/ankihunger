@@ -1,0 +1,100 @@
+import './quiz.css';
+import { Show, onMount, onCleanup } from 'solid-js';
+import type { Section } from '../../projects/types.ts';
+import { createQuizSession } from './store.ts';
+import { sectionHandlers, bumpHandlerVersion } from '../../core/store/sections.ts';
+import { activeProject } from '../../core/store/app.ts';
+import { McqCard } from './McqCard.tsx';
+import { FlashcardArea } from './FlashcardArea.tsx';
+
+export function QuizSection(props: { section: Section }) {
+  const session = createQuizSession(props.section);
+
+  onMount(() => {
+    sectionHandlers.set(props.section.id, session);
+    bumpHandlerVersion();
+    if (!session.flashMode()) {
+      session.pickNextCard();
+    }
+  });
+
+  onCleanup(() => {
+    sectionHandlers.delete(props.section.id);
+    bumpHandlerVersion();
+  });
+
+  const hasFlash = () => props.section.hasFlashcards && (props.section.flashcards?.length ?? 0) > 0;
+  const isPassage = () => props.section.type === 'passage-quiz';
+  const sourceFolder = () => activeProject()?.sourceFolder;
+
+  function openFolder() {
+    const folder = sourceFolder();
+    if (folder) fetch(`/__open-folder?path=${encodeURIComponent(folder)}`);
+  }
+
+  return (
+    <div>
+      {/* Mode toggle (quiz/flash tabs + reset) */}
+      <Show when={hasFlash()}>
+        <div class="mode-toggle">
+          <button
+            class={`mode-btn ${!session.flashMode() ? 'active' : ''}`}
+            onClick={() => { if (session.flashMode()) session.toggleFlashMode(); }}
+          >
+            Quiz Mode
+          </button>
+          <button
+            class={`mode-btn ${session.flashMode() ? 'active' : ''}`}
+            onClick={() => { if (!session.flashMode()) session.toggleFlashMode(); }}
+          >
+            Flashcards
+          </button>
+          <span class="mode-toggle-actions">
+            <Show when={session.currentImageLink()}>
+              <a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a>
+            </Show>
+            <Show when={sourceFolder()}>
+              <button class="reset-btn" onClick={openFolder} title="Open project folder">Open</button>
+            </Show>
+            <button
+              class="reset-btn"
+              onClick={() => session.resetSection()}
+              title="Reset section progress"
+            >
+              Reset
+            </button>
+          </span>
+        </div>
+      </Show>
+
+      {/* Reset only (no flashcards) */}
+      <Show when={!hasFlash()}>
+        <div class="mode-toggle mode-toggle-actions-only">
+          <span class="mode-toggle-actions">
+            <Show when={session.currentImageLink()}>
+              <a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a>
+            </Show>
+            <Show when={sourceFolder()}>
+              <button class="reset-btn" onClick={openFolder} title="Open project folder">Open</button>
+            </Show>
+            <button
+              class="reset-btn"
+              onClick={() => session.resetSection()}
+              title="Reset section progress"
+            >
+              Reset
+            </button>
+          </span>
+        </div>
+      </Show>
+
+      {/* Quiz or Flash content */}
+      <Show when={!session.flashMode()}>
+        <McqCard session={session} isPassage={isPassage()} />
+      </Show>
+      <Show when={session.flashMode()}>
+        <FlashcardArea session={session} section={props.section} />
+      </Show>
+    </div>
+  );
+}

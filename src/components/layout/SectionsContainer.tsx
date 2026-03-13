@@ -1,7 +1,7 @@
 import { For } from 'solid-js';
-import { activeProject, activeTab } from '../../store/app.ts';
-import { QuizSection } from '../quiz/QuizSection.tsx';
-import { MathSection } from '../math/MathSection.tsx';
+import { activeProject, activeTab } from '../../core/store/app.ts';
+import { QuizSection } from '../../features/quiz/QuizSection.tsx';
+import { MathSection } from '../../features/math/MathSection.tsx';
 
 export function SectionsContainer() {
   const project = () => activeProject()!;

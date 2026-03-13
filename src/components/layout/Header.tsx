@@ -1,9 +1,9 @@
 import { For, onCleanup } from 'solid-js';
-import { activeProject, activeTab, setActiveTab, syncActivity, toggleSyncActivity, headerVisible, setHeaderVisible, headerLocked } from '../../store/app.ts';
-import { goToLauncher } from '../../store/project.ts';
-import { SettingsPanel } from '../settings/SettingsPanel.tsx';
-import { KeybindsPanel } from '../settings/KeybindsPanel.tsx';
-import { TipsPanel } from '../settings/TipsPanel.tsx';
+import { activeProject, activeTab, setActiveTab, syncActivity, toggleSyncActivity, headerVisible, setHeaderVisible, headerLocked } from '../../core/store/app.ts';
+import { goToLauncher } from '../../features/launcher/store.ts';
+import { SettingsPanel } from '../../features/settings/SettingsPanel.tsx';
+import { KeybindsPanel } from '../../features/settings/KeybindsPanel.tsx';
+import { TipsPanel } from '../../features/settings/TipsPanel.tsx';
 
 export function Header() {
   const project = () => activeProject()!;

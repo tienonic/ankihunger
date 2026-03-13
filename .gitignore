@@ -12,3 +12,4 @@ Thumbs.db
 *.spec.ts
 *.spec.tsx
 __tests__/
+research/
