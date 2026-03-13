@@ -136,6 +136,11 @@ export const workerApi = {
   setFSRSParams: (projectId: string, weights: number[], retention: number) =>
     sendWorkerMessage({ type: 'SET_FSRS_PARAMS', projectId, weights, retention }),
 
+  getPerformanceCards: (projectId: string) =>
+    sendWorkerMessage<{ card_id: string; section_id: string; card_type: string; fsrs_state: number; stability: number; difficulty: number; reps: number; lapses: number }[]>({
+      type: 'GET_PERFORMANCE_CARDS', projectId,
+    }),
+
   getHotkeys: () =>
     sendWorkerMessage<{ action: string; binding: string; context: string }[]>({ type: 'GET_HOTKEYS' }),
 

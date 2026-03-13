@@ -30,7 +30,8 @@ export type WorkerRequest =
   | { type: 'IMPORT_LEGACY'; projectId: string; data: unknown }
   | { type: 'GET_REVIEW_LOG'; projectId: string; limit?: number }
   | { type: 'GET_FSRS_PARAMS'; projectId: string }
-  | { type: 'SET_FSRS_PARAMS'; projectId: string; weights: number[]; retention: number };
+  | { type: 'SET_FSRS_PARAMS'; projectId: string; weights: number[]; retention: number }
+  | { type: 'GET_PERFORMANCE_CARDS'; projectId: string };
 
 export interface WorkerResponse {
   id: number;

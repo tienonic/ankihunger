@@ -1,0 +1,8 @@
+{
+  "model": "sonnet",
+  "systemPrompt": null,
+  "verbose": false,
+  "showOutput": true,
+  "maxBudgetUsd": null,
+  "effort": null
+}

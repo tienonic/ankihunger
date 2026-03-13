@@ -4,6 +4,7 @@ import { goToLauncher } from '../../features/launcher/store.ts';
 import { SettingsPanel } from '../../features/settings/SettingsPanel.tsx';
 import { KeybindsPanel } from '../../features/settings/KeybindsPanel.tsx';
 import { TipsPanel } from '../../features/settings/TipsPanel.tsx';
+import { AIPanel } from '../../features/ai/AIPanel.tsx';
 
 export function Header() {
   const project = () => activeProject()!;
@@ -47,6 +48,7 @@ export function Header() {
             <span class="sync-toggle-label">sync graph</span>
           </label>
           <TipsPanel />
+          <AIPanel />
           <KeybindsPanel />
           <SettingsPanel />
         </div>

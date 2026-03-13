@@ -686,6 +686,15 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
       );
     }
 
+    case 'GET_PERFORMANCE_CARDS': {
+      return await queryAll(
+        `SELECT card_id, section_id, card_type, fsrs_state, stability, difficulty, reps, lapses
+         FROM cards WHERE project_id = ? AND suspended = 0
+         ORDER BY lapses DESC, stability ASC`,
+        [request.projectId]
+      );
+    }
+
     case 'IMPORT_LEGACY': {
       return { ok: true };
     }

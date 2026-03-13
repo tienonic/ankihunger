@@ -4,6 +4,7 @@
 @import "@fontsource/inter/700.css";
 @import "tailwindcss";
 @import "katex/dist/katex.min.css";
+@import "./features/ai/ai.css";
 
 /* Theme tokens */
 @theme {

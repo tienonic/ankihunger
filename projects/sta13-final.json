@@ -16,85 +16,141 @@
         {
           "q": "A random variable $X$ has the distribution: $P(X=3)=0.5$, $P(X=1)=0.3$, $P(X=-1)=0.2$. What is $E(X)$?",
           "correct": "$1.6$",
-          "wrong": ["$1.0$", "$2.0$", "$0.8$"],
+          "wrong": [
+            "$1.0$",
+            "$2.0$",
+            "$0.8$"
+          ],
           "explanation": "$E(X) = 3(0.5) + 1(0.3) + (-1)(0.2) = 1.5 + 0.3 - 0.2 = 1.6$"
         },
         {
           "q": "A discrete random variable has $E(X) = 4$ and $E(X^2) = 18$. What is $\\text{Var}(X)$?",
           "correct": "$2$",
-          "wrong": ["$14$", "$4$", "$18$"],
+          "wrong": [
+            "$14$",
+            "$4$",
+            "$18$"
+          ],
           "explanation": "$\\text{Var}(X) = E(X^2) - [E(X)]^2 = 18 - 16 = 2$"
         },
         {
           "q": "If $\\text{Var}(X) = 0.81$, what is $\\text{SD}(X)$?",
           "correct": "$0.9$",
-          "wrong": ["$0.81$", "$0.656$", "$0.45$"],
+          "wrong": [
+            "$0.81$",
+            "$0.656$",
+            "$0.45$"
+          ],
           "explanation": "$\\text{SD}(X) = \\sqrt{\\text{Var}(X)} = \\sqrt{0.81} = 0.9$"
         },
         {
           "q": "A random variable $X$ has the distribution: $P(X=2)=0.85$, $P(X=1)=0.1$, $P(X=-2)=0.05$. What is closest to $E(X)$?",
           "correct": "$1.7$",
-          "wrong": ["$2.0$", "$1.0$", "$0.5$"],
+          "wrong": [
+            "$2.0$",
+            "$1.0$",
+            "$0.5$"
+          ],
           "explanation": "$E(X) = 2(0.85) + 1(0.1) + (-2)(0.05) = 1.7 + 0.1 - 0.1 = 1.7$"
         },
         {
           "q": "Using the distribution $P(X=2)=0.85$, $P(X=1)=0.1$, $P(X=-2)=0.05$ with $E(X)=1.7$, what is closest to $\\text{Var}(X)$?",
           "correct": "$0.81$",
-          "wrong": ["$0.5$", "$1.7$", "$0.09$"],
+          "wrong": [
+            "$0.5$",
+            "$1.7$",
+            "$0.09$"
+          ],
           "explanation": "$E(X^2) = 4(0.85) + 1(0.1) + 4(0.05) = 3.4 + 0.1 + 0.2 = 3.7$. $\\text{Var}(X) = 3.7 - 1.7^2 = 3.7 - 2.89 = 0.81$"
         },
         {
           "q": "If $X_1$ and $X_2$ are independent and identically distributed with $E(X)=5$, what is $E(X_1 + X_2)$?",
           "correct": "$10$",
-          "wrong": ["$5$", "$25$", "$\\sqrt{10}$"],
+          "wrong": [
+            "$5$",
+            "$25$",
+            "$\\sqrt{10}$"
+          ],
           "explanation": "$E(X_1 + X_2) = E(X_1) + E(X_2) = 5 + 5 = 10$. Expected values always add, regardless of independence."
         },
         {
           "q": "If $X_1$ and $X_2$ are independent with $\\text{Var}(X_1) = \\text{Var}(X_2) = 3$, what is $\\text{Var}(X_1 + X_2)$?",
           "correct": "$6$",
-          "wrong": ["$3$", "$9$", "$\\sqrt{6}$"],
+          "wrong": [
+            "$3$",
+            "$9$",
+            "$\\sqrt{6}$"
+          ],
           "explanation": "For independent random variables, variances add: $\\text{Var}(X_1 + X_2) = 3 + 3 = 6$."
         },
         {
           "q": "If $X_1$ and $X_2$ are independent with $\\text{SD}(X_1) = \\text{SD}(X_2) = 4$, what is $\\text{SD}(X_1 + X_2)$?",
           "correct": "$\\sqrt{32} \\approx 5.66$",
-          "wrong": ["$8$", "$4$", "$16$"],
+          "wrong": [
+            "$8$",
+            "$4$",
+            "$16$"
+          ],
           "explanation": "Standard deviations do NOT add. Variances add: $\\text{Var} = 16 + 16 = 32$. Then $\\text{SD} = \\sqrt{32} \\approx 5.66$."
         },
         {
           "q": "You have 5 independent random variables each with $E(X_i)=1.7$ and $\\text{Var}(X_i)=0.81$. What is $E(\\sum_{i=1}^{5} X_i)$?",
           "correct": "$8.5$",
-          "wrong": ["$1.7$", "$5$", "$4.05$"],
+          "wrong": [
+            "$1.7$",
+            "$5$",
+            "$4.05$"
+          ],
           "explanation": "$E(\\sum X_i) = 5 \\cdot E(X) = 5(1.7) = 8.5$"
         },
         {
           "q": "You have 5 independent random variables each with $\\text{Var}(X_i)=0.81$. What is $\\text{Var}(\\sum_{i=1}^{5} X_i)$?",
           "correct": "$4.05$",
-          "wrong": ["$0.81$", "$8.5$", "$16.4$"],
+          "wrong": [
+            "$0.81$",
+            "$8.5$",
+            "$16.4$"
+          ],
           "explanation": "$\\text{Var}(\\sum X_i) = 5 \\cdot \\text{Var}(X) = 5(0.81) = 4.05$"
         },
         {
           "q": "You have 5 independent random variables each with $\\text{Var}(X_i)=0.81$. What is closest to $\\text{SD}(\\sum_{i=1}^{5} X_i)$?",
           "correct": "$\\approx 2.01$",
-          "wrong": ["$4.05$", "$4.5$", "$0.9$"],
+          "wrong": [
+            "$4.05$",
+            "$4.5$",
+            "$0.9$"
+          ],
           "explanation": "$\\text{SD} = \\sqrt{5 \\cdot 0.81} = \\sqrt{4.05} \\approx 2.01$. Remember: SD = $\\sqrt{\\text{Var}}$, not the sum of individual SDs."
         },
         {
           "q": "Which statement about combining independent random variables is FALSE?",
           "correct": "Standard deviations of independent variables add when the variables are summed",
-          "wrong": ["Expected values add regardless of independence", "Variances add for independent variables", "The SD of a sum equals the square root of the sum of the variances"],
+          "wrong": [
+            "Expected values add regardless of independence",
+            "Variances add for independent variables",
+            "The SD of a sum equals the square root of the sum of the variances"
+          ],
           "explanation": "SDs do NOT add. Variances add, and then you take the square root. $\\text{SD}(X+Y) = \\sqrt{\\text{Var}(X) + \\text{Var}(Y)} \\neq \\text{SD}(X) + \\text{SD}(Y)$."
         },
         {
           "q": "If $E(X) = 3$ and $\\text{Var}(X) = 2$, what is $E(X^2)$?",
           "correct": "$11$",
-          "wrong": ["$9$", "$5$", "$7$"],
+          "wrong": [
+            "$9$",
+            "$5$",
+            "$7$"
+          ],
           "explanation": "From $\\text{Var}(X) = E(X^2) - [E(X)]^2$, we get $E(X^2) = \\text{Var}(X) + [E(X)]^2 = 2 + 9 = 11$."
         },
         {
           "q": "Can the variance of a random variable be negative?",
           "correct": "No — variance is a sum of squared deviations, so it is always $\\geq 0$",
-          "wrong": ["Yes — if the expected value is negative, the variance can be negative", "Yes — if most values are below the mean, variance is negative", "It depends on whether the distribution is symmetric"],
+          "wrong": [
+            "Yes — if the expected value is negative, the variance can be negative",
+            "Yes — if most values are below the mean, variance is negative",
+            "It depends on whether the distribution is symmetric"
+          ],
           "explanation": "$\\text{Var}(X) = E[(X - \\mu)^2]$. Since we're squaring the deviations, every term is non-negative, making the sum non-negative."
         }
       ],
@@ -139,49 +195,81 @@
         {
           "q": "In a population of $N=500$, the true number guilty is $M=411$. A sample of $n=40$ finds 33 guilty. What is the sample proportion $\\hat{p}$?",
           "correct": "$33/40 = 0.825$",
-          "wrong": ["$411/500 = 0.822$", "$33/500 = 0.066$", "$411/40 = 10.275$"],
+          "wrong": [
+            "$411/500 = 0.822$",
+            "$33/500 = 0.066$",
+            "$411/40 = 10.275$"
+          ],
           "explanation": "$\\hat{p} = x/n = 33/40 = 0.825$. The sample proportion uses the sample data, not the population values."
         },
         {
           "q": "In a population of $N=500$ with $M=411$ truly guilty, what is the true population proportion $p$?",
           "correct": "$411/500 = 0.822$",
-          "wrong": ["$33/40 = 0.825$", "$33/500 = 0.066$", "Unknown — we'd need to sample"],
+          "wrong": [
+            "$33/40 = 0.825$",
+            "$33/500 = 0.066$",
+            "Unknown — we'd need to sample"
+          ],
           "explanation": "$p = M/N = 411/500 = 0.822$. This is the true proportion, though in practice it's usually unknown."
         },
         {
           "q": "Investigators sample $n=40$ and find 33 guilty. They don't know $M$. What formula would they use to estimate the standard error?",
           "correct": "$\\sqrt{\\hat{p}(1-\\hat{p})/n}$, using $\\hat{p} = 33/40$",
-          "wrong": ["$\\sqrt{p(1-p)/n}$, using $p = 411/500$", "$\\sqrt{\\hat{p}(1-\\hat{p})/N}$, using $N=500$", "$\\hat{p}/\\sqrt{n}$"],
+          "wrong": [
+            "$\\sqrt{p(1-p)/n}$, using $p = 411/500$",
+            "$\\sqrt{\\hat{p}(1-\\hat{p})/N}$, using $N=500$",
+            "$\\hat{p}/\\sqrt{n}$"
+          ],
           "explanation": "Since investigators don't know $p$, they plug in $\\hat{p}$. They use $n$ (sample size), not $N$ (population size)."
         },
         {
           "q": "The 'true' standard error for $\\hat{p}$ uses which proportion in the formula?",
           "correct": "The true population proportion $p$",
-          "wrong": ["The sample proportion $\\hat{p}$", "The average of $p$ and $\\hat{p}$", "Either one — they're interchangeable"],
+          "wrong": [
+            "The sample proportion $\\hat{p}$",
+            "The average of $p$ and $\\hat{p}$",
+            "Either one — they're interchangeable"
+          ],
           "explanation": "The true SE uses $p$: $\\sqrt{p(1-p)/n}$. But since $p$ is usually unknown, we estimate SE using $\\hat{p}$."
         },
         {
           "q": "A researcher takes a sample of $n=100$ from a large population and finds $\\hat{p} = 0.4$. What is the estimated standard error?",
           "correct": "$\\approx 0.049$",
-          "wrong": ["$\\approx 0.4$", "$\\approx 0.24$", "$\\approx 0.004$"],
+          "wrong": [
+            "$\\approx 0.4$",
+            "$\\approx 0.24$",
+            "$\\approx 0.004$"
+          ],
           "explanation": "$\\text{SE} = \\sqrt{0.4 \\cdot 0.6 / 100} = \\sqrt{0.0024} \\approx 0.049$"
         },
         {
           "q": "What happens to the standard error of $\\hat{p}$ as the sample size $n$ increases?",
           "correct": "It decreases — proportional to $1/\\sqrt{n}$",
-          "wrong": ["It increases proportional to $\\sqrt{n}$", "It stays the same — SE depends only on $p$", "It decreases proportional to $1/n$"],
+          "wrong": [
+            "It increases proportional to $\\sqrt{n}$",
+            "It stays the same — SE depends only on $p$",
+            "It decreases proportional to $1/n$"
+          ],
           "explanation": "$\\text{SE} = \\sqrt{p(1-p)/n}$. As $n$ grows, $1/n$ shrinks, so SE shrinks. Specifically, quadrupling $n$ halves the SE."
         },
         {
           "q": "Which of these is the key distinction between $\\hat{p}$ and $p$?",
           "correct": "$p$ is a fixed population parameter; $\\hat{p}$ is a random variable that varies by sample",
-          "wrong": ["$\\hat{p}$ is always larger than $p$ due to sampling bias", "$p$ is computed from the sample while $\\hat{p}$ is the population value", "They are the same thing, just different notation"],
+          "wrong": [
+            "$\\hat{p}$ is always larger than $p$ due to sampling bias",
+            "$p$ is computed from the sample while $\\hat{p}$ is the population value",
+            "They are the same thing, just different notation"
+          ],
           "explanation": "$p = M/N$ is fixed (the true proportion). $\\hat{p} = x/n$ is a statistic — it changes depending on which sample you draw."
         },
         {
           "q": "A pollster estimates $\\hat{p} = 0.55$ with SE $= 0.03$. To cut the SE in half, they would need to multiply their sample size by approximately:",
           "correct": "$4$",
-          "wrong": ["$2$", "$8$", "$\\sqrt{2}$"],
+          "wrong": [
+            "$2$",
+            "$8$",
+            "$\\sqrt{2}$"
+          ],
           "explanation": "SE is proportional to $1/\\sqrt{n}$. To halve SE, you need $\\sqrt{n_{\\text{new}}/n_{\\text{old}}} = 2$, so $n_{\\text{new}} = 4 \\cdot n_{\\text{old}}$."
         }
       ],
@@ -222,55 +310,91 @@
         {
           "q": "If $X \\sim \\text{Binomial}(n=3, p=0.2)$, what is the most likely value of $X$?",
           "correct": "$0$",
-          "wrong": ["$1$", "$0.6$", "$2$"],
+          "wrong": [
+            "$1$",
+            "$0.6$",
+            "$2$"
+          ],
           "explanation": "$P(0) = 0.8^3 = 0.512$, $P(1) = 0.384$, $P(2) = 0.096$, $P(3) = 0.008$. The mode is 0."
         },
         {
           "q": "If $X \\sim \\text{Binomial}(n=3, p=0.2)$, what is $E(X)$?",
           "correct": "$0.6$",
-          "wrong": ["$0$", "$1$", "$0.2$"],
+          "wrong": [
+            "$0$",
+            "$1$",
+            "$0.2$"
+          ],
           "explanation": "$E(X) = np = 3(0.2) = 0.6$. Note: the expected value doesn't have to be a possible value of $X$."
         },
         {
           "q": "If $X \\sim \\text{Binomial}(n=3, p=0.2)$, what is $\\text{Var}(X)$?",
           "correct": "$0.48$",
-          "wrong": ["$0.6$", "$0.2$", "$0.52$"],
+          "wrong": [
+            "$0.6$",
+            "$0.2$",
+            "$0.52$"
+          ],
           "explanation": "$\\text{Var}(X) = np(1-p) = 3(0.2)(0.8) = 0.48$"
         },
         {
           "q": "What is $P(X = 2)$ when $X \\sim \\text{Binomial}(n=3, p=0.2)$?",
           "correct": "$96/1000$",
-          "wrong": ["$384/1000$", "$8/1000$", "$512/1000$"],
+          "wrong": [
+            "$384/1000$",
+            "$8/1000$",
+            "$512/1000$"
+          ],
           "explanation": "$P(X=2) = \\binom{3}{2}(0.2)^2(0.8)^1 = 3(0.04)(0.8) = 0.096 = 96/1000$"
         },
         {
           "q": "What is $P(X = 0)$ when $X \\sim \\text{Binomial}(n=3, p=0.2)$?",
           "correct": "$512/1000$",
-          "wrong": ["$384/1000$", "$96/1000$", "$8/1000$"],
+          "wrong": [
+            "$384/1000$",
+            "$96/1000$",
+            "$8/1000$"
+          ],
           "explanation": "$P(X=0) = \\binom{3}{0}(0.2)^0(0.8)^3 = (0.8)^3 = 0.512 = 512/1000$"
         },
         {
           "q": "For $X \\sim \\text{Binomial}(n=10, p=0.3)$, what is $E(X)$ and $\\text{Var}(X)$?",
           "correct": "$E(X)=3$, $\\text{Var}(X)=2.1$",
-          "wrong": ["$E(X)=3$, $\\text{Var}(X)=3$", "$E(X)=0.3$, $\\text{Var}(X)=0.21$", "$E(X)=7$, $\\text{Var}(X)=2.1$"],
+          "wrong": [
+            "$E(X)=3$, $\\text{Var}(X)=3$",
+            "$E(X)=0.3$, $\\text{Var}(X)=0.21$",
+            "$E(X)=7$, $\\text{Var}(X)=2.1$"
+          ],
           "explanation": "$E(X) = np = 10(0.3) = 3$. $\\text{Var}(X) = np(1-p) = 10(0.3)(0.7) = 2.1$."
         },
         {
           "q": "The binomial coefficient $\\binom{5}{2}$ equals:",
           "correct": "$10$",
-          "wrong": ["$5$", "$20$", "$25$"],
+          "wrong": [
+            "$5$",
+            "$20$",
+            "$25$"
+          ],
           "explanation": "$\\binom{5}{2} = \\frac{5!}{2! \\cdot 3!} = \\frac{120}{2 \\cdot 6} = 10$"
         },
         {
           "q": "In a binomial setting with $n=3$ and $p=0.2$, which value of $X$ has the LEAST probability?",
           "correct": "$3$",
-          "wrong": ["$0$", "$1$", "$2$"],
+          "wrong": [
+            "$0$",
+            "$1$",
+            "$2$"
+          ],
           "explanation": "$P(3) = (0.2)^3 = 0.008$. All successes is very unlikely when $p$ is small."
         },
         {
           "q": "Which conditions must hold for a binomial distribution? Select the correct set.",
           "correct": "Fixed $n$ trials, each with the same probability $p$, and trials are independent",
-          "wrong": ["Fixed $n$ trials with the same $p$, but trials can be dependent", "Variable number of trials until first success, with fixed $p$", "Fixed $n$ trials with changing probability on each trial"],
+          "wrong": [
+            "Fixed $n$ trials with the same $p$, but trials can be dependent",
+            "Variable number of trials until first success, with fixed $p$",
+            "Fixed $n$ trials with changing probability on each trial"
+          ],
           "explanation": "Binomial requires: fixed number of trials, constant probability, independence, and two outcomes per trial."
         }
       ],
@@ -311,55 +435,91 @@
         {
           "q": "At significance level $\\alpha = 0.01$, which statement is true?",
           "correct": "The chance of rejecting $H_0$ when $H_0$ is true is at most $0.01$",
-          "wrong": ["The chance of rejecting $H_0$ when $H_0$ is true is exactly $0.01$", "The chance of failing to reject $H_0$ when $H_0$ is false is at most $0.01$", "The chance the null hypothesis is true given rejection is $0.01$"],
+          "wrong": [
+            "The chance of rejecting $H_0$ when $H_0$ is true is exactly $0.01$",
+            "The chance of failing to reject $H_0$ when $H_0$ is false is at most $0.01$",
+            "The chance the null hypothesis is true given rejection is $0.01$"
+          ],
           "explanation": "$\\alpha$ is an upper bound on the Type I error rate: $P(\\text{reject } H_0 \\mid H_0 \\text{ true}) \\leq \\alpha$. It's 'at most', not 'exactly'."
         },
         {
           "q": "You compute a p-value of 0.07 with $\\alpha = 0.05$. What do you conclude?",
           "correct": "Fail to reject $H_0$ — you cannot conclude the alternative is true",
-          "wrong": ["Reject $H_0$ — 0.07 is close enough", "Accept $H_0$ — the null hypothesis is true", "The test is inconclusive and should be discarded"],
+          "wrong": [
+            "Reject $H_0$ — 0.07 is close enough",
+            "Accept $H_0$ — the null hypothesis is true",
+            "The test is inconclusive and should be discarded"
+          ],
           "explanation": "$p\\text{-value} = 0.07 > 0.05 = \\alpha$, so we fail to reject. We never 'accept' $H_0$ — we just can't rule it out."
         },
         {
           "q": "A binomial exact test has $H_0: p = 0.2$. The unknown true proportion is actually $p = 0.5$. What distribution defines the null?",
           "correct": "$\\text{Binomial}(n, p=0.2)$ — the null distribution uses the claimed value",
-          "wrong": ["$\\text{Binomial}(n, p=0.5)$ — use the true proportion", "$\\text{Binomial}(n, p=0.35)$ — average of claimed and true", "$\\text{Normal}(0.2, \\text{SE})$ — always use a normal approximation"],
+          "wrong": [
+            "$\\text{Binomial}(n, p=0.5)$ — use the true proportion",
+            "$\\text{Binomial}(n, p=0.35)$ — average of claimed and true",
+            "$\\text{Normal}(0.2, \\text{SE})$ — always use a normal approximation"
+          ],
           "explanation": "The null distribution is always based on $H_0$. The true value of $p$ is irrelevant to computing the null distribution or p-value."
         },
         {
           "q": "In a binomial exact test with $H_0: p = 0.2$ and $n=3$, you observe $X=2$. The p-value is calculated as:",
           "correct": "$P(X \\geq 2 \\mid p=0.2) = P(X=2) + P(X=3)$",
-          "wrong": ["$P(X = 2 \\mid p=0.2)$ only", "$P(X \\leq 2 \\mid p=0.2)$", "$P(X > 2 \\mid p=0.2) = P(X=3)$ only"],
+          "wrong": [
+            "$P(X = 2 \\mid p=0.2)$ only",
+            "$P(X \\leq 2 \\mid p=0.2)$",
+            "$P(X > 2 \\mid p=0.2) = P(X=3)$ only"
+          ],
           "explanation": "P-value = probability of result as extreme or more extreme than observed, under $H_0$. Since 2 is above the expected 0.6, 'as extreme or more' means $P(X \\geq 2)$."
         },
         {
           "q": "You run a hypothesis test with $\\alpha = 0.1$ and get a p-value of 0.104. What do you conclude?",
           "correct": "You cannot rule out the possibility that $H_0$ is true",
-          "wrong": ["You conclude $H_0$ is true", "You conclude $H_0$ is false", "The result is statistically significant"],
+          "wrong": [
+            "You conclude $H_0$ is true",
+            "You conclude $H_0$ is false",
+            "The result is statistically significant"
+          ],
           "explanation": "$0.104 > 0.1$, so fail to reject. This doesn't prove $H_0$ — it just means we don't have enough evidence against it."
         },
         {
           "q": "Which is the correct interpretation of a p-value?",
           "correct": "The probability of observing data as extreme or more extreme than what was observed, assuming $H_0$ is true",
-          "wrong": ["The probability that $H_0$ is true", "The probability that $H_1$ is true", "The probability of making a Type II error"],
+          "wrong": [
+            "The probability that $H_0$ is true",
+            "The probability that $H_1$ is true",
+            "The probability of making a Type II error"
+          ],
           "explanation": "A p-value is NOT the probability that the null is true. It's conditional: given $H_0$, how surprising is our data?"
         },
         {
           "q": "A Type I error occurs when:",
           "correct": "You reject $H_0$ when $H_0$ is actually true",
-          "wrong": ["You fail to reject $H_0$ when $H_0$ is actually false", "You reject $H_0$ when $H_0$ is actually false", "You accept $H_1$ when there's insufficient evidence"],
+          "wrong": [
+            "You fail to reject $H_0$ when $H_0$ is actually false",
+            "You reject $H_0$ when $H_0$ is actually false",
+            "You accept $H_1$ when there's insufficient evidence"
+          ],
           "explanation": "Type I = false positive (rejecting a true null). Type II = false negative (failing to reject a false null)."
         },
         {
           "q": "If you decrease $\\alpha$ from 0.05 to 0.01, what happens?",
           "correct": "You're less likely to commit a Type I error, but more likely to commit a Type II error",
-          "wrong": ["Both Type I and Type II error rates decrease", "You're more likely to commit a Type I error", "Nothing changes — $\\alpha$ only affects the critical value"],
+          "wrong": [
+            "Both Type I and Type II error rates decrease",
+            "You're more likely to commit a Type I error",
+            "Nothing changes — $\\alpha$ only affects the critical value"
+          ],
           "explanation": "Lower $\\alpha$ = stricter threshold = fewer false positives (Type I), but harder to detect real effects = more false negatives (Type II)."
         },
         {
           "q": "After a hypothesis test, which phrasing is NEVER appropriate?",
           "correct": "\"We accept the null hypothesis\"",
-          "wrong": ["\"We reject the null hypothesis\"", "\"We fail to reject the null hypothesis\"", "\"We cannot conclude the null is false\""],
+          "wrong": [
+            "\"We reject the null hypothesis\"",
+            "\"We fail to reject the null hypothesis\"",
+            "\"We cannot conclude the null is false\""
+          ],
           "explanation": "Failing to reject is not the same as accepting. Absence of evidence ≠ evidence of absence."
         }
       ],
@@ -400,55 +560,91 @@
         {
           "q": "Observed counts: 63, 20, 14, 13. What is the sample size?",
           "correct": "$110$",
-          "wrong": ["$63$", "$100$", "$4$"],
+          "wrong": [
+            "$63$",
+            "$100$",
+            "$4$"
+          ],
           "explanation": "$n = 63 + 20 + 14 + 13 = 110$. The sample size is the sum of all observed counts."
         },
         {
           "q": "A business claims orders are split 60%, 20%, 10%, 10% across 4 channels. With $n=110$, what is the expected count for in-person orders (claimed 20%)?",
           "correct": "$22$",
-          "wrong": ["$20$", "$0.2$", "$110$"],
+          "wrong": [
+            "$20$",
+            "$0.2$",
+            "$110$"
+          ],
           "explanation": "Expected = $n \\cdot p_0 = 110 \\times 0.2 = 22$."
         },
         {
           "q": "For a chi-squared goodness-of-fit test with 4 categories, the degrees of freedom are:",
           "correct": "$3$",
-          "wrong": ["$4$", "$2$", "$1$"],
+          "wrong": [
+            "$4$",
+            "$2$",
+            "$1$"
+          ],
           "explanation": "$df = k - 1 = 4 - 1 = 3$ for a goodness-of-fit test, where $k$ is the number of categories."
         },
         {
           "q": "For a GOF test with $df = 3$ and $\\alpha = 0.01$, the critical value from the chi-squared table is:",
           "correct": "$11.34$",
-          "wrong": ["$7.81$", "$6.25$", "$9.21$"],
+          "wrong": [
+            "$7.81$",
+            "$6.25$",
+            "$9.21$"
+          ],
           "explanation": "Look up $df=3$, $\\alpha = 0.01$ in the chi-squared table: $\\chi^2_{\\text{crit}} = 11.34$."
         },
         {
           "q": "The chi-squared test statistic formula is:",
           "correct": "$\\chi^2 = \\sum \\frac{(O_i - E_i)^2}{E_i}$",
-          "wrong": ["$\\chi^2 = \\sum \\frac{(O_i - E_i)}{E_i}$", "$\\chi^2 = \\sum \\frac{(O_i - E_i)^2}{O_i}$", "$\\chi^2 = \\sum (O_i - E_i)^2$"],
+          "wrong": [
+            "$\\chi^2 = \\sum \\frac{(O_i - E_i)}{E_i}$",
+            "$\\chi^2 = \\sum \\frac{(O_i - E_i)^2}{O_i}$",
+            "$\\chi^2 = \\sum (O_i - E_i)^2$"
+          ],
           "explanation": "Each term is the squared difference between observed and expected, divided by expected. The denominator is $E_i$, not $O_i$."
         },
         {
           "q": "Expected counts under $H_0$: 66, 22, 11, 11. Observed: 63, 20, 14, 13. Which is closest to the test statistic?",
           "correct": "$\\approx 1.5$",
-          "wrong": ["$\\approx 0$", "$\\approx 10$", "$\\approx 2.5$"],
+          "wrong": [
+            "$\\approx 0$",
+            "$\\approx 10$",
+            "$\\approx 2.5$"
+          ],
           "explanation": "$\\chi^2 = \\frac{(63-66)^2}{66} + \\frac{(20-22)^2}{22} + \\frac{(14-11)^2}{11} + \\frac{(13-11)^2}{11} = 0.136 + 0.182 + 0.818 + 0.364 \\approx 1.5$"
         },
         {
           "q": "You get $\\chi^2 = 1.5$ with critical value $11.34$. Your conclusion?",
           "correct": "You cannot conclude the claimed proportions are wrong",
-          "wrong": ["You conclude the proportions are accurate", "You conclude the proportions are not accurate", "The test is invalid because the statistic is too small"],
+          "wrong": [
+            "You conclude the proportions are accurate",
+            "You conclude the proportions are not accurate",
+            "The test is invalid because the statistic is too small"
+          ],
           "explanation": "$1.5 < 11.34$, so fail to reject $H_0$. We can't conclude the proportions are wrong, but we also haven't proven they're right."
         },
         {
           "q": "When is the chi-squared approximation for a GOF test considered valid?",
           "correct": "When all expected cell counts are at least 5",
-          "wrong": ["When the sample size is at least 30", "When all observed cell counts are at least 5", "When the number of categories is at least 3"],
+          "wrong": [
+            "When the sample size is at least 30",
+            "When all observed cell counts are at least 5",
+            "When the number of categories is at least 3"
+          ],
           "explanation": "The rule of thumb is that all expected counts (not observed) should be ≥ 5 for the chi-squared approximation to be reliable."
         },
         {
           "q": "With $n = 100$ and 4 categories with claimed proportions 60%, 20%, 10%, 10%, is the chi-squared approximation valid?",
           "correct": "Yes — the smallest expected count is $100 \\times 0.1 = 10 \\geq 5$",
-          "wrong": ["No — 10% categories are too small", "Not necessarily — we need to check observed counts", "No — we need $n \\geq 200$ for 4 categories"],
+          "wrong": [
+            "No — 10% categories are too small",
+            "Not necessarily — we need to check observed counts",
+            "No — we need $n \\geq 200$ for 4 categories"
+          ],
           "explanation": "Expected counts: 60, 20, 10, 10. All are ≥ 5, so the approximation is valid."
         }
       ],
@@ -489,49 +685,81 @@
         {
           "q": "A contingency table has 3 rows and 2 columns. What are the degrees of freedom for a chi-squared test of independence?",
           "correct": "$(3-1)(2-1) = 2$",
-          "wrong": ["$3 \\times 2 - 1 = 5$", "$(3-1) + (2-1) = 3$", "$3 + 2 - 2 = 3$"],
+          "wrong": [
+            "$3 \\times 2 - 1 = 5$",
+            "$(3-1) + (2-1) = 3$",
+            "$3 + 2 - 2 = 3$"
+          ],
           "explanation": "$df = (r-1)(c-1) = (3-1)(2-1) = 2$"
         },
         {
           "q": "In a contingency table, row total for C is 18, column total for 'No' is 42, and grand total is 84. What is the expected count for cell (C, No)?",
           "correct": "$9$",
-          "wrong": ["$3$", "$18$", "$15$"],
+          "wrong": [
+            "$3$",
+            "$18$",
+            "$15$"
+          ],
           "explanation": "$E = \\frac{\\text{row total} \\times \\text{column total}}{\\text{grand total}} = \\frac{18 \\times 42}{84} = 9$"
         },
         {
           "q": "For a test of independence with $df=2$ and $\\alpha=0.01$, the chi-squared critical value is:",
           "correct": "$9.21$",
-          "wrong": ["$5.99$", "$4.61$", "$13.82$"],
+          "wrong": [
+            "$5.99$",
+            "$4.61$",
+            "$13.82$"
+          ],
           "explanation": "From the table: $df=2$, $\\alpha=0.01$ gives $\\chi^2_{\\text{crit}} = 9.21$."
         },
         {
           "q": "In a contingency table test, you get $\\chi^2 = 10$ with critical value $9.21$. Your conclusion?",
           "correct": "Reject $H_0$ — conclude the variables are associated",
-          "wrong": ["Fail to reject — no evidence of association", "Conclude the variables are independent", "The test is inconclusive"],
+          "wrong": [
+            "Fail to reject — no evidence of association",
+            "Conclude the variables are independent",
+            "The test is inconclusive"
+          ],
           "explanation": "$10 > 9.21$, so reject $H_0$ of independence. There is evidence of an association between the variables."
         },
         {
           "q": "A contingency table has expected counts of 10.5, 14, 7.5, 10.5, 14, 7.5 in its six cells. Is the chi-squared approximation valid?",
           "correct": "Yes — all expected counts are at least 5",
-          "wrong": ["No — expected counts must be integers", "No — the minimum expected count is 7.5, which rounds to 8", "Not enough information — we need observed counts too"],
+          "wrong": [
+            "No — expected counts must be integers",
+            "No — the minimum expected count is 7.5, which rounds to 8",
+            "Not enough information — we need observed counts too"
+          ],
           "explanation": "The rule is all expected counts ≥ 5. Here the smallest is 7.5, which satisfies the condition."
         },
         {
           "q": "What does the null hypothesis state in a chi-squared test of independence?",
           "correct": "The two categorical variables are independent (no association)",
-          "wrong": ["The two variables have equal proportions", "The observed counts equal the expected counts exactly", "The row totals equal the column totals"],
+          "wrong": [
+            "The two variables have equal proportions",
+            "The observed counts equal the expected counts exactly",
+            "The row totals equal the column totals"
+          ],
           "explanation": "$H_0$: the variables are independent. $H_1$: the variables are associated."
         },
         {
           "q": "In a study linking diet to sleep quality, if you fail to reject $H_0$ in a test of independence, which statement is most accurate?",
           "correct": "You cannot conclude that diet is associated with sleep quality",
-          "wrong": ["You conclude diet is not associated with sleep quality", "You conclude diet and sleep are independent", "Diet has no effect on sleep"],
+          "wrong": [
+            "You conclude diet is not associated with sleep quality",
+            "You conclude diet and sleep are independent",
+            "Diet has no effect on sleep"
+          ],
           "explanation": "Failing to reject means insufficient evidence of association. It does NOT prove independence."
         },
         {
           "q": "How does the expected count formula differ between GOF and independence tests?",
           "correct": "GOF uses $E_i = n \\cdot p_{0,i}$; independence uses $E_{ij} = \\frac{\\text{row total} \\times \\text{col total}}{\\text{grand total}}$",
-          "wrong": ["They use the same formula", "GOF uses observed counts; independence uses expected counts", "Independence tests don't use expected counts"],
+          "wrong": [
+            "They use the same formula",
+            "GOF uses observed counts; independence uses expected counts",
+            "Independence tests don't use expected counts"
+          ],
           "explanation": "Different formulas for expected counts, but the test statistic $\\sum (O-E)^2/E$ is the same for both."
         }
       ],
@@ -564,49 +792,81 @@
         {
           "q": "A 90% CI for $p_2 - p_1$ is $[-0.177, -0.036]$. What can you conclude?",
           "correct": "We're 90% confident that $p_2 < p_1$ (since the entire interval is negative)",
-          "wrong": ["We're 90% confident that $p_2 > p_1$", "We cannot determine the direction since the interval contains values near zero", "The interval is invalid because it contains negative values"],
+          "wrong": [
+            "We're 90% confident that $p_2 > p_1$",
+            "We cannot determine the direction since the interval contains values near zero",
+            "The interval is invalid because it contains negative values"
+          ],
           "explanation": "The interval is entirely negative, meaning $p_2 - p_1 < 0$, so $p_2 < p_1$ with 90% confidence."
         },
         {
           "q": "A 90% CI for $p_2 - p_1$ is $[-0.177, -0.036]$, where $p_1$ = tower block satisfaction rate and $p_2$ = apartment satisfaction rate. Is it true that tower block residents are LESS satisfied?",
           "correct": "No — the CI says $p_2 < p_1$, meaning tower block residents are MORE satisfied",
-          "wrong": ["Yes — negative values confirm tower block is less satisfied", "Yes — $p_1$ is always the smaller proportion", "Cannot determine — the CI is too narrow"],
+          "wrong": [
+            "Yes — negative values confirm tower block is less satisfied",
+            "Yes — $p_1$ is always the smaller proportion",
+            "Cannot determine — the CI is too narrow"
+          ],
           "explanation": "$p_2 - p_1 < 0$ means $p_2 < p_1$. Tower block ($p_1$) has the HIGHER proportion. Read subscripts carefully!"
         },
         {
           "q": "Bob's 95% CI is $[0.51, 0.77]$ (width 0.26). Ramona's is $[0.58, 0.72]$ (width 0.14). Who had the larger sample?",
           "correct": "Ramona — her narrower interval indicates a larger sample size",
-          "wrong": ["Bob — his wider interval captured more variation", "They had the same sample size — the intervals just differ by chance", "Cannot determine from confidence intervals alone"],
+          "wrong": [
+            "Bob — his wider interval captured more variation",
+            "They had the same sample size — the intervals just differ by chance",
+            "Cannot determine from confidence intervals alone"
+          ],
           "explanation": "Larger samples produce narrower CIs (smaller margin of error). Ramona's interval is narrower, so her sample was larger."
         },
         {
           "q": "A Welch t-test gives $p = 0.2333$ and 95% CI $[-14.82, 3.85]$. What do you conclude?",
           "correct": "Not strong evidence of a difference between the two means",
-          "wrong": ["Strong evidence there is a difference", "Strong evidence there is no difference", "The test is invalid because the CI is wide"],
+          "wrong": [
+            "Strong evidence there is a difference",
+            "Strong evidence there is no difference",
+            "The test is invalid because the CI is wide"
+          ],
           "explanation": "$p = 0.23 > 0.05$ and the CI contains 0. Both indicate insufficient evidence of a difference."
         },
         {
           "q": "A 95% CI for $\\mu_A - \\mu_B$ is $[-14.82, 3.85]$. Since the interval contains 0, this means:",
           "correct": "We cannot rule out that the two means are equal",
-          "wrong": ["The two means are definitely equal", "The difference is exactly zero", "The test has no power"],
+          "wrong": [
+            "The two means are definitely equal",
+            "The difference is exactly zero",
+            "The test has no power"
+          ],
           "explanation": "Zero is a plausible value for the difference, so we can't conclude the means differ. But we haven't proven they're equal either."
         },
         {
           "q": "\"Not strong evidence of a difference\" vs \"Strong evidence of no difference\" — which is the correct conclusion when $p > \\alpha$?",
           "correct": "Not strong evidence of a difference",
-          "wrong": ["Strong evidence of no difference", "Either phrasing is acceptable", "Neither — you should just state the p-value"],
+          "wrong": [
+            "Strong evidence of no difference",
+            "Either phrasing is acceptable",
+            "Neither — you should just state the p-value"
+          ],
           "explanation": "Failing to reject means insufficient evidence against $H_0$. It does NOT mean you've shown $H_0$ is true."
         },
         {
           "q": "If a 99% CI and a 95% CI are both computed from the same data, which is wider?",
           "correct": "The 99% CI is wider",
-          "wrong": ["The 95% CI is wider", "They are the same width", "It depends on the sample size"],
+          "wrong": [
+            "The 95% CI is wider",
+            "They are the same width",
+            "It depends on the sample size"
+          ],
           "explanation": "Higher confidence requires a wider interval to be more sure of capturing the true parameter."
         },
         {
           "q": "A CI for $p_2 - p_1$ is $[0.05, 0.30]$. Does this interval suggest a statistically significant difference?",
           "correct": "Yes — the interval doesn't contain 0, so $p_2 > p_1$ at this confidence level",
-          "wrong": ["No — the values are too small to be meaningful", "No — you need a hypothesis test, not a CI", "Only if $\\alpha < 0.05$"],
+          "wrong": [
+            "No — the values are too small to be meaningful",
+            "No — you need a hypothesis test, not a CI",
+            "Only if $\\alpha < 0.05$"
+          ],
           "explanation": "If a CI for a difference doesn't contain 0, the difference is significant at the corresponding $\\alpha$."
         }
       ],
@@ -643,67 +903,111 @@
         {
           "q": "Speed has mean 50 mph, SD 10 mph. A car drives at 65 mph. Its standardized speed is:",
           "correct": "$1.5$",
-          "wrong": ["$15$", "$0.65$", "$6.5$"],
+          "wrong": [
+            "$15$",
+            "$0.65$",
+            "$6.5$"
+          ],
           "explanation": "$z = (65 - 50)/10 = 15/10 = 1.5$ standard deviations above the mean."
         },
         {
           "q": "If a car's standardized speed is $1.5$ (mean 50, SD 10), what is its speed in mph?",
           "correct": "$65$ mph",
-          "wrong": ["$55$ mph", "$51.5$ mph", "$75$ mph"],
+          "wrong": [
+            "$55$ mph",
+            "$51.5$ mph",
+            "$75$ mph"
+          ],
           "explanation": "$x = \\bar{x} + z \\cdot s_x = 50 + 1.5(10) = 65$ mph."
         },
         {
           "q": "The correlation between fuel economy and speed is $r = 0.6$. A car is 2 SDs above mean speed. How many SDs above mean fuel economy do you predict?",
           "correct": "$1.2$",
-          "wrong": ["$2.0$", "$0.6$", "$3.2$"],
+          "wrong": [
+            "$2.0$",
+            "$0.6$",
+            "$3.2$"
+          ],
           "explanation": "In standardized units: $\\hat{z}_y = r \\cdot z_x = 0.6 \\times 2 = 1.2$"
         },
         {
           "q": "With $r = 0.6$, a car is 2 SDs BELOW mean speed. What is the predicted standardized fuel economy?",
           "correct": "$-1.2$",
-          "wrong": ["$1.2$", "$-0.6$", "$-2.0$"],
+          "wrong": [
+            "$1.2$",
+            "$-0.6$",
+            "$-2.0$"
+          ],
           "explanation": "$\\hat{z}_y = r \\cdot z_x = 0.6 \\times (-2) = -1.2$. Below average speed predicts below average fuel economy."
         },
         {
           "q": "With $r=0.6$, $\\bar{y}=25$ mpg, $s_y=5$ mpg, a car is 3 SDs above mean speed. Predicted fuel economy?",
           "correct": "$34$ mpg",
-          "wrong": ["$25$ mpg", "$30$ mpg", "$40$ mpg"],
+          "wrong": [
+            "$25$ mpg",
+            "$30$ mpg",
+            "$40$ mpg"
+          ],
           "explanation": "$\\hat{z}_y = 0.6(3) = 1.8$. Convert back: $\\hat{y} = 25 + 1.8(5) = 25 + 9 = 34$ mpg."
         },
         {
           "q": "With $r=0.6$, $\\bar{x}=50$, $s_x=10$, $\\bar{y}=25$, $s_y=5$, what is the predicted fuel economy at 65 mph?",
           "correct": "$\\approx 29.5$ mpg (closest to 30)",
-          "wrong": ["$25$ mpg", "$34$ mpg", "$24$ mpg"],
+          "wrong": [
+            "$25$ mpg",
+            "$34$ mpg",
+            "$24$ mpg"
+          ],
           "explanation": "$z_x = (65-50)/10 = 1.5$. $\\hat{z}_y = 0.6(1.5) = 0.9$. $\\hat{y} = 25 + 0.9(5) = 29.5$ mpg."
         },
         {
           "q": "The slope $b$ in terms of correlation and standard deviations is:",
           "correct": "$b = r \\cdot \\frac{s_y}{s_x}$",
-          "wrong": ["$b = r \\cdot \\frac{s_x}{s_y}$", "$b = r \\cdot s_x \\cdot s_y$", "$b = \\frac{r}{s_x \\cdot s_y}$"],
+          "wrong": [
+            "$b = r \\cdot \\frac{s_x}{s_y}$",
+            "$b = r \\cdot s_x \\cdot s_y$",
+            "$b = \\frac{r}{s_x \\cdot s_y}$"
+          ],
           "explanation": "$b = r \\cdot (s_y / s_x)$. With $r=0.6$, $s_y=5$, $s_x=10$: $b = 0.6(5/10) = 0.3$."
         },
         {
           "q": "With slope $b = 0.3$ and point $(\\bar{x}, \\bar{y}) = (50, 25)$, what is the intercept $a$?",
           "correct": "$10$",
-          "wrong": ["$25$", "$15$", "$-10$"],
+          "wrong": [
+            "$25$",
+            "$15$",
+            "$-10$"
+          ],
           "explanation": "$a = \\bar{y} - b\\bar{x} = 25 - 0.3(50) = 25 - 15 = 10$. So $\\hat{y} = 10 + 0.3x$."
         },
         {
           "q": "The regression line in standardized units always passes through which point?",
           "correct": "$(0, 0)$ — both variables at their means",
-          "wrong": ["$(1, 1)$", "$(r, r)$", "$(\\bar{x}, \\bar{y})$"],
+          "wrong": [
+            "$(1, 1)$",
+            "$(r, r)$",
+            "$(\\bar{x}, \\bar{y})$"
+          ],
           "explanation": "When both variables are standardized, the means are 0. The regression line $\\hat{z}_y = r \\cdot z_x$ passes through the origin."
         },
         {
           "q": "If $r = 0.6$ and a car is at the mean speed ($z_x = 0$), what fuel economy do you predict?",
           "correct": "The mean fuel economy ($\\bar{y} = 25$ mpg)",
-          "wrong": ["$0$ mpg", "$0.6 \\times 25 = 15$ mpg", "Cannot predict at the mean"],
+          "wrong": [
+            "$0$ mpg",
+            "$0.6 \\times 25 = 15$ mpg",
+            "Cannot predict at the mean"
+          ],
           "explanation": "$\\hat{z}_y = r \\cdot 0 = 0$, so predicted value equals the mean. Regression always predicts the mean when $x$ is at its mean."
         },
         {
           "q": "Regression toward the mean implies that predicted standardized $y$ values are:",
           "correct": "Closer to 0 than the corresponding standardized $x$ values (since $|r| < 1$)",
-          "wrong": ["Always positive when $x$ is positive", "Equal in magnitude to the standardized $x$ values", "Further from 0 than the standardized $x$ values"],
+          "wrong": [
+            "Always positive when $x$ is positive",
+            "Equal in magnitude to the standardized $x$ values",
+            "Further from 0 than the standardized $x$ values"
+          ],
           "explanation": "$\\hat{z}_y = r \\cdot z_x$. Since $|r| < 1$, the predicted $z_y$ is shrunk toward 0 relative to $z_x$. This is regression to the mean."
         }
       ],
@@ -751,19 +1055,31 @@
             {
               "q": "What is the expected change in stock over 2 months, $E(X_1 + X_2)$?",
               "correct": "$3.4$",
-              "wrong": ["$1.7$", "$2.89$", "$4.0$"],
+              "wrong": [
+                "$1.7$",
+                "$2.89$",
+                "$4.0$"
+              ],
               "explanation": "$E(X_1 + X_2) = 2 \\times E(X) = 2(1.7) = 3.4$"
             },
             {
               "q": "What is $\\text{Var}(X_1 + X_2)$ for two independent months?",
               "correct": "$1.62$",
-              "wrong": ["$0.81$", "$3.4$", "$0.9$"],
+              "wrong": [
+                "$0.81$",
+                "$3.4$",
+                "$0.9$"
+              ],
               "explanation": "$\\text{Var}(X_1 + X_2) = 2 \\times 0.81 = 1.62$. Variances add for independent RVs."
             },
             {
               "q": "What is $\\text{SD}(X_1 + X_2)$?",
               "correct": "$\\approx 1.27$",
-              "wrong": ["$1.62$", "$1.8$", "$0.9$"],
+              "wrong": [
+                "$1.62$",
+                "$1.8$",
+                "$0.9$"
+              ],
               "explanation": "$\\text{SD} = \\sqrt{1.62} \\approx 1.27$. Not $2 \\times 0.9 = 1.8$ — SDs don't add!"
             }
           ]
@@ -775,19 +1091,31 @@
             {
               "q": "The officials want to estimate the proportion of guilty employers. What value do they use?",
               "correct": "$\\hat{p} = 33/40 = 0.825$",
-              "wrong": ["$p = 411/500 = 0.822$", "$33/500 = 0.066$", "They can't estimate without knowing $M$"],
+              "wrong": [
+                "$p = 411/500 = 0.822$",
+                "$33/500 = 0.066$",
+                "They can't estimate without knowing $M$"
+              ],
               "explanation": "They only have their sample data. Their estimate is $\\hat{p} = 33/40 = 0.825$."
             },
             {
               "q": "The officials compute their estimated SE as $\\sqrt{\\hat{p}(1-\\hat{p})/n}$. Approximately what value do they get?",
               "correct": "$\\approx 0.06$",
-              "wrong": ["$\\approx 0.02$", "$\\approx 0.04$", "$\\approx 0.82$"],
+              "wrong": [
+                "$\\approx 0.02$",
+                "$\\approx 0.04$",
+                "$\\approx 0.82$"
+              ],
               "explanation": "$\\sqrt{(33/40)(7/40)/40} = \\sqrt{(0.825)(0.175)/40} = \\sqrt{0.00361} \\approx 0.060$"
             },
             {
               "q": "The TRUE standard error (using the actual $p = 411/500$) is approximately:",
               "correct": "$\\approx 0.06$",
-              "wrong": ["$\\approx 0.02$", "$\\approx 0.04$", "$\\approx 0.82$"],
+              "wrong": [
+                "$\\approx 0.02$",
+                "$\\approx 0.04$",
+                "$\\approx 0.82$"
+              ],
               "explanation": "$\\sqrt{(411/500)(89/500)/40} = \\sqrt{(0.822)(0.178)/40} = \\sqrt{0.00366} \\approx 0.060$. Close to the estimate because $\\hat{p} \\approx p$."
             }
           ]
@@ -799,19 +1127,31 @@
             {
               "q": "Under $H_0$, the probabilities for $X = 0, 1, 2, 3$ corgis are:",
               "correct": "$512/1000, 384/1000, 96/1000, 8/1000$",
-              "wrong": ["$125/1000, 375/1000, 375/1000, 125/1000$", "$108/500, 216/500, 144/500, 32/500$", "$32/500, 144/500, 216/500, 108/500$"],
+              "wrong": [
+                "$125/1000, 375/1000, 375/1000, 125/1000$",
+                "$108/500, 216/500, 144/500, 32/500$",
+                "$32/500, 144/500, 216/500, 108/500$"
+              ],
               "explanation": "Under $H_0: p=0.2$, use $\\text{Binomial}(3, 0.2)$. $P(0) = 0.512$, $P(1) = 0.384$, $P(2) = 0.096$, $P(3) = 0.008$."
             },
             {
               "q": "You observe 2 corgis. What is the p-value?",
               "correct": "$104/1000 = 0.104$",
-              "wrong": ["$96/1000 = 0.096$", "$8/1000 = 0.008$", "$500/1000 = 0.5$"],
+              "wrong": [
+                "$96/1000 = 0.096$",
+                "$8/1000 = 0.008$",
+                "$500/1000 = 0.5$"
+              ],
               "explanation": "$\\text{p-value} = P(X \\geq 2) = P(2) + P(3) = 96/1000 + 8/1000 = 104/1000 = 0.104$."
             },
             {
               "q": "With $\\alpha = 0.1$ and p-value $= 0.104$, what is the conclusion?",
               "correct": "Cannot rule out the possibility that the friend's claim is true",
-              "wrong": ["Conclude the friend's claim is true", "Conclude the friend's claim is false", "Reject the null and conclude more than 20% are corgis"],
+              "wrong": [
+                "Conclude the friend's claim is true",
+                "Conclude the friend's claim is false",
+                "Reject the null and conclude more than 20% are corgis"
+              ],
               "explanation": "$0.104 > 0.1$, so fail to reject $H_0$. We cannot rule out $p = 0.2$, but we also haven't proven it."
             }
           ]
@@ -823,13 +1163,21 @@
             {
               "q": "The expected counts under $H_0$ are:",
               "correct": "$66, 22, 11, 11$",
-              "wrong": ["$63, 20, 14, 13$", "$60, 20, 10, 10$", "$27.5, 27.5, 27.5, 27.5$"],
+              "wrong": [
+                "$63, 20, 14, 13$",
+                "$60, 20, 10, 10$",
+                "$27.5, 27.5, 27.5, 27.5$"
+              ],
               "explanation": "$n = 110$. Expected: $110(0.6)=66$, $110(0.2)=22$, $110(0.1)=11$, $110(0.1)=11$."
             },
             {
               "q": "The test statistic $\\chi^2$ is closest to:",
               "correct": "$1.5$",
-              "wrong": ["$0$", "$10$", "$2.5$"],
+              "wrong": [
+                "$0$",
+                "$10$",
+                "$2.5$"
+              ],
               "explanation": "$\\chi^2 = (63-66)^2/66 + (20-22)^2/22 + (14-11)^2/11 + (13-11)^2/11 \\approx 0.14 + 0.18 + 0.82 + 0.36 = 1.5$."
             }
           ]
@@ -841,19 +1189,31 @@
             {
               "q": "The degrees of freedom for this test are:",
               "correct": "$2$",
-              "wrong": ["$3$", "$5$", "$6$"],
+              "wrong": [
+                "$3$",
+                "$5$",
+                "$6$"
+              ],
               "explanation": "$df = (3-1)(2-1) = 2$. Three diet groups (rows) and two sleep outcomes (columns)."
             },
             {
               "q": "Column totals: Yes = 42, No = 42. Row total for C = 18. Expected count for (C, No):",
               "correct": "$9$",
-              "wrong": ["$3$", "$15$", "$18$"],
+              "wrong": [
+                "$3$",
+                "$15$",
+                "$18$"
+              ],
               "explanation": "$E = (18 \\times 42)/84 = 756/84 = 9$."
             },
             {
               "q": "The observed count for (C, No) is 3, but expected is 9. This means diet C:",
               "correct": "Had much better sleep outcomes than expected under independence",
-              "wrong": ["Had much worse sleep outcomes than expected", "Matches the expected pattern perfectly", "Cannot be interpreted without the full test statistic"],
+              "wrong": [
+                "Had much worse sleep outcomes than expected",
+                "Matches the expected pattern perfectly",
+                "Cannot be interpreted without the full test statistic"
+              ],
               "explanation": "Only 3 observed vs 9 expected in the 'No' column. Diet C had far fewer poor sleep outcomes than independence would predict, contributing a large $(3-9)^2/9 = 4$ to the test statistic."
             }
           ]
@@ -866,25 +1226,85 @@
     }
   ],
   "glossary": [
-    { "term": "Expected Value E(X)", "def": "The long-run average of a random variable. Computed as Σ x·P(x) for discrete distributions." },
-    { "term": "Variance Var(X)", "def": "Measure of spread: E(X²) - [E(X)]². Always non-negative." },
-    { "term": "Standard Deviation SD(X)", "def": "Square root of variance. In the same units as the original variable." },
-    { "term": "Sample Proportion p̂", "def": "x/n — the proportion of successes observed in a sample." },
-    { "term": "Population Proportion p", "def": "M/N — the true proportion in the population. Usually unknown." },
-    { "term": "Standard Error (SE)", "def": "The standard deviation of a sampling distribution. For p̂: √[p̂(1-p̂)/n]." },
-    { "term": "Binomial Distribution", "def": "Distribution of the number of successes in n independent trials, each with probability p. P(X=k) = C(n,k)·p^k·(1-p)^(n-k)." },
-    { "term": "P-value", "def": "Probability of observing data as extreme or more extreme than what was seen, assuming H₀ is true." },
-    { "term": "Significance Level α", "def": "The maximum tolerable probability of a Type I error. Common values: 0.01, 0.05, 0.10." },
-    { "term": "Type I Error", "def": "Rejecting H₀ when it is actually true. A false positive." },
-    { "term": "Type II Error", "def": "Failing to reject H₀ when it is actually false. A false negative." },
-    { "term": "Chi-Squared Test Statistic", "def": "χ² = Σ (O - E)²/E, summed over all cells or categories." },
-    { "term": "Degrees of Freedom (GOF)", "def": "df = k - 1, where k is the number of categories." },
-    { "term": "Degrees of Freedom (Independence)", "def": "df = (r-1)(c-1), where r = rows, c = columns." },
-    { "term": "Confidence Interval", "def": "A range of plausible values for a parameter. If CI for a difference excludes 0, the difference is significant." },
-    { "term": "Pearson Correlation r", "def": "Measures linear association between two variables. Ranges from -1 to 1." },
-    { "term": "Regression to the Mean", "def": "Predicted standardized y is closer to 0 than standardized x, because |r| < 1." },
-    { "term": "Slope (Simple Linear Regression)", "def": "b = r · (s_y / s_x). Gives the change in y per unit change in x." },
-    { "term": "Standardized Value (z-score)", "def": "z = (x - x̄) / s. Number of standard deviations from the mean." },
-    { "term": "Null Distribution", "def": "The probability distribution assumed under H₀. Uses the claimed parameter value, not the true value." }
+    {
+      "term": "Expected Value E(X)",
+      "def": "The long-run average of a random variable. Computed as Σ x·P(x) for discrete distributions."
+    },
+    {
+      "term": "Variance Var(X)",
+      "def": "Measure of spread: E(X²) - [E(X)]². Always non-negative."
+    },
+    {
+      "term": "Standard Deviation SD(X)",
+      "def": "Square root of variance. In the same units as the original variable."
+    },
+    {
+      "term": "Sample Proportion p̂",
+      "def": "x/n — the proportion of successes observed in a sample."
+    },
+    {
+      "term": "Population Proportion p",
+      "def": "M/N — the true proportion in the population. Usually unknown."
+    },
+    {
+      "term": "Standard Error (SE)",
+      "def": "The standard deviation of a sampling distribution. For p̂: √[p̂(1-p̂)/n]."
+    },
+    {
+      "term": "Binomial Distribution",
+      "def": "Distribution of the number of successes in n independent trials, each with probability p. P(X=k) = C(n,k)·p^k·(1-p)^(n-k)."
+    },
+    {
+      "term": "P-value",
+      "def": "Probability of observing data as extreme or more extreme than what was seen, assuming H₀ is true."
+    },
+    {
+      "term": "Significance Level α",
+      "def": "The maximum tolerable probability of a Type I error. Common values: 0.01, 0.05, 0.10."
+    },
+    {
+      "term": "Type I Error",
+      "def": "Rejecting H₀ when it is actually true. A false positive."
+    },
+    {
+      "term": "Type II Error",
+      "def": "Failing to reject H₀ when it is actually false. A false negative."
+    },
+    {
+      "term": "Chi-Squared Test Statistic",
+      "def": "χ² = Σ (O - E)²/E, summed over all cells or categories."
+    },
+    {
+      "term": "Degrees of Freedom (GOF)",
+      "def": "df = k - 1, where k is the number of categories."
+    },
+    {
+      "term": "Degrees of Freedom (Independence)",
+      "def": "df = (r-1)(c-1), where r = rows, c = columns."
+    },
+    {
+      "term": "Confidence Interval",
+      "def": "A range of plausible values for a parameter. If CI for a difference excludes 0, the difference is significant."
+    },
+    {
+      "term": "Pearson Correlation r",
+      "def": "Measures linear association between two variables. Ranges from -1 to 1."
+    },
+    {
+      "term": "Regression to the Mean",
+      "def": "Predicted standardized y is closer to 0 than standardized x, because |r| < 1."
+    },
+    {
+      "term": "Slope (Simple Linear Regression)",
+      "def": "b = r · (s_y / s_x). Gives the change in y per unit change in x."
+    },
+    {
+      "term": "Standardized Value (z-score)",
+      "def": "z = (x - x̄) / s. Number of standard deviations from the mean."
+    },
+    {
+      "term": "Null Distribution",
+      "def": "The probability distribution assumed under H₀. Uses the claimed parameter value, not the true value."
+    }
   ]
 }
