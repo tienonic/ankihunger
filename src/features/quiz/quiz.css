@@ -9,36 +9,6 @@
   min-height: 320px;
 }
 
-/* === Score Bar === */
-.score-bar {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 8px 14px;
-  background: transparent;
-  border-bottom: 1px solid var(--color-border);
-  margin-bottom: 16px;
-  font-weight: 500;
-  font-size: 0.8rem;
-  flex-wrap: wrap;
-  color: var(--color-text-light);
-}
-
-.score-bar .srs-info {
-  font-size: 0.78rem;
-  font-weight: 400;
-  color: var(--color-text-light);
-}
-
-.score-bar .reset-btn {
-  background: none;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-light);
-  padding: 3px 10px;
-  border-radius: 2px;
-  cursor: pointer;
-  font-size: 0.75rem;
-}
 
 /* === Mode Toggle === */
 .mode-toggle {

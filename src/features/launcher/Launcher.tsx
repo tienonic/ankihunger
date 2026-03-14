@@ -1,4 +1,5 @@
-import { For, Show, createSignal, onMount } from 'solid-js';
+import './launcher.css';
+import { For, Show } from 'solid-js';
 import { projectRegistry } from '../../projects/registry.ts';
 import {
   openRegistryProject,
@@ -40,14 +41,14 @@ export function Launcher() {
   }
 
   return (
-    <div class="flex items-center justify-center min-h-screen p-5">
-      <div class="bg-card rounded-sm shadow-[0_4px_24px_rgba(0,0,0,0.12)] py-12 px-10 max-w-[460px] w-full text-center">
-        <h1 class="text-[1.8rem] font-bold text-primary-dark mb-1">Study Tool</h1>
-        <p class="text-[0.95rem] text-text-light mb-8">
+    <div class="launcher-wrap">
+      <div class="launcher-card">
+        <h1>Study Tool</h1>
+        <p class="launcher-subtitle">
           FSRS-Powered Spaced Repetition
         </p>
 
-        <div class="flex flex-col gap-3 mb-4">
+        <div class="launcher-list">
           <For each={projectRegistry}>
             {(proj) => (
               <ProjectCard
@@ -58,7 +59,7 @@ export function Launcher() {
           </For>
 
           <button
-            class="w-full py-3 px-4 rounded-sm border-2 border-primary bg-primary-light text-primary-dark font-semibold cursor-pointer transition-colors hover:bg-primary-dark hover:text-white"
+            class="launcher-open-btn"
             onClick={() => fileInput.click()}
           >
             Open Project File (.json)
@@ -80,13 +81,13 @@ export function Launcher() {
         />
 
         <Show when={loadError()}>
-          <div class="mt-4 p-3 bg-danger-light text-danger-dark rounded-sm text-sm font-medium">
+          <div class="launcher-error">
             {loadError()}
           </div>
         </Show>
 
         <Show when={isLoading()}>
-          <div class="mt-4 text-text-light text-sm">Loading project...</div>
+          <div class="launcher-loading">Loading project...</div>
         </Show>
       </div>
     </div>

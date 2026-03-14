@@ -137,11 +137,7 @@ function handleMcqKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typ
         session.rate(session.isCorrect() ? 3 : 1);
       }
     } else if (st === 'answering') {
-      if (session.pending()) {
-        session.skip();
-      } else {
-        session.skip();
-      }
+      session.skip();
     }
     return;
   }

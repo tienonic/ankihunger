@@ -30,7 +30,6 @@ export interface QuizSession {
   options: () => string[];
   selected: () => string | null;
   isCorrect: () => boolean;
-  pending: () => boolean;
   ratingLabels: () => Record<number, string>;
   score: () => { correct: number; attempted: number };
   dueCount: () => { due: number; newCount: number; total: number };
@@ -93,7 +92,6 @@ export function createQuizSession(section: Section): QuizSession {
   const [options, setOptions] = createSignal<string[]>([]);
   const [selected, setSelected] = createSignal<string | null>(null);
   const [isCorrect, setIsCorrect] = createSignal(false);
-  const [pending, setPending] = createSignal(false);
   const [ratingLabels, setRatingLabels] = createSignal<Record<number, string>>({});
   const [score, setScore] = createSignal({ correct: 0, attempted: 0 });
   const [dueCount, setDueCount] = createSignal({ due: 0, newCount: 0, total: 0 });
@@ -210,7 +208,6 @@ export function createQuizSession(section: Section): QuizSession {
       setOptions(shuffle([lookup.question.correct, ...lookup.question.wrong]));
       setSelected(null);
       setIsCorrect(false);
-      setPending(false);
       setPassage(lookup.passage ?? '');
       setState('answering');
     });
@@ -361,8 +358,7 @@ export function createQuizSession(section: Section): QuizSession {
           setOptions(shuffle([lookup.question.correct, ...lookup.question.wrong]));
           setSelected(null);
           setIsCorrect(false);
-          setPending(false);
-          setPassage(lookup.passage ?? '');
+              setPassage(lookup.passage ?? '');
           setState('answering');
           setLeechWarning(false);
           setSkipped(false);
@@ -587,8 +583,7 @@ export function createQuizSession(section: Section): QuizSession {
         setOptions(shuffle([lookup.question.correct, ...lookup.question.wrong]));
         setSelected(null);
         setIsCorrect(false);
-        setPending(false);
-        setPassage(lookup.passage ?? '');
+          setPassage(lookup.passage ?? '');
         setState('answering');
       });
       timer.start();
@@ -664,7 +659,6 @@ export function createQuizSession(section: Section): QuizSession {
     options,
     selected,
     isCorrect,
-    pending,
     ratingLabels,
     score,
     dueCount,
