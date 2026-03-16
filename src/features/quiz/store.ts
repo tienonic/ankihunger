@@ -478,7 +478,7 @@ export function createQuizSession(section: Section): QuizSession {
     if (!fId || !p) return;
 
     await workerApi.reviewCard(fId, p.slug, section.id, rating, 0);
-    workerApi.addActivity(p.slug, section.id, rating, rating !== 1);
+    await workerApi.addActivity(p.slug, section.id, rating, rating !== 1);
     pushChartEntry(rating, rating !== 1);
     await pickNextFlash();
   }

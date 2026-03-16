@@ -127,14 +127,14 @@
   background: var(--color-card);
   border: 2px solid var(--color-border);
   border-radius: 4px;
-  cursor: pointer;
+  cursor: default;
   font-size: 1rem;
   transition: border-color 0.15s, background 0.15s;
   line-height: 1.4;
   width: 100%;
 }
 
-.option-btn:hover:not(:disabled) {
+.option-btn:hover:not(.answered) {
   border-color: var(--color-primary);
   background: var(--color-primary-light);
 }
@@ -143,8 +143,7 @@
   z-index: 10;
 }
 
-.option-btn:disabled {
-  cursor: default;
+.option-btn.answered {
   opacity: 0.85;
 }
 

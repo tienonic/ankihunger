@@ -43,6 +43,9 @@ export function useKeyboard() {
       return;
     }
 
+    // Ignore when modifier keys are held (Ctrl+1 = Firefox tab switch, not answer)
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
     const session = sectionHandlers.get(tab);
     if (!session) return;
 

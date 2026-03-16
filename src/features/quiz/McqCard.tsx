@@ -16,7 +16,7 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
     if (st === 'answering' || st === 'idle') return 'option-btn';
     const q = s.question();
     if (!q) return 'option-btn';
-    let cls = 'option-btn';
+    let cls = 'option-btn answered';
     if (opt === q.correct) cls += ' correct';
     if (opt === s.selected() && !s.isCorrect()) cls += ' wrong';
     return cls;
@@ -38,10 +38,6 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
     return null;
   }
 
-  const isRevealed = () => {
-    const st = s.state();
-    return st === 'revealed' || st === 'rated' || st === 'reviewing-history';
-  };
   const showRating = () => s.state() === 'revealed' && !easyMode();
   const showActions = () => s.state() === 'revealed' && !easyMode();
 
@@ -68,8 +64,13 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
               <div class="option-wrapper">
                 <button
                   class={optionClass(opt)}
-                  disabled={isRevealed()}
-                  onClick={() => s.answer(opt)}
+                  onClick={() => {
+                    const st = s.state();
+                    if (st === 'answering') { s.answer(opt); return; }
+                    if (st === 'rated') s.pickNextCard();
+                    else if (st === 'revealed' && easyMode()) s.rate(s.isCorrect() ? 3 : 1);
+                    else if (st === 'reviewing-history') s.advanceFromHistory();
+                  }}
                 >
                   <LatexText text={opt} />
                 </button>

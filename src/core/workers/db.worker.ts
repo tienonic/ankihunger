@@ -420,14 +420,7 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
 
       const card = cardToFSRS(row);
 
-      // Save undo state
-      await run(`DELETE FROM undo_stack`);
-      await run(
-        `INSERT INTO undo_stack (card_id, prev_state) VALUES (?, ?)`,
-        [cardId, JSON.stringify(row)]
-      );
-
-      // Apply FSRS
+      // Apply FSRS (pure computation, before transaction)
       const result = fsrsEngine!.repeat(card, new Date()) as unknown as Record<number, { card: Card; log: any }>;
       const reviewed = result[rating];
       const newCard = reviewed.card;
@@ -438,22 +431,42 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
         newLapses++;
       }
 
-      // Check leech
       let isLeechNow = false;
       if (isLeech(newLapses)) {
         isLeechNow = true;
-        await run(`UPDATE cards SET leech = 1 WHERE card_id = ?`, [cardId]);
       }
 
-      await saveCardFromFSRS(cardId, newCard, newLapses);
-
-      // Log review
       const logId = uuidv7();
-      await run(
-        `INSERT INTO review_log (id, card_id, project_id, rating, review_time, elapsed_ms, new_state, new_stability, new_difficulty, scheduled_days, section_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [logId, cardId, projectId, rating, new Date().toISOString(), elapsedMs, newCard.state, newCard.stability, newCard.difficulty, newCard.scheduled_days, sectionId]
-      );
+      const reviewTime = new Date().toISOString();
+
+      await run('BEGIN');
+      try {
+        // Save undo state
+        await run(`DELETE FROM undo_stack`);
+        await run(
+          `INSERT INTO undo_stack (card_id, prev_state) VALUES (?, ?)`,
+          [cardId, JSON.stringify(row)]
+        );
+
+        // Check leech
+        if (isLeechNow) {
+          await run(`UPDATE cards SET leech = 1 WHERE card_id = ?`, [cardId]);
+        }
+
+        await saveCardFromFSRS(cardId, newCard, newLapses);
+
+        // Log review
+        await run(
+          `INSERT INTO review_log (id, card_id, project_id, rating, review_time, elapsed_ms, new_state, new_stability, new_difficulty, scheduled_days, section_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [logId, cardId, projectId, rating, reviewTime, elapsedMs, newCard.state, newCard.stability, newCard.difficulty, newCard.scheduled_days, sectionId]
+        );
+
+        await run('COMMIT');
+      } catch (e) {
+        await run('ROLLBACK');
+        throw e;
+      }
 
       return {
         card: {
@@ -472,27 +485,36 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
       if (!undoRow) return { undone: false };
 
       const prevState = JSON.parse(undoRow.prev_state as string);
-      await run(
-        `UPDATE cards SET fsrs_state = ?, due = ?, stability = ?, difficulty = ?,
-         elapsed_days = ?, scheduled_days = ?, reps = ?, lapses = ?,
-         last_review = ?, suspended = ?, buried = ?, leech = ?, updated_at = datetime('now')
-         WHERE card_id = ?`,
-        [
-          prevState.fsrs_state, prevState.due, prevState.stability, prevState.difficulty,
-          prevState.elapsed_days, prevState.scheduled_days, prevState.reps, prevState.lapses,
-          prevState.last_review, prevState.suspended, prevState.buried, prevState.leech,
-          undoRow.card_id,
-        ]
-      );
-      await run(`DELETE FROM undo_stack WHERE id = ?`, [undoRow.id]);
 
-      // Remove the last review log for this card
-      await run(
-        `DELETE FROM review_log WHERE id = (
-          SELECT id FROM review_log WHERE card_id = ? ORDER BY review_time DESC LIMIT 1
-        )`,
-        [undoRow.card_id]
-      );
+      await run('BEGIN');
+      try {
+        await run(
+          `UPDATE cards SET fsrs_state = ?, due = ?, stability = ?, difficulty = ?,
+           elapsed_days = ?, scheduled_days = ?, reps = ?, lapses = ?,
+           last_review = ?, suspended = ?, buried = ?, leech = ?, updated_at = datetime('now')
+           WHERE card_id = ?`,
+          [
+            prevState.fsrs_state, prevState.due, prevState.stability, prevState.difficulty,
+            prevState.elapsed_days, prevState.scheduled_days, prevState.reps, prevState.lapses,
+            prevState.last_review, prevState.suspended, prevState.buried, prevState.leech,
+            undoRow.card_id,
+          ]
+        );
+        await run(`DELETE FROM undo_stack WHERE id = ?`, [undoRow.id]);
+
+        // Remove the last review log for this card
+        await run(
+          `DELETE FROM review_log WHERE id = (
+            SELECT id FROM review_log WHERE card_id = ? ORDER BY review_time DESC LIMIT 1
+          )`,
+          [undoRow.card_id]
+        );
+
+        await run('COMMIT');
+      } catch (e) {
+        await run('ROLLBACK');
+        throw e;
+      }
 
       return { undone: true, cardId: undoRow.card_id };
     }
