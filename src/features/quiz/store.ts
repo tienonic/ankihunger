@@ -44,6 +44,8 @@ export interface QuizSession {
   leechWarning: () => boolean;
   skipped: () => boolean;
   currentImageLink: () => string;
+  cramMode: () => boolean;
+  cramCount: () => number;
   pickNextCard: () => Promise<void>;
   answer: (option: string) => Promise<void>;
   skip: () => Promise<void>;
@@ -61,6 +63,8 @@ export interface QuizSession {
   resetSection: () => Promise<void>;
   refreshDue: () => Promise<void>;
   studyMore: () => Promise<void>;
+  startCram: () => Promise<void>;
+  endCram: () => void;
   increaseNewCards: (count?: number) => Promise<void>;
   unburyAll: () => Promise<void>;
   timer:{ seconds: () => number; start: () => void; stop: () => number; reset: () => void; pause: () => void; resume: () => void; paused: () => boolean };
@@ -99,6 +103,9 @@ export function createQuizSession(section: Section): QuizSession {
   const [historyReview, setHistoryReview] = createSignal<HistoryEntry | null>(null);
   const [leechWarning, setLeechWarning] = createSignal(false);
   const [skipped, setSkipped] = createSignal(false);
+  const [cramMode, setCramMode] = createSignal(false);
+  const [cramCount, setCramCount] = createSignal(0);
+  const cramSeen = new Set<string>();
 
   const timer = useTimer();
   let lastElapsedMs = 0;
@@ -172,6 +179,7 @@ export function createQuizSession(section: Section): QuizSession {
   }
 
   async function pickNextCard() {
+    if (cramMode()) { await pickNextCram(); return; }
     const p = project();
     if (!p) return;
 
@@ -313,6 +321,15 @@ export function createQuizSession(section: Section): QuizSession {
     const p = project();
     if (!p) return;
 
+    if (cramMode()) {
+      await workerApi.addActivity(p.slug, section.id, rating, rating !== 1);
+      pushChartEntry(rating, rating !== 1);
+      cramSeen.add(cId);
+      setCramCount(cramSeen.size);
+      setState('rated');
+      return;
+    }
+
     const [result] = await Promise.all([
       workerApi.reviewCard(cId, p.slug, section.id, rating, lastElapsedMs),
       workerApi.addActivity(p.slug, section.id, rating, rating !== 1),
@@ -373,6 +390,7 @@ export function createQuizSession(section: Section): QuizSession {
   }
 
   async function pickNextFlash() {
+    if (cramMode()) { await pickNextCram(); return; }
     const p = project();
     if (!p || !section.flashcards || section.flashCardIds.length === 0) return;
 
@@ -436,6 +454,15 @@ export function createQuizSession(section: Section): QuizSession {
     const fId = flashCardId();
     const p = project();
     if (!fId || !p) return;
+
+    if (cramMode()) {
+      await workerApi.addActivity(p.slug, section.id, rating, rating !== 1);
+      pushChartEntry(rating, rating !== 1);
+      cramSeen.add(fId);
+      setCramCount(cramSeen.size);
+      await pickNextCram();
+      return;
+    }
 
     await workerApi.reviewCard(fId, p.slug, section.id, rating, 0);
     await workerApi.addActivity(p.slug, section.id, rating, rating !== 1);
@@ -586,6 +613,67 @@ export function createQuizSession(section: Section): QuizSession {
     await refreshDue();
   }
 
+  async function pickNextCram() {
+    const p = project();
+    if (!p) return;
+    const cardType = getCardType();
+    const result = await workerApi.pickNextOverride(p.slug, [section.id], cardType, [...cramSeen]);
+    if (!result.cardId) {
+      endCram();
+      return;
+    }
+
+    if (flashMode()) {
+      const flashParts = result.cardId.split('-flash-');
+      if (flashParts.length !== 2) { endCram(); return; }
+      const idx = parseInt(flashParts[1], 10);
+      if (isNaN(idx)) { endCram(); return; }
+      const card = section.flashcards?.[idx];
+      if (!card) { endCram(); return; }
+      const defFirst = flashDefFirst();
+      batch(() => {
+        setFlashCardId(result.cardId);
+        setFlashFront(defFirst ? card.back : card.front);
+        setFlashBack(defFirst ? card.front : card.back);
+        setFlashFlipped(false);
+        setRatingLabels({});
+        setState('answering');
+      });
+      setQuestionContext([card.front, card.back].join(' '));
+    } else {
+      const lookup = lookupQuestion(result.cardId);
+      if (!lookup) { endCram(); return; }
+      const shuffled = shuffle([lookup.question.correct, ...lookup.question.wrong]);
+      batch(() => {
+        setCardId(result.cardId);
+        setQuestion(lookup.question);
+        setOptions(shuffled);
+        setSelected(null);
+        setIsCorrect(false);
+        setPassage(lookup.passage ?? '');
+        setState('answering');
+      });
+      timer.start();
+      const q = lookup.question;
+      const ctx = [q.q, q.correct, q.imageName || q.cropName || '', q.explanation || ''].join(' ');
+      setQuestionContext(ctx);
+    }
+  }
+
+  async function startCram() {
+    cramSeen.clear();
+    setCramCount(0);
+    setCramMode(true);
+    await pickNextCram();
+  }
+
+  function endCram() {
+    setCramMode(false);
+    cramSeen.clear();
+    setCramCount(0);
+    setState('done');
+  }
+
   async function increaseNewCards(count?: number) {
     const p = project();
     if (p && count != null) p.config.new_per_session = count;
@@ -666,6 +754,8 @@ export function createQuizSession(section: Section): QuizSession {
     leechWarning,
     skipped,
     currentImageLink,
+    cramMode,
+    cramCount,
 
     pickNextCard,
     answer,
@@ -684,6 +774,8 @@ export function createQuizSession(section: Section): QuizSession {
     resetSection: resetSectionAction,
     refreshDue,
     studyMore,
+    startCram,
+    endCram,
     increaseNewCards,
     unburyAll: unburyAllAction,
 

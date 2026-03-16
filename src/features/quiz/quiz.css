@@ -463,5 +463,15 @@
   font-size: 0.6rem;
 }
 
+/* === Cram Mode === */
+.cram-btn {
+  border-color: var(--color-accent);
+  color: var(--color-accent-dark);
+}
+
+.cram-btn:hover {
+  background: var(--color-accent-light);
+}
+
 .leech-warning { display: block; margin-top: 8px; }
 .key-hints { margin-top: 12px; }

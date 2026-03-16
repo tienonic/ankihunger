@@ -155,6 +155,7 @@
 .activity-widget-stats {
   border-top: 1px solid var(--color-border);
   padding: 4px 8px;
+  position: relative;
 }
 
 .activity-stats {
@@ -170,3 +171,30 @@
 .activity-stats + .activity-stats { margin-top: 1px; }
 .activity-stats .stat-item { color: var(--color-text-light); white-space: nowrap; font-size: inherit; }
 .activity-stats .stat-item strong { color: var(--color-text); font-weight: 600; }
+
+/* Cram mode indicator */
+.activity-widget .cram-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-top: 1px solid var(--color-accent);
+  background: var(--color-accent-light);
+  font-size: 7px;
+  font-weight: 600;
+  color: var(--color-accent-dark);
+}
+
+.activity-widget .cram-end {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--color-accent-dark);
+  cursor: pointer;
+  font-size: 7px;
+  font-weight: 600;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.activity-widget .cram-end:hover { opacity: 0.7; }

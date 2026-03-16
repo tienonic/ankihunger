@@ -71,6 +71,7 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
           <div class="done-due"><span>{s.dueCount().newCount} new remaining</span><span>{s.dueCount().total} total cards</span></div>
           <div class="done-actions">
             <button type="button" class="action-sm" onClick={() => s.studyMore()}>Study More</button>
+            <button type="button" class="action-sm cram-btn" onClick={() => s.startCram()}>Cram</button>
             <div class="done-add-new">
               {(() => { const [count, setCount] = createSignal(5); return <><input type="number" value={count()} min="1" class="new-cards-input" onInput={(e) => setCount(Math.max(1, parseInt(e.currentTarget.value) || 1))} /><button type="button" class="action-sm" onClick={() => s.increaseNewCards(count())}>Add New</button></>; })()}
             </div>

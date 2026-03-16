@@ -58,8 +58,8 @@ export const workerApi = {
   pickNext: (projectId: string, sectionIds: string[], newPerSession: number, cardType?: 'mcq' | 'passage' | 'flashcard') =>
     sendWorkerMessage<{ cardId: string | null }>({ type: 'PICK_NEXT', projectId, sectionIds, newPerSession, cardType }),
 
-  pickNextOverride: (projectId: string, sectionIds: string[], cardType?: 'mcq' | 'passage' | 'flashcard') =>
-    sendWorkerMessage<{ cardId: string | null }>({ type: 'PICK_NEXT_OVERRIDE', projectId, sectionIds, cardType }),
+  pickNextOverride: (projectId: string, sectionIds: string[], cardType?: 'mcq' | 'passage' | 'flashcard', excludeIds?: string[]) =>
+    sendWorkerMessage<{ cardId: string | null }>({ type: 'PICK_NEXT_OVERRIDE', projectId, sectionIds, cardType, excludeIds }),
 
   resetNewCount: () =>
     sendWorkerMessage({ type: 'RESET_NEW_COUNT' }),

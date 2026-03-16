@@ -1,8 +1,14 @@
 # Study Tool
 
+## Current Status
+
+Active work-in-progress. The app is fully functional — FSRS scheduling, MCQ/flashcard/math modes, activity tracking, cram mode, and all core features work. There are known bugs being actively addressed. Contributions and feedback welcome.
+
+---
+
 Spaced repetition study app using the FSRS algorithm (same scheduling as Anki). Load any subject as a JSON file and study with MCQ quizzes, flashcards, and math drills. All card state persists locally in an IndexedDB-backed SQLite database.
 
-Built with SolidJS, TypeScript, Tailwind CSS v4, and Vite.
+Built with SolidJS, TypeScript, and Vite.
 
 ## Quick Start
 
@@ -31,6 +37,7 @@ Open `http://localhost:3000`. Pick a built-in project or drop a JSON file onto t
 - **Notes** — quick timestamped notes per project (press `/`)
 - **Customizable keybinds** — rebind any keyboard shortcut from the Keys panel
 - **Settings** — tune FSRS parameters (desired retention, new cards per session, leech threshold)
+- **Cram mode** — review all cards in a section by weakest stability, ignoring due dates
 - **Easy mode** — auto-rates cards as Good for faster review
 - **Zen mode** — hides score bar and progress indicators
 - **Custom projects** — create your own subjects as JSON files (see `projects/README.md`)
@@ -86,40 +93,26 @@ Custom projects are stored in localStorage.
 src/
 ├── App.tsx                          # Root: launcher or study phase
 ├── main.tsx                         # Entry point
-├── index.css                        # Tailwind v4 + theme tokens + component styles
-├── components/
+├── index.css                        # @import per-feature CSS + @theme tokens + responsive rules
+├── core/                            # Shared infrastructure
+│   ├── store/app.ts                 # Phase, active project/tab, toggles
+│   ├── store/sections.ts            # sectionHandlers Map + keyboard routing
+│   ├── hooks/                       # useWorker, useKeyboard, useTimer, useLatex
+│   └── workers/                     # db.worker.ts (SQLite+FSRS), protocol.ts
+├── features/                        # Self-contained feature folders
 │   ├── launcher/                    # Project selection, file drop, recent projects
-│   ├── layout/                      # StudyApp shell, Header, TopToggles, SectionsContainer
-│   ├── quiz/                        # McqCard, FlashcardArea, QuizSection
-│   ├── math/                        # MathSection (KaTeX rendering)
-│   ├── glossary/                    # TermsDropdown (sidebar)
-│   ├── notes/                       # NoteBox (/ key input)
-│   └── settings/                    # SettingsPanel, KeybindsPanel, TipsPanel
-├── store/                           # Module-level SolidJS signals (no context providers)
-│   ├── app.ts                       # Phase, active project/tab, toggles
-│   ├── project.ts                   # Project loading, registry, worker registration
-│   ├── quiz.ts                      # Per-section quiz session factory
-│   ├── math.ts                      # Per-section math session factory
-│   ├── glossary.ts                  # Glossary entries, relevance scoring, search
-│   └── keybinds.ts                  # Customizable keyboard bindings
-├── hooks/
-│   ├── useWorker.ts                 # Worker communication + typed API
-│   ├── useKeyboard.ts               # Global keydown routing
-│   ├── useTimer.ts                  # Per-question reactive timer
-│   └── useLatex.ts                  # KaTeX rendering hook
-├── workers/
-│   ├── db.worker.ts                 # SQLite + FSRS engine (wa-sqlite, Web Worker)
-│   └── protocol.ts                  # Typed request/response messages
-├── projects/
-│   ├── types.ts                     # Project/section type definitions
-│   ├── loader.ts                    # JSON → project with card ID generation
-│   ├── registry.ts                  # Built-in project registry
-│   └── ag-inspector/                # Built-in project data + builder
-├── data/
-│   └── math.ts                      # Math problem generators
-├── db/
-│   ├── schema.sql                   # SQLite schema
-│   └── types.ts                     # DB row types
+│   ├── quiz/                        # MCQ + flashcard (shared session/score/cram)
+│   ├── math/                        # Math mode with categories + KaTeX
+│   ├── activity/                    # Sidebar chart + stats widget
+│   ├── glossary/                    # Terms dropdown with relevance scoring
+│   ├── ai/                          # AI assistant panel (Claude CLI bridge)
+│   ├── notes/                       # Note input (/ key)
+│   └── settings/                    # FSRS settings, keybinds, tips
+├── components/                      # Shared display components
+│   ├── LatexText.tsx
+│   └── layout/                      # StudyApp shell, Header, TopToggles, SectionsContainer
+├── projects/                        # Data types, loader, registry, built-in projects
+├── data/                            # Math problem generators
 └── utils/                           # shuffle, formatting, ID helpers
 ```
 
@@ -138,7 +131,6 @@ src/
 | [ts-fsrs](https://github.com/open-spaced-repetition/ts-fsrs) | FSRS spaced repetition algorithm |
 | [wa-sqlite](https://rhashimoto.github.io/wa-sqlite/) | SQLite compiled to WASM (IndexedDB VFS) |
 | [KaTeX](https://katex.org/) | LaTeX math rendering |
-| [Tailwind CSS v4](https://tailwindcss.com/) | Utility-first CSS |
 | [Vite](https://vite.dev/) | Build tool + dev server |
 
 ## Browser Requirements

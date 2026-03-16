@@ -32,18 +32,21 @@ export function ActivityWidget(props: { isFlashMode: () => boolean; activeSessio
         <div class="activity-widget-stats">
           <div class="activity-stats"><span class="stat-item">review: <strong>{reviewStats().reviews}</strong></span><span class="stat-item">retention: <strong>{reviewStats().retention}</strong></span></div>
           <div class="activity-stats"><span class="stat-item">score: <strong>{sidebarScore().correct} / {sidebarScore().attempted}</strong></span><span class="stat-item">due: <strong>{sidebarScore().due} / {sidebarScore().total}</strong></span></div>
+          <div class="activity-reset-wrap" ref={resetWrapRef}>
+            <button type="button" class="activity-reset-btn" onClick={() => setResetMenuOpen(v => !v)}>reset</button>
+            <Show when={resetMenuOpen()}>
+              <div class="reset-menu">
+                <Show when={!confirmAction()} fallback={<div class="reset-confirm"><span class="reset-confirm-label">Are you sure?</span><div class="reset-confirm-btns"><button type="button" class="reset-confirm-yes" onClick={() => { confirmAction()?.(); setConfirmAction(null); setResetMenuOpen(false); }}>Yes</button><button type="button" class="reset-confirm-no" onClick={() => setConfirmAction(null)}>No</button></div></div>}>
+                  <button type="button" class="reset-menu-item" onClick={() => { setConfirmAction(() => async () => { const p = activeProject(); if (p) { await workerApi.clearActivity(p.slug); loadActivity(); } }); }}>Reset Graph</button>
+                  <button type="button" class="reset-menu-item" onClick={() => { setConfirmAction(() => () => { props.activeSession()?.resetSection?.(); }); }}>Reset Section</button>
+                </Show>
+              </div>
+            </Show>
+          </div>
         </div>
-        <div class="activity-reset-wrap" ref={resetWrapRef}>
-          <button type="button" class="activity-reset-btn" onClick={() => setResetMenuOpen(v => !v)}>reset</button>
-          <Show when={resetMenuOpen()}>
-            <div class="reset-menu">
-              <Show when={!confirmAction()} fallback={<div class="reset-confirm"><span class="reset-confirm-label">Are you sure?</span><div class="reset-confirm-btns"><button type="button" class="reset-confirm-yes" onClick={() => { confirmAction()?.(); setConfirmAction(null); setResetMenuOpen(false); }}>Yes</button><button type="button" class="reset-confirm-no" onClick={() => setConfirmAction(null)}>No</button></div></div>}>
-                <button type="button" class="reset-menu-item" onClick={() => { setConfirmAction(() => async () => { const p = activeProject(); if (p) { await workerApi.clearActivity(p.slug); loadActivity(); } }); }}>Reset Graph</button>
-                <button type="button" class="reset-menu-item" onClick={() => { setConfirmAction(() => () => { props.activeSession()?.resetSection?.(); }); }}>Reset Section</button>
-              </Show>
-            </div>
-          </Show>
-        </div>
+        <Show when={props.activeSession()?.cramMode?.()}>
+          <div class="cram-bar">Cram mode — {props.activeSession()?.cramCount()} reviewed <button type="button" class="cram-end" onClick={() => props.activeSession()?.endCram()}>End</button></div>
+        </Show>
       </div>
       <Show when={props.isFlashMode()}>
         {(() => { const s = props.activeSession()!; const due = () => s.dueCount(); return (<div class="flash-sidebar-controls"><div class="activity-stats"><span class="stat-item">new: <strong>{due().newCount}</strong></span><span class="stat-item">due: <strong>{due().due}</strong></span><span class="stat-item">total: <strong>{due().total}</strong></span></div><div class="flash-sidebar-btns"><button type="button" class="action-sm flash-nav-btn" onClick={() => s.shuffleFlash()} title="Random card">shuffle</button><button type="button" class="action-sm flash-nav-btn" onClick={() => s.resetSection()} title="Reset flashcard progress">reset</button></div></div>); })()}

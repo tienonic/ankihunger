@@ -327,18 +327,22 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
 
     case 'PICK_NEXT_OVERRIDE': {
       await checkNewDay();
-      const { projectId, sectionIds, cardType } = request;
+      const { projectId, sectionIds, cardType, excludeIds } = request;
       const placeholders = sectionIds.map(() => '?').join(',');
       const typeFilter = cardType ? ' AND card_type = ?' : '';
       const typeParam = cardType ? [cardType] : [];
+      const excludeFilter = excludeIds && excludeIds.length > 0
+        ? ` AND card_id NOT IN (${excludeIds.map(() => '?').join(',')})`
+        : '';
+      const excludeParam = excludeIds && excludeIds.length > 0 ? excludeIds : [];
 
       // Pick weakest card (lowest stability) regardless of due date
       const row = await queryOne(
         `SELECT card_id FROM cards
          WHERE project_id = ? AND section_id IN (${placeholders})
-         AND suspended = 0 AND buried = 0${typeFilter}
+         AND suspended = 0 AND buried = 0${typeFilter}${excludeFilter}
          ORDER BY stability ASC LIMIT 1`,
-        [projectId, ...sectionIds, ...typeParam]
+        [projectId, ...sectionIds, ...typeParam, ...excludeParam]
       );
       return row ? { cardId: row.card_id } : { cardId: null };
     }
