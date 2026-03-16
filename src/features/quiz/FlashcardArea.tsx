@@ -1,4 +1,4 @@
-import { Show, For } from 'solid-js';
+import { Show, For, createSignal } from 'solid-js';
 import type { Section } from '../../projects/types.ts';
 import type { QuizSession } from './store.ts';
 import { LatexHtml } from '../../components/LatexText.tsx';
@@ -57,7 +57,21 @@ export function FlashcardArea(props: { session: QuizSession; section: Section })
           </div>
           <div class="done-actions">
             <button class="action-sm" onClick={() => s.studyMore()}>Study More</button>
-            <button class="action-sm" onClick={() => s.increaseNewCards()}>+5 New Cards</button>
+            <div class="done-add-new">
+              {(() => {
+                const [count, setCount] = createSignal(5);
+                return <>
+                  <input
+                    type="number"
+                    value={count()}
+                    min="1"
+                    class="new-cards-input"
+                    onInput={(e) => setCount(Math.max(1, parseInt(e.currentTarget.value) || 1))}
+                  />
+                  <button class="action-sm" onClick={() => s.increaseNewCards(count())}>Add New</button>
+                </>;
+              })()}
+            </div>
             <button class="action-sm" onClick={() => s.unburyAll()}>Unbury Cards</button>
           </div>
         </div>

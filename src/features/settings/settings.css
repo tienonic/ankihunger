@@ -7,8 +7,7 @@
 
 .settings-dropdown {
   position: fixed;
-  top: 80px;
-  right: 20px;
+  left: 210px;
   width: 220px;
   background: var(--color-card);
   border: 1px solid var(--color-border);
@@ -56,17 +55,6 @@
 .settings-save-btn:hover { opacity: 0.9; }
 
 /* === Keybinds Panel === */
-.keybinds-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(45, 42, 38, 0.4);
-  z-index: 500;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 80px;
-}
-
 .keybinds-modal {
   background: var(--color-card);
   border: 1px solid var(--color-border);
@@ -75,7 +63,13 @@
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.keybinds-modal.panel-fixed {
+  position: fixed;
+  left: 210px;
+  z-index: 501;
 }
 
 .keybinds-header {

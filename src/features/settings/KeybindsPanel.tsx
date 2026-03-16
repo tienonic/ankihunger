@@ -5,7 +5,7 @@ import {
   ACTION_META, DEFAULT_KEYBINDS,
   type KeyAction, type Binding, type KeyContext,
 } from './keybinds.ts';
-import { setHeaderLocked } from '../../core/store/app.ts';
+import { activePanel, setActivePanel, setHeaderLocked } from '../../core/store/app.ts';
 
 const CONTEXT_ORDER: KeyContext[] = ['global', 'mcq', 'flashcard', 'math'];
 const CONTEXT_LABELS: Record<KeyContext, string> = {
@@ -30,23 +30,24 @@ function keyToLabel(key: string, code?: string): string {
 }
 
 export function KeybindsPanel() {
-  const [open, setOpen] = createSignal(false);
   const [capturing, setCapturing] = createSignal<KeyAction | null>(null);
   const [conflict, setConflict] = createSignal<{ action: KeyAction; existing: KeyAction } | null>(null);
+  const [panelTop, setPanelTop] = createSignal(0);
+  let btnRef!: HTMLButtonElement;
 
   function close() {
-    setOpen(false);
+    setActivePanel(null);
     setHeaderLocked(false);
   }
 
   function handleEscape(e: KeyboardEvent) {
-    if (e.key === 'Escape' && open() && !capturing()) {
+    if (e.key === 'Escape' && activePanel() === 'keybinds' && !capturing()) {
       close();
     }
   }
 
   function handleBackdropClick(e: MouseEvent) {
-    if ((e.target as HTMLElement).classList.contains('keybinds-overlay')) {
+    if ((e.target as HTMLElement).classList.contains('settings-backdrop')) {
       if (capturing()) {
         setCapturing(null);
         setConflict(null);
@@ -82,7 +83,6 @@ export function KeybindsPanel() {
       const existing = findConflict(action, binding);
       if (existing) {
         setConflict({ action, existing });
-        // Swap: clear the conflicting binding by assigning it the old key
         const oldBinding = keybinds()[action];
         setKeybind(existing, oldBinding);
       }
@@ -91,7 +91,6 @@ export function KeybindsPanel() {
       setCapturing(null);
     }
 
-    // Use next tick so the current keypress (if any) doesn't get captured
     setTimeout(() => document.addEventListener('keydown', captureHandler, true), 0);
   }
 
@@ -110,13 +109,13 @@ export function KeybindsPanel() {
 
   return (
     <>
-      <button class="tips-btn" title="Keyboard shortcuts" onClick={() => { setOpen(true); setHeaderLocked(true); }}>
+      <button ref={btnRef} class="tips-btn" title="Keyboard shortcuts" onClick={() => { setPanelTop(btnRef.getBoundingClientRect().top); setActivePanel('keybinds'); setHeaderLocked(true); }}>
         Keys
       </button>
-      <Show when={open()}>
+      <Show when={activePanel() === 'keybinds'}>
         <Portal>
-          <div class="keybinds-overlay" onClick={handleBackdropClick}>
-            <div class="keybinds-modal">
+          <div class="settings-backdrop" onClick={handleBackdropClick}>
+            <div class="keybinds-modal panel-fixed" style={{ top: `${panelTop()}px` }}>
               <div class="keybinds-header">
                 <span>Keyboard Shortcuts</span>
                 <button class="keybinds-close" onClick={close}>&times;</button>

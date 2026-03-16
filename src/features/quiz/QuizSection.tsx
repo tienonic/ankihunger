@@ -34,7 +34,7 @@ export function QuizSection(props: { section: Section }) {
 
   return (
     <div>
-      {/* Mode toggle (quiz/flash tabs + reset) */}
+      {/* Mode toggle (quiz/flash tabs) */}
       <Show when={hasFlash()}>
         <div class="mode-toggle">
           <button
@@ -56,19 +56,12 @@ export function QuizSection(props: { section: Section }) {
             <Show when={sourceFolder()}>
               <button class="reset-btn" onClick={openFolder} title="Open project folder">Open</button>
             </Show>
-            <button
-              class="reset-btn"
-              onClick={() => session.resetSection()}
-              title="Reset section progress"
-            >
-              Reset
-            </button>
           </span>
         </div>
       </Show>
 
-      {/* Reset only (no flashcards) */}
-      <Show when={!hasFlash()}>
+      {/* Actions only (no flashcards) */}
+      <Show when={!hasFlash() && (session.currentImageLink() || sourceFolder())}>
         <div class="mode-toggle mode-toggle-actions-only">
           <span class="mode-toggle-actions">
             <Show when={session.currentImageLink()}>
@@ -77,13 +70,6 @@ export function QuizSection(props: { section: Section }) {
             <Show when={sourceFolder()}>
               <button class="reset-btn" onClick={openFolder} title="Open project folder">Open</button>
             </Show>
-            <button
-              class="reset-btn"
-              onClick={() => session.resetSection()}
-              title="Reset section progress"
-            >
-              Reset
-            </button>
           </span>
         </div>
       </Show>

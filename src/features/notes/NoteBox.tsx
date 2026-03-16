@@ -4,7 +4,7 @@ import { noteBoxVisible, setNoteBoxVisible, activeProject } from '../../core/sto
 import { workerApi } from '../../core/hooks/useWorker.ts';
 
 export function NoteBox() {
-  const [placeholder, setPlaceholder] = createSignal('note...');
+  const [placeholder, setPlaceholder] = createSignal('');
   let inputRef: HTMLInputElement | undefined;
 
   // Auto-focus when visible
@@ -25,12 +25,12 @@ export function NoteBox() {
         setPlaceholder('saved');
         setTimeout(() => {
           setNoteBoxVisible(false);
-          setPlaceholder('note...');
+          setPlaceholder('');
         }, 400);
       }
     } else if (e.key === 'Escape') {
       if (inputRef) inputRef.value = '';
-      setPlaceholder('note...');
+      setPlaceholder('');
       setNoteBoxVisible(false);
     }
   }

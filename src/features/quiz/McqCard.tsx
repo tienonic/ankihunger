@@ -1,4 +1,4 @@
-import { Show, For } from 'solid-js';
+import { Show, For, createSignal } from 'solid-js';
 import type { QuizSession } from './store.ts';
 import { easyMode } from '../../core/store/app.ts';
 import { getLabel } from '../settings/keybinds.ts';
@@ -6,8 +6,6 @@ import { LatexText } from '../../components/LatexText.tsx';
 
 const RATING_CSS: Record<number, string> = { 1: 'rating-again', 2: 'rating-hard', 3: 'rating-good', 4: 'rating-easy' };
 const RATING_NAMES: Record<number, string> = { 1: 'Again', 2: 'Hard', 3: 'Good', 4: 'Easy' };
-const STATE_LABELS: Record<number, string> = { 0: 'NEW', 1: 'LEARNING', 2: 'REVIEW', 3: 'RELEARNING' };
-const STATE_CSS: Record<number, string> = { 0: 'state-new', 1: 'state-learning', 2: 'state-review', 3: 'state-relearning' };
 const FLASH_CSS: Record<number, string> = { 1: 'flash-again', 2: 'flash-hard', 3: 'flash-good', 4: 'flash-easy' };
 
 export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
@@ -31,11 +29,11 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
     if (!q) return null;
 
     if (s.skipped() && opt === q.correct) {
-      return { text: 'Answer: ' + q.correct, cls: 'option-feedback skip-fb', explanation: q.explanation };
+      return { text: q.correct, cls: 'option-feedback skip-fb', explanation: q.explanation };
     }
     if (opt === s.selected()) {
-      if (s.isCorrect()) return { text: 'Correct!', cls: 'option-feedback correct-fb', explanation: q.explanation };
-      return { text: 'Incorrect. Answer: ' + q.correct, cls: 'option-feedback wrong-fb', explanation: q.explanation };
+      if (s.isCorrect()) return { text: '', cls: 'option-feedback correct-fb', explanation: q.explanation };
+      return { text: q.correct, cls: 'option-feedback wrong-fb', explanation: q.explanation };
     }
     return null;
   }
@@ -49,27 +47,15 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
 
   return (
     <div class="card">
-      {/* Rating flash animation */}
-      <Show when={s.ratingFlash().show}>
-        <span class={`rating-flash show ${FLASH_CSS[s.ratingFlash().rating] ?? ''}`}>
-          {RATING_NAMES[s.ratingFlash().rating] ?? ''}
-        </span>
-      </Show>
-
       {/* Passage */}
       <Show when={props.isPassage && s.passage()}>
         <div class="passage" innerHTML={s.passage()} />
       </Show>
 
-      {/* Question + timer */}
+      {/* Question */}
       <Show when={s.question()}>
         <div class="question-header">
           <LatexText text={s.question()!.q} class="question-text" />
-          <Show when={s.state() === 'answering'}>
-            <span class={`timer${s.timer.seconds() >= 59 ? ' skull' : s.timer.seconds() >= 15 ? ' red' : ''}`}>
-              {s.timer.seconds() >= 59 ? '\u{1F480}' : s.timer.seconds() + 's'}
-            </span>
-          </Show>
         </div>
       </Show>
 
@@ -79,21 +65,25 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
           {(opt) => {
             const fb = () => feedbackFor(opt);
             return (
-              <button
-                class={optionClass(opt)}
-                disabled={isRevealed()}
-                onClick={() => s.answer(opt)}
-              >
-                <LatexText text={opt} />
+              <div class="option-wrapper">
+                <button
+                  class={optionClass(opt)}
+                  disabled={isRevealed()}
+                  onClick={() => s.answer(opt)}
+                >
+                  <LatexText text={opt} />
+                </button>
                 <Show when={fb()}>
                   <div class={fb()!.cls}>
-                    <LatexText text={fb()!.text} />
+                    <Show when={fb()!.text}>
+                      <LatexText text={fb()!.text} />
+                    </Show>
                     <Show when={fb()!.explanation}>
                       <LatexText text={fb()!.explanation} class="explanation" />
                     </Show>
                   </div>
                 </Show>
-              </button>
+              </div>
             );
           }}
         </For>
@@ -120,13 +110,6 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
           <button class="action-sm" onClick={() => s.suspend()}>Suspend</button>
           <button class="action-sm" onClick={() => s.bury()}>Bury</button>
         </div>
-      </Show>
-
-      {/* State badge */}
-      <Show when={showActions()}>
-        <span class={`state-badge ${STATE_CSS[s.cardState()] ?? 'state-new'}`}>
-          {STATE_LABELS[s.cardState()] ?? 'NEW'}
-        </span>
       </Show>
 
       {/* Leech warning */}
@@ -160,7 +143,21 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
           </div>
           <div class="done-actions">
             <button class="action-sm" onClick={() => s.studyMore()}>Study More</button>
-            <button class="action-sm" onClick={() => s.increaseNewCards()}>+5 New Cards</button>
+            <div class="done-add-new">
+              {(() => {
+                const [count, setCount] = createSignal(5);
+                return <>
+                  <input
+                    type="number"
+                    value={count()}
+                    min="1"
+                    class="new-cards-input"
+                    onInput={(e) => setCount(Math.max(1, parseInt(e.currentTarget.value) || 1))}
+                  />
+                  <button class="action-sm" onClick={() => s.increaseNewCards(count())}>Add New</button>
+                </>;
+              })()}
+            </div>
             <button class="action-sm" onClick={() => s.unburyAll()}>Unbury Cards</button>
           </div>
         </div>

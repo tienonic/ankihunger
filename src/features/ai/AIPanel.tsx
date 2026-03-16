@@ -1,7 +1,7 @@
-import { Show, onMount, onCleanup, Switch, Match } from 'solid-js';
+import { createSignal, Show, onMount, onCleanup, Switch, Match } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { setHeaderLocked } from '../../core/store/app.ts';
-import { aiOpen, setAiOpen, aiTab, setAiTab, abortStream } from './store.ts';
+import { activePanel, setActivePanel, setHeaderLocked } from '../../core/store/app.ts';
+import { aiTab, setAiTab, abortStream } from './store.ts';
 import { InsightsTab } from './InsightsTab.tsx';
 import { GenerateTab } from './GenerateTab.tsx';
 import { TargetedTab } from './TargetedTab.tsx';
@@ -14,20 +14,23 @@ const TABS: { id: AITab; label: string }[] = [
 ];
 
 export function AIPanel() {
+  const [panelTop, setPanelTop] = createSignal(0);
+  let btnRef!: HTMLButtonElement;
+
   function close() {
     abortStream();
-    setAiOpen(false);
+    setActivePanel(null);
     setHeaderLocked(false);
   }
 
   function handleEscape(e: KeyboardEvent) {
-    if (e.key === 'Escape' && aiOpen()) {
+    if (e.key === 'Escape' && activePanel() === 'ai') {
       close();
     }
   }
 
   function handleBackdropClick(e: MouseEvent) {
-    if ((e.target as HTMLElement).classList.contains('keybinds-overlay')) {
+    if ((e.target as HTMLElement).classList.contains('settings-backdrop')) {
       close();
     }
   }
@@ -38,16 +41,17 @@ export function AIPanel() {
   return (
     <>
       <button
+        ref={btnRef}
         class="tips-btn"
         title="AI Assistant"
-        onClick={() => { setAiOpen(true); setHeaderLocked(true); }}
+        onClick={() => { setPanelTop(btnRef.getBoundingClientRect().top); setActivePanel('ai'); setHeaderLocked(true); }}
       >
         AI
       </button>
-      <Show when={aiOpen()}>
+      <Show when={activePanel() === 'ai'}>
         <Portal>
-          <div class="keybinds-overlay" onClick={handleBackdropClick}>
-            <div class="keybinds-modal ai-modal">
+          <div class="settings-backdrop" onClick={handleBackdropClick}>
+            <div class="keybinds-modal panel-fixed ai-modal" style={{ top: `${panelTop()}px` }}>
               <div class="keybinds-header">
                 <span>AI Assistant</span>
                 <button class="keybinds-close" onClick={close}>&times;</button>

@@ -4,7 +4,7 @@ import {
   type KeyAction, type KeyContext,
   keybinds,
 } from './keybinds.ts';
-import { setHeaderLocked } from '../../core/store/app.ts';
+import { activePanel, setActivePanel, setHeaderLocked } from '../../core/store/app.ts';
 
 const CONTEXT_ORDER: KeyContext[] = ['mcq', 'flashcard', 'math', 'global'];
 const CONTEXT_LABELS: Record<KeyContext, string> = {
@@ -40,21 +40,22 @@ const TIPS: Record<KeyContext, { action: string; keys: (map: Record<KeyAction, {
 };
 
 export function TipsPanel() {
-  const [open, setOpen] = createSignal(false);
+  const [panelTop, setPanelTop] = createSignal(0);
+  let btnRef!: HTMLButtonElement;
 
   function close() {
-    setOpen(false);
+    setActivePanel(null);
     setHeaderLocked(false);
   }
 
   function handleEscape(e: KeyboardEvent) {
-    if (e.key === 'Escape' && open()) {
+    if (e.key === 'Escape' && activePanel() === 'tips') {
       close();
     }
   }
 
   function handleBackdropClick(e: MouseEvent) {
-    if ((e.target as HTMLElement).classList.contains('keybinds-overlay')) {
+    if ((e.target as HTMLElement).classList.contains('settings-backdrop')) {
       close();
     }
   }
@@ -64,13 +65,13 @@ export function TipsPanel() {
 
   return (
     <>
-      <button class="tips-btn" title="Show keyboard tips" onClick={() => { setOpen(true); setHeaderLocked(true); }}>
+      <button ref={btnRef} class="tips-btn" title="Show keyboard tips" onClick={() => { setPanelTop(btnRef.getBoundingClientRect().top); setActivePanel('tips'); setHeaderLocked(true); }}>
         Tips
       </button>
-      <Show when={open()}>
+      <Show when={activePanel() === 'tips'}>
         <Portal>
-          <div class="keybinds-overlay" onClick={handleBackdropClick}>
-            <div class="keybinds-modal">
+          <div class="settings-backdrop" onClick={handleBackdropClick}>
+            <div class="keybinds-modal panel-fixed" style={{ top: `${panelTop()}px` }}>
               <div class="keybinds-header">
                 <span>Tips</span>
                 <button class="keybinds-close" onClick={close}>&times;</button>

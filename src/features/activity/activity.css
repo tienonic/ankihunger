@@ -1,10 +1,10 @@
 /* === Sidebar Right (Activity Widget) === */
 .sidebar-right {
   position: fixed;
-  left: calc(50% + 420px);
-  top: 200px;
+  left: calc(50% + 314px);
+  top: calc(15vh + 100px);
   z-index: 150;
-  width: 185px;
+  width: 175px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -19,10 +19,13 @@
   position: relative;
 }
 
-.activity-reset-btn {
+.activity-reset-wrap {
   position: absolute;
   bottom: 3px;
   right: 3px;
+}
+
+.activity-reset-btn {
   background: none;
   border: none;
   color: var(--color-text-light);
@@ -36,14 +39,107 @@
 .activity-widget:hover .activity-reset-btn { opacity: 0.4; }
 .activity-reset-btn:hover { opacity: 1 !important; text-decoration: underline; }
 
+.reset-menu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 2px;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  z-index: 200;
+  white-space: nowrap;
+}
+
+.reset-menu-item {
+  display: block;
+  width: 100%;
+  padding: 5px 10px;
+  background: none;
+  border: none;
+  font-size: 0.6rem;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.reset-menu-item:hover {
+  background: var(--color-bg);
+}
+
+.reset-menu-item + .reset-menu-item {
+  border-top: 1px solid var(--color-border);
+}
+
+.reset-confirm {
+  padding: 6px 10px;
+  text-align: center;
+}
+
+.reset-confirm-label {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.reset-confirm-btns {
+  display: flex;
+  gap: 4px;
+}
+
+.reset-confirm-yes,
+.reset-confirm-no {
+  flex: 1;
+  padding: 3px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  font-size: 0.55rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  color: var(--color-text);
+}
+
+.reset-confirm-yes:hover {
+  background: var(--color-danger-light);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.reset-confirm-no:hover {
+  background: var(--color-bg);
+}
+
+.activity-score-row {
+  position: relative;
+  padding: 6px 6px 0;
+}
+
 .activity-score-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--color-primary-dark);
   text-align: center;
-  margin-bottom: 4px;
-  padding: 8px 8px 2px;
+  margin-bottom: 2px;
 }
+
+.sidebar-timer {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.sidebar-timer:hover { opacity: 0.7; }
+.sidebar-timer.paused { opacity: 0.5; font-size: 0.7rem; }
+.sidebar-timer.red { color: var(--color-danger); }
+.sidebar-timer.skull { font-size: 1.2rem; }
 
 .activity-chart-wrap {
   padding: 0 4px;

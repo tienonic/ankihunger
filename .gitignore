@@ -13,3 +13,4 @@ Thumbs.db
 *.spec.tsx
 __tests__/
 research/
+projects/*.json

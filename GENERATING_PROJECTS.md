@@ -53,11 +53,14 @@ I need you to create a study project JSON file. Here are the rules:
 { "term": "Key term", "def": "Definition" }
 ```
 
+**IMPORTANT: Use a single section unless the user explicitly asks for multiple.**
+Multiple sections create separate tabs in the UI, which gets crowded. Put all questions in ONE section with a general name (e.g., "All Topics"). Only split into multiple sections if the user specifically requests it.
+
 **Section structure:**
 ```json
 {
-  "id": "unique-kebab-id",
-  "name": "Display Name",
+  "id": "all-topics",
+  "name": "All Topics",
   "type": "mc-quiz",
   "questions": [ ... ],
   "flashcards": [ ... ],

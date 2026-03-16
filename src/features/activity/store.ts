@@ -125,33 +125,39 @@ function drawChart() {
   const toX = (i: number) => leftPad + (i / (recent.length - 1 || 1)) * plotW;
 
   const zeroY = Math.round(toY(0)) + 0.5;
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.12)';
+  ctx.strokeStyle = 'rgba(45, 42, 38, 0.2)';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(leftPad, zeroY);
   ctx.lineTo(w - rightPad, zeroY);
   ctx.stroke();
 
+  // Y-axis vertical line
+  ctx.beginPath();
+  ctx.moveTo(leftPad + 0.5, topPad);
+  ctx.lineTo(leftPad + 0.5, topPad + plotH);
+  ctx.stroke();
+
   const yTicks = niceYTicks(minS, maxS, 5);
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+  ctx.fillStyle = 'rgba(45, 42, 38, 0.45)';
   ctx.font = '7px sans-serif';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
   for (const val of yTicks) {
     const y = toY(val);
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.strokeStyle = 'rgba(45, 42, 38, 0.25)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(leftPad - 3, y);
     ctx.lineTo(leftPad, y);
     ctx.stroke();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillStyle = 'rgba(45, 42, 38, 0.45)';
     ctx.fillText(String(val), leftPad - 5, y);
   }
 
   const n = recent.length;
   const xStep = n <= 10 ? 1 : n <= 25 ? 5 : 10;
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+  ctx.fillStyle = 'rgba(45, 42, 38, 0.45)';
   ctx.font = '7px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
@@ -159,18 +165,18 @@ function drawChart() {
     const qNum = i + 1;
     if (qNum === 1 || qNum === n || qNum % xStep === 0) {
       const x = toX(i);
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.strokeStyle = 'rgba(45, 42, 38, 0.25)';
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(x, topPad + plotH);
       ctx.lineTo(x, topPad + plotH + 3);
       ctx.stroke();
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.fillStyle = 'rgba(45, 42, 38, 0.45)';
       ctx.fillText(String(qNum), x, topPad + plotH + 4);
     }
   }
 
-  ctx.strokeStyle = 'rgba(74, 127, 181, 0.5)';
+  ctx.strokeStyle = 'rgba(74, 127, 181, 0.8)';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   for (let i = 0; i < n; i++) {
@@ -183,11 +189,34 @@ function drawChart() {
   for (let i = 0; i < n; i++) {
     const x = toX(i);
     const y = toY(cumScores[i]);
-    ctx.fillStyle = recent[i].correct ? '#4a8f5e' : '#b54a3f';
+    ctx.fillStyle = recent[i].correct ? '#3d7a4f' : '#a84036';
     ctx.beginPath();
     ctx.arc(x, y, 3, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+export function pushChartEntry(rating: number, correct: boolean) {
+  chartEntries.push({ rating, correct });
+
+  let score = 0;
+  for (const e of chartEntries) {
+    if (!e.correct || e.rating === 1) score -= 2;
+    else if (e.rating === 4) score += 4;
+    else if (e.rating === 3) score += 3;
+    else score += 1;
+    score = Math.max(0, score);
+  }
+  setActivityScore(Math.round(score));
+
+  const total = chartEntries.length;
+  const goodEasy = chartEntries.filter(e => e.correct && e.rating >= 3).length;
+  setReviewStats({
+    reviews: total,
+    retention: total > 0 ? Math.round(goodEasy / total * 100) + '%' : '0%',
+  });
+
+  drawChart();
 }
 
 export function initActivityEffects() {
@@ -204,6 +233,7 @@ export function initActivityEffects() {
     const session = sectionHandlers.get(tab);
     if (session?.dueCount) session.dueCount();
     if (session?.score) session.score();
+    loadActivity();
     loadSidebarScore();
   });
 

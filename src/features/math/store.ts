@@ -27,7 +27,9 @@ export interface MathSession {
   setCategory: (cat: string) => void;
   resetSection: () => void;
 
-  timer: { seconds: () => number; start: () => void; stop: () => number; reset: () => void };
+  timer: { seconds: () => number; start: () => void; stop: () => number; reset: () => void; pause: () => void; resume: () => void; paused: () => boolean };
+  paused: () => boolean;
+  togglePause: () => void;
 }
 
 export function createMathSession(section: Section): MathSession {
@@ -197,5 +199,7 @@ export function createMathSession(section: Section): MathSession {
     resetSection: resetSectionAction,
 
     timer,
+    paused: timer.paused,
+    togglePause: () => { timer.paused() ? timer.resume() : timer.pause(); },
   };
 }

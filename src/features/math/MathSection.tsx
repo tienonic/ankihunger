@@ -80,9 +80,16 @@ export function MathSection(props: { section: Section }) {
 
   return (
     <div>
-      {/* Reset button */}
+      {/* Action bar */}
       <div class="mode-toggle mode-toggle-actions-only">
         <span class="mode-toggle-actions">
+          <button
+            class={`pause-btn${session.paused() ? ' active' : ''}`}
+            onClick={() => session.togglePause()}
+            title={session.paused() ? 'Resume timer' : 'Pause timer'}
+          >
+            {session.paused() ? '\u25B6' : '\u23F8'}
+          </button>
           <button
             class="reset-btn"
             onClick={() => session.resetSection()}

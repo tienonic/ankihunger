@@ -1,5 +1,6 @@
 import './launcher.css';
-import { For, Show } from 'solid-js';
+import { createSignal, For, Show } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import { projectRegistry } from '../../projects/registry.ts';
 import {
   openRegistryProject,
@@ -9,13 +10,27 @@ import {
   setLoadError,
   isLoading,
   getRecentProjects,
+  clearRecentProjects,
 } from './store.ts';
-import { ProjectCard } from './ProjectCard.tsx';
 import { DropZone } from './DropZone.tsx';
-import { RecentProjects } from './RecentProjects.tsx';
 
 export function Launcher() {
   let fileInput!: HTMLInputElement;
+  const [recentVersion, setRecentVersion] = createSignal(0);
+  const recentProjects = () => { recentVersion(); return getRecentProjects(); };
+  const [browseOpen, setBrowseOpen] = createSignal(false);
+  const [searchQuery, setSearchQuery] = createSignal('');
+
+  const filteredRegistry = () => {
+    const q = searchQuery().toLowerCase().trim();
+    if (!q) return projectRegistry;
+    return projectRegistry.filter(p => p.name.toLowerCase().includes(q));
+  };
+
+  function handleClearRecent() {
+    clearRecentProjects();
+    setRecentVersion(v => v + 1);
+  }
 
   function readFile(file: File) {
     const reader = new FileReader();
@@ -40,6 +55,12 @@ export function Launcher() {
     readFile(file);
   }
 
+  function handleBrowseSelect(slug: string) {
+    setBrowseOpen(false);
+    setSearchQuery('');
+    openRegistryProject(slug);
+  }
+
   return (
     <div class="launcher-wrap">
       <div class="launcher-card">
@@ -48,21 +69,37 @@ export function Launcher() {
           FSRS-Powered Spaced Repetition
         </p>
 
-        <div class="launcher-list">
-          <For each={projectRegistry}>
-            {(proj) => (
-              <ProjectCard
-                name={proj.name}
-                onClick={() => openRegistryProject(proj.slug)}
-              />
-            )}
-          </For>
+        {/* Recent projects as primary buttons */}
+        <Show when={recentProjects().length > 0}>
+          <div class="launcher-list">
+            <For each={recentProjects()}>
+              {(p) => (
+                <button
+                  class="launcher-proj-btn"
+                  onClick={() => openRecentProject(p.slug)}
+                >
+                  {p.name}
+                </button>
+              )}
+            </For>
+          </div>
+          <button class="launcher-clear-recent" onClick={handleClearRecent}>
+            clear recent
+          </button>
+        </Show>
 
+        {/* Browse all projects button */}
+        <button class="launcher-browse-btn" onClick={() => setBrowseOpen(true)}>
+          Browse All Projects
+        </button>
+
+        {/* File open + drop */}
+        <div class="launcher-file-row">
           <button
             class="launcher-open-btn"
             onClick={() => fileInput.click()}
           >
-            Open Project File (.json)
+            Open File (.json)
           </button>
           <input
             ref={fileInput}
@@ -75,11 +112,6 @@ export function Launcher() {
 
         <DropZone onDrop={handleDrop} onClick={() => fileInput.click()} />
 
-        <RecentProjects
-          projects={getRecentProjects()}
-          onSelect={openRecentProject}
-        />
-
         <Show when={loadError()}>
           <div class="launcher-error">
             {loadError()}
@@ -90,6 +122,49 @@ export function Launcher() {
           <div class="launcher-loading">Loading project...</div>
         </Show>
       </div>
+
+      {/* Browse panel */}
+      <Show when={browseOpen()}>
+        <Portal>
+          <div class="settings-backdrop" onClick={(e) => {
+            if ((e.target as HTMLElement).classList.contains('settings-backdrop')) {
+              setBrowseOpen(false);
+              setSearchQuery('');
+            }
+          }}>
+            <div class="launcher-browse-panel">
+              <div class="keybinds-header">
+                <span>All Projects</span>
+                <button class="keybinds-close" onClick={() => { setBrowseOpen(false); setSearchQuery(''); }}>&times;</button>
+              </div>
+              <div class="launcher-browse-search">
+                <input
+                  type="text"
+                  placeholder="Search projects..."
+                  value={searchQuery()}
+                  onInput={(e) => setSearchQuery(e.currentTarget.value)}
+                  autofocus
+                />
+              </div>
+              <div class="launcher-browse-list">
+                <For each={filteredRegistry()}>
+                  {(proj) => (
+                    <button
+                      class="launcher-browse-item"
+                      onClick={() => handleBrowseSelect(proj.slug)}
+                    >
+                      {proj.name}
+                    </button>
+                  )}
+                </For>
+                <Show when={filteredRegistry().length === 0}>
+                  <div class="launcher-browse-empty">No projects found</div>
+                </Show>
+              </div>
+            </div>
+          </div>
+        </Portal>
+      </Show>
     </div>
   );
 }

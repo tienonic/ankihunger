@@ -33,14 +33,14 @@ export function StudyApp() {
     <div class={zenMode() ? 'zen' : ''} id="study-app">
       <Header />
       <TopToggles />
-      <NoteBox />
 
       <Show when={!isMathTab()}>
         <div class="sidebar-right">
+          <NoteBox />
           <Show when={glossaryEntries().length > 0}>
             <TermsDropdown />
           </Show>
-          <ActivityWidget isFlashMode={isFlashMode} activeSession={activeSession} />
+          <ActivityWidget isFlashMode={isFlashMode} activeSession={activeSession} timerSession={activeSession} />
         </div>
       </Show>
 

@@ -41,9 +41,9 @@ button, input, textarea, select { font-family: inherit; }
 .zen .state-badge { display: none; }
 .zen .card-actions { display: none; }
 .zen .sidebar-right { display: none !important; }
-.zen .mode-toggle { display: none; }
+.zen .mode-btn { display: none; }
+.zen .mode-toggle { border-color: transparent; margin-bottom: 4px; }
 .zen .dk-btn { display: none; }
-.zen .view-img { display: none; }
 .zen .timer { display: none; }
 .zen .rating-flash { display: none; }
 .zen .flashcard-hint { display: none; }
@@ -51,8 +51,7 @@ button, input, textarea, select { font-family: inherit; }
 .zen .option-feedback { display: none; }
 
 .zen .top-toggles { opacity: 0.15 !important; }
-.zen .top-toggles .easy-toggle { display: none; }
-.zen .top-toggles .top-toggle-label { display: none; }
+.zen .top-toggles .def-first-toggle .top-toggle-label { display: none; }
 .zen .top-toggles:hover { opacity: 0.6 !important; }
 
 .zen main {
@@ -67,8 +66,6 @@ button, input, textarea, select { font-family: inherit; }
 .zen .card {
   box-shadow: none;
   border: none;
-  max-width: 700px;
-  width: 100%;
 }
 
 /* Zen mode: hide math extras */

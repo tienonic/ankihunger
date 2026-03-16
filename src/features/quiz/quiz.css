@@ -6,9 +6,11 @@
   margin-bottom: 20px;
   position: relative;
   border: 1px solid var(--color-border);
-  min-height: 320px;
+  max-width: 700px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
 }
-
 
 /* === Mode Toggle === */
 .mode-toggle {
@@ -50,7 +52,8 @@
   padding-bottom: 1px;
 }
 
-.mode-toggle-actions .reset-btn {
+.mode-toggle-actions .reset-btn,
+.mode-toggle-actions .pause-btn {
   background: none;
   border: 1px solid var(--color-border);
   color: var(--color-text-light);
@@ -60,6 +63,8 @@
   font-size: 0.65rem;
   font-weight: 500;
   line-height: 1.2;
+  opacity: 0;
+  transition: opacity 0.15s;
 }
 
 .mode-toggle-actions .view-img {
@@ -78,8 +83,15 @@
   cursor: pointer;
 }
 
-.mode-toggle:hover .view-img { opacity: 0.5; }
-.view-img:hover { opacity: 1 !important; background: var(--color-bg); }
+.mode-toggle:hover .view-img,
+.mode-toggle:hover .reset-btn,
+.mode-toggle:hover .pause-btn { opacity: 0.5; }
+
+.view-img:hover,
+.reset-btn:hover,
+.pause-btn:hover { opacity: 1 !important; background: var(--color-bg); }
+
+.pause-btn.active { opacity: 1 !important; }
 
 .mode-toggle-actions-only { display: flex; margin-bottom: 12px; border: none; }
 
@@ -105,6 +117,10 @@
   gap: 10px;
 }
 
+.option-wrapper {
+  position: relative;
+}
+
 .option-btn {
   text-align: left;
   padding: 14px 18px;
@@ -115,7 +131,7 @@
   font-size: 1rem;
   transition: border-color 0.15s, background 0.15s;
   line-height: 1.4;
-  position: relative;
+  width: 100%;
 }
 
 .option-btn:hover:not(:disabled) {
@@ -123,14 +139,8 @@
   background: var(--color-primary-light);
 }
 
-.option-btn.correct {
-  border-color: var(--color-primary);
-  background: var(--color-primary-light);
-}
-
-.option-btn.wrong {
-  border-color: var(--color-danger);
-  background: var(--color-danger-light);
+.option-wrapper:has(.option-feedback) {
+  z-index: 10;
 }
 
 .option-btn:disabled {
@@ -138,34 +148,41 @@
   opacity: 0.85;
 }
 
-/* Option feedback overlays */
+/* Option feedback overlay — covers button, grows down for long explanations */
 .option-feedback {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 10px 18px;
-  border-radius: 2px;
+  justify-content: flex-start;
+  padding: 6px 12px;
+  border-radius: 4px;
   font-size: 0.85rem;
   font-weight: 500;
   z-index: 5;
   pointer-events: none;
+  text-align: left;
 }
 
 .option-feedback.correct-fb {
   background: var(--color-primary-light);
-  color: var(--color-primary-dark);
+  color: var(--color-text);
+  border: 2px solid var(--color-primary);
 }
 
 .option-feedback.wrong-fb {
   background: var(--color-danger-light);
-  color: var(--color-danger-dark);
+  color: var(--color-text);
+  border: 2px solid var(--color-danger);
 }
 
 .option-feedback.skip-fb {
   background: var(--color-info-light);
-  color: var(--color-info);
+  color: var(--color-text);
+  border: 2px solid var(--color-info);
 }
 
 .option-feedback .explanation {
@@ -307,8 +324,24 @@
 .done-actions {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+.done-add-new {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.new-cards-input {
+  width: 48px;
+  padding: 5px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  font-size: 0.8rem;
+  text-align: center;
+  background: var(--color-card);
+  color: var(--color-text);
 }
 
 .state-badge {
@@ -366,6 +399,7 @@
   font-variant-numeric: tabular-nums;
   margin-left: auto;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .timer.red { color: var(--color-danger); background: var(--color-danger-light); }

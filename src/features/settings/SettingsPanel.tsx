@@ -1,15 +1,16 @@
 import './settings.css';
-import { createSignal, Show, onMount, onCleanup } from 'solid-js';
+import { Show, onMount, onCleanup, createSignal } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { activeProject, setHeaderLocked } from '../../core/store/app.ts';
+import { activeProject, activePanel, setActivePanel, setHeaderLocked } from '../../core/store/app.ts';
 import { workerApi } from '../../core/hooks/useWorker.ts';
 
 export function SettingsPanel() {
-  const [open, setOpen] = createSignal(false);
   const [retention, setRetention] = createSignal(0.9);
   const [newPerSession, setNewPerSession] = createSignal(20);
   const [leechThreshold, setLeechThreshold] = createSignal(8);
   const [saved, setSaved] = createSignal(false);
+  const [panelTop, setPanelTop] = createSignal(0);
+  let btnRef!: HTMLButtonElement;
 
   function load() {
     const project = activeProject();
@@ -20,20 +21,25 @@ export function SettingsPanel() {
   }
 
   function handleOpen() {
-    load();
-    const next = !open();
-    setOpen(next);
-    setHeaderLocked(next);
-    setSaved(false);
+    if (activePanel() === 'settings') {
+      setActivePanel(null);
+      setHeaderLocked(false);
+    } else {
+      load();
+      setPanelTop(btnRef.getBoundingClientRect().top);
+      setActivePanel('settings');
+      setHeaderLocked(true);
+      setSaved(false);
+    }
   }
 
   function close() {
-    setOpen(false);
+    setActivePanel(null);
     setHeaderLocked(false);
   }
 
   function handleEscape(e: KeyboardEvent) {
-    if (e.key === 'Escape' && open()) {
+    if (e.key === 'Escape' && activePanel() === 'settings') {
       close();
     }
   }
@@ -70,13 +76,13 @@ export function SettingsPanel() {
 
   return (
     <>
-      <button class="tips-btn" title="FSRS settings" onClick={handleOpen}>
+      <button ref={btnRef} class="tips-btn" title="FSRS settings" onClick={handleOpen}>
         Settings
       </button>
-      <Show when={open()}>
+      <Show when={activePanel() === 'settings'}>
         <Portal>
           <div class="settings-backdrop" onClick={handleBackdropClick}>
-            <div class="settings-dropdown">
+            <div class="settings-dropdown" style={{ top: `${panelTop()}px` }}>
               <label class="settings-field">
                 <span>Desired retention</span>
                 <input

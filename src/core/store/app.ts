@@ -13,6 +13,7 @@ const [noteBoxVisible, setNoteBoxVisible] = createSignal(false);
 const [headerVisible, setHeaderVisible] = createSignal(false);
 const [termsOpen, setTermsOpen] = createSignal(false);
 const [headerLocked, setHeaderLocked] = createSignal(false);
+const [activePanel, setActivePanel] = createSignal<string | null>(null);
 
 export {
   appPhase, setAppPhase,
@@ -25,6 +26,7 @@ export {
   headerVisible, setHeaderVisible,
   termsOpen, setTermsOpen,
   headerLocked, setHeaderLocked,
+  activePanel, setActivePanel,
 };
 
 export function toggleEasyMode() {

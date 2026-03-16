@@ -1,9 +1,10 @@
-import { createSignal, batch } from 'solid-js';
+import { createSignal, createEffect, batch } from 'solid-js';
 import { workerApi } from '../../core/hooks/useWorker.ts';
 import { useTimer } from '../../core/hooks/useTimer.ts';
 import { shuffle } from '../../utils/shuffle.ts';
 import { activeProject, easyMode } from '../../core/store/app.ts';
 import { setQuestionContext } from '../glossary/store.ts';
+import { pushChartEntry } from '../activity/store.ts';
 import type { Section, Question } from '../../projects/types.ts';
 
 export { sectionHandlers, handlerVersion, bumpHandlerVersion } from '../../core/store/sections.ts';
@@ -14,12 +15,14 @@ export interface HistoryEntry {
   idx: number;
   scenarioIdx?: number;
   questionIdx?: number;
+  cardId: string;
   selected: string | null;
   correct: string;
   optionOrder: string[];
   isCorrect: boolean;
   skipped: boolean;
   explanation: string;
+  passage: string;
 }
 
 export interface QuizSession {
@@ -65,11 +68,13 @@ export interface QuizSession {
   resetSection: () => Promise<void>;
   refreshDue: () => Promise<void>;
   studyMore: () => Promise<void>;
-  increaseNewCards: () => Promise<void>;
+  increaseNewCards: (count?: number) => Promise<void>;
   unburyAll: () => Promise<void>;
 
   // Timer
-  timer: { seconds: () => number; start: () => void; stop: () => number; reset: () => void };
+  timer: { seconds: () => number; start: () => void; stop: () => number; reset: () => void; pause: () => void; resume: () => void; paused: () => boolean };
+  paused: () => boolean;
+  togglePause: () => void;
 }
 
 import { bumpHandlerVersion } from '../../core/store/sections.ts';
@@ -110,6 +115,22 @@ export function createQuizSession(section: Section): QuizSession {
 
   const timer = useTimer();
   let lastElapsedMs = 0;
+
+  // When easyMode is toggled off while a question is revealed, load rating previews
+  createEffect(() => {
+    const easy = easyMode();
+    const st = state();
+    const cId = cardId();
+    if (!easy && st === 'revealed' && cId) {
+      Promise.all([
+        workerApi.previewRatings(cId),
+        workerApi.getCardState(cId) as Promise<any>,
+      ]).then(([preview, cs]) => {
+        setRatingLabels(preview.labels);
+        if (cs) setCardState(cs.fsrs_state ?? 0);
+      });
+    }
+  });
 
   // History tracking
   let history: HistoryEntry[] = [];
@@ -202,13 +223,16 @@ export function createQuizSession(section: Section): QuizSession {
       return;
     }
 
+    const shuffled = shuffle([lookup.question.correct, ...lookup.question.wrong]);
+    const passageText = lookup.passage ?? '';
+
     batch(() => {
       setCardId(result.cardId);
       setQuestion(lookup.question);
-      setOptions(shuffle([lookup.question.correct, ...lookup.question.wrong]));
+      setOptions(shuffled);
       setSelected(null);
       setIsCorrect(false);
-      setPassage(lookup.passage ?? '');
+      setPassage(passageText);
       setState('answering');
     });
 
@@ -221,12 +245,14 @@ export function createQuizSession(section: Section): QuizSession {
         : 0,
       scenarioIdx: lookup.scenarioIdx,
       questionIdx: lookup.questionIdx,
+      cardId: result.cardId!,
       selected: null,
       correct: lookup.question.correct,
-      optionOrder: [],
+      optionOrder: shuffled,
       isCorrect: false,
       skipped: false,
       explanation: lookup.question.explanation ?? '',
+      passage: passageText,
     });
 
     timer.start();
@@ -273,8 +299,6 @@ export function createQuizSession(section: Section): QuizSession {
 
     if (easyMode()) {
       const autoRating = correct ? timeToRating(elapsed) : 1;
-      setRatingFlash({ rating: autoRating, show: true });
-      setTimeout(() => setRatingFlash({ rating: 0, show: false }), 1600);
       await doRate(cId, autoRating);
     } else {
       const [preview, cs] = await Promise.all([
@@ -318,8 +342,6 @@ export function createQuizSession(section: Section): QuizSession {
     }
 
     // Auto-rate Again
-    setRatingFlash({ rating: 1, show: true });
-    setTimeout(() => setRatingFlash({ rating: 0, show: false }), 1600);
     await doRate(cId, 1);
   }
 
@@ -331,6 +353,7 @@ export function createQuizSession(section: Section): QuizSession {
       workerApi.reviewCard(cId, p.slug, section.id, rating, lastElapsedMs),
       workerApi.addActivity(p.slug, section.id, rating, rating !== 1),
     ]);
+    pushChartEntry(rating, rating !== 1);
 
     if (result.isLeech) setLeechWarning(true);
 
@@ -455,7 +478,8 @@ export function createQuizSession(section: Section): QuizSession {
     if (!fId || !p) return;
 
     await workerApi.reviewCard(fId, p.slug, section.id, rating, 0);
-    await workerApi.addActivity(p.slug, section.id, rating, rating !== 1);
+    workerApi.addActivity(p.slug, section.id, rating, rating !== 1);
+    pushChartEntry(rating, rating !== 1);
     await pickNextFlash();
   }
 
@@ -476,22 +500,21 @@ export function createQuizSession(section: Section): QuizSession {
     const entry = history[histPos];
     if (!entry) return;
 
-    // Replay the history entry
-    if (section.type === 'mc-quiz' && section.questions) {
-      const q = section.questions[entry.idx];
-      if (!q) return;
-      batch(() => {
-        setQuestion(q);
-        if (entry.optionOrder.length > 0) {
-          setOptions(entry.optionOrder);
-        }
-        setSelected(entry.selected);
-        setIsCorrect(entry.isCorrect);
-        setSkipped(entry.skipped);
-        setHistoryReview(entry);
-        setState('reviewing-history');
-      });
-    }
+    const lookup = lookupQuestion(entry.cardId);
+    if (!lookup) return;
+
+    batch(() => {
+      setQuestion(lookup.question);
+      if (entry.optionOrder.length > 0) {
+        setOptions(entry.optionOrder);
+      }
+      setSelected(entry.selected);
+      setIsCorrect(entry.isCorrect);
+      setSkipped(entry.skipped);
+      setPassage(entry.passage);
+      setHistoryReview(entry);
+      setState('reviewing-history');
+    });
   }
 
   function advanceFromHistory() {
@@ -500,22 +523,35 @@ export function createQuizSession(section: Section): QuizSession {
     if (histPos < history.length - 1) {
       histPos++;
       const entry = history[histPos];
-      // Skip unanswered entries (the current card that hasn't been answered yet)
+      // Restore unanswered card directly (don't re-pick from scheduler)
       if (entry && entry.selected === null && !entry.skipped) {
-        pickNextCard();
-        return;
-      }
-      if (entry && section.type === 'mc-quiz' && section.questions) {
-        const q = section.questions[entry.idx];
-        if (q) {
+        const lookup = lookupQuestion(entry.cardId);
+        if (lookup) {
           batch(() => {
-            setQuestion(q);
+            setCardId(entry.cardId);
+            setQuestion(lookup.question);
+            setOptions(entry.optionOrder);
+            setSelected(null);
+            setIsCorrect(false);
+            setPassage(entry.passage);
+            setState('answering');
+          });
+          timer.start();
+          return;
+        }
+      }
+      if (entry && (section.type === 'mc-quiz' || section.type === 'passage-quiz')) {
+        const lookup = lookupQuestion(entry.cardId);
+        if (lookup) {
+          batch(() => {
+            setQuestion(lookup.question);
             if (entry.optionOrder.length > 0) {
               setOptions(entry.optionOrder);
             }
             setSelected(entry.selected);
             setIsCorrect(entry.isCorrect);
             setSkipped(entry.skipped);
+            setPassage(entry.passage);
             setHistoryReview(entry);
             setState('reviewing-history');
           });
@@ -594,7 +630,9 @@ export function createQuizSession(section: Section): QuizSession {
     await refreshDue();
   }
 
-  async function increaseNewCards() {
+  async function increaseNewCards(count?: number) {
+    const p = project();
+    if (p && count != null) p.config.new_per_session = count;
     await workerApi.resetNewCount();
     if (flashMode()) {
       await pickNextFlash();
@@ -697,5 +735,7 @@ export function createQuizSession(section: Section): QuizSession {
     unburyAll: unburyAllAction,
 
     timer,
+    paused: timer.paused,
+    togglePause: () => { timer.paused() ? timer.resume() : timer.pause(); },
   };
 }

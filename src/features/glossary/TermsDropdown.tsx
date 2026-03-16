@@ -58,7 +58,7 @@ export function TermsDropdown() {
   return (
     <div class="terms-dropdown" ref={dropdownRef}>
       <button class="terms-toggle-btn" onClick={() => { setTermsOpen(!termsOpen()); setSearchQuery(''); }}>
-        Terms {termsOpen() ? '\u25B2' : '\u25BC'}
+        {termsOpen() ? '\u25B2' : '\u25BC'}
       </button>
       <Show when={termsOpen()}>
         <div class="terms-list">

@@ -2,7 +2,7 @@ import { createSignal } from 'solid-js';
 import { projectRegistry } from '../../projects/registry.ts';
 import { loadProject, validateProject } from '../../projects/loader.ts';
 import { initWorker, workerApi } from '../../core/hooks/useWorker.ts';
-import { setAppPhase, setActiveProject, setActiveTab, activeProject } from '../../core/store/app.ts';
+import { setAppPhase, setActiveProject, setActiveTab, activeProject, setHeaderVisible, setActivePanel } from '../../core/store/app.ts';
 import { buildGlossary } from '../glossary/store.ts';
 import { loadKeybinds } from '../settings/keybinds.ts';
 import type { Project, ProjectData } from '../../projects/types.ts';
@@ -91,6 +91,8 @@ export async function openProject(data: ProjectData, isDefault: boolean, registr
     await workerApi.loadProject(project.slug, sectionIds, cardRegs);
     await loadKeybinds();
 
+    setHeaderVisible(false);
+    setActivePanel(null);
     setActiveProject(project);
     buildGlossary(project);
     setActiveTab(project.sections[0]?.id ?? null);
@@ -123,6 +125,10 @@ export function openRecentProject(slug: string) {
     if (saved) openProject(saved, false);
     else setLoadError('Project data not found. Please re-import the file.');
   }
+}
+
+export function clearRecentProjects() {
+  try { localStorage.removeItem('recent-projects'); } catch { /* */ }
 }
 
 export function goToLauncher() {

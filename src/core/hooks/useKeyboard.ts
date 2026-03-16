@@ -125,8 +125,8 @@ function handleMcqKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typ
     return;
   }
 
-  // Skip/advance (Space or skip key)
-  if (e.code === 'Space' || matchesKey(e, 'skip')) {
+  // Space: advance through states + skip
+  if (e.code === 'Space') {
     e.preventDefault();
     if (st === 'reviewing-history') {
       session.advanceFromHistory();
@@ -179,12 +179,17 @@ function handleMcqKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typ
     return;
   }
 
-  // Forward from history
+  // Forward (D): navigate forward, blocked if unanswered
   if (matchesKey(e, 'forward')) {
+    e.preventDefault();
     if (st === 'reviewing-history') {
-      e.preventDefault();
       session.advanceFromHistory();
+    } else if (st === 'rated') {
+      session.pickNextCard();
+    } else if (st === 'revealed' && easyMode()) {
+      session.rate(session.isCorrect() ? 3 : 1);
     }
+    // answering → do nothing (can't go forward without answering)
     return;
   }
 }

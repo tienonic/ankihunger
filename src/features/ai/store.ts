@@ -12,8 +12,7 @@ import {
 
 // --- UI State ---
 const [aiTab, setAiTab] = createSignal<AITab>('insights');
-const [aiOpen, setAiOpen] = createSignal(false);
-export { aiTab, setAiTab, aiOpen, setAiOpen };
+export { aiTab, setAiTab };
 
 // --- Streaming ---
 const [insightsOutput, setInsightsOutput] = createSignal('');
