@@ -1,18 +1,11 @@
 import './notes.css';
-import { createSignal, Show, createEffect } from 'solid-js';
+import { createSignal, Show } from 'solid-js';
 import { noteBoxVisible, setNoteBoxVisible, activeProject } from '../../core/store/app.ts';
 import { workerApi } from '../../core/hooks/useWorker.ts';
 
 export function NoteBox() {
   const [placeholder, setPlaceholder] = createSignal('');
   let inputRef: HTMLInputElement | undefined;
-
-  // Auto-focus when visible
-  createEffect(() => {
-    if (noteBoxVisible() && inputRef) {
-      inputRef.focus();
-    }
-  });
 
   function handleKeyDown(e: KeyboardEvent) {
     e.stopPropagation();
@@ -43,7 +36,7 @@ export function NoteBox() {
     <Show when={noteBoxVisible()}>
       <div class="note-box">
         <input
-          ref={inputRef}
+          ref={el => { inputRef = el; el?.focus(); }}
           type="text"
           placeholder={placeholder()}
           autocomplete="off"

@@ -110,7 +110,6 @@ export function createMathSession(section: Section): MathSession {
       });
     }
 
-    // Persist score to worker
     const proj = project();
     if (proj) {
       workerApi.updateScore(proj.slug, section.id, isCorrect);

@@ -50,7 +50,6 @@ export function formatSampleQuestions(section: Section): string {
 }
 
 export function parseGeneratedQuestions(raw: string): GeneratedQuestion[] {
-  // Strip markdown code fences
   let cleaned = raw.trim();
   cleaned = cleaned.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '');
 
@@ -63,7 +62,6 @@ export function parseGeneratedQuestions(raw: string): GeneratedQuestion[] {
     // Try regex extraction as fallback
   }
 
-  // Fallback: try to find JSON array in the text
   const match = cleaned.match(/\[[\s\S]*\]/);
   if (match) {
     try {
@@ -78,8 +76,6 @@ export function parseGeneratedQuestions(raw: string): GeneratedQuestion[] {
 
   return [];
 }
-
-// --- Prompt Builders (for claude -p single-prompt format) ---
 
 export function buildInsightsPrompt(performanceData: string): string {
   return `${INSIGHTS_SYSTEM}\n\nHere is the student's performance data:\n${performanceData}`;

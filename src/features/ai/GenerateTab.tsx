@@ -23,7 +23,7 @@ export function GenerateTab() {
           onInput={(e) => setCount(parseInt(e.currentTarget.value) || 10)}
         />
         <Show when={generateLoading()} fallback={
-          <button
+          <button type="button"
             class="ai-btn"
             disabled={!sourceText().trim()}
             onClick={() => runGenerate(sourceText(), count())}
@@ -31,7 +31,7 @@ export function GenerateTab() {
             Generate
           </button>
         }>
-          <button class="ai-btn ai-btn-secondary" onClick={abortStream}>
+          <button type="button" class="ai-btn ai-btn-secondary" onClick={abortStream}>
             <span class="ai-spinner ai-spinner-dark" /> Stop
           </button>
         </Show>

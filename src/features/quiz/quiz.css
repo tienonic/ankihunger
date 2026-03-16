@@ -343,8 +343,6 @@
   color: var(--color-text);
 }
 
-
-
 /* === Timer === */
 .timer {
   font-size: 0.8rem;
@@ -418,7 +416,7 @@
 
 .flashcard-front {
   background: var(--color-primary);
-  color: #fff;
+  color: white;
   font-size: 1.1rem;
   font-weight: 600;
   line-height: 1.4;
@@ -464,3 +462,6 @@
   padding: 2px 6px;
   font-size: 0.6rem;
 }
+
+.leech-warning { display: block; margin-top: 8px; }
+.key-hints { margin-top: 12px; }

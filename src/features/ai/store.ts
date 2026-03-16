@@ -10,11 +10,9 @@ import {
   buildInsightsPrompt, buildGeneratePrompt, buildTargetedPrompt,
 } from './prompts.ts';
 
-// --- UI State ---
 const [aiTab, setAiTab] = createSignal<AITab>('insights');
 export { aiTab, setAiTab };
 
-// --- Streaming ---
 const [insightsOutput, setInsightsOutput] = createSignal('');
 const [insightsLoading, setInsightsLoading] = createSignal(false);
 const [insightsError, setInsightsError] = createSignal<string | null>(null);
@@ -33,7 +31,6 @@ const [targetedAccepted, setTargetedAccepted] = createSignal<Set<number>>(new Se
 const [targetedWeakAreas, setTargetedWeakAreas] = createSignal('');
 export { targetedOutput, targetedLoading, targetedError, targetedAccepted, setTargetedAccepted, targetedWeakAreas };
 
-// --- Bridge ---
 let activeAbort: AbortController | null = null;
 
 export function abortStream() {
@@ -88,7 +85,6 @@ async function callBridge(
   }
 }
 
-// --- Performance Data ---
 async function gatherPerformanceSummary(): Promise<PerformanceSummary> {
   const project = activeProject()!;
   const slug = project.slug;
@@ -143,7 +139,6 @@ async function gatherPerformanceSummary(): Promise<PerformanceSummary> {
   };
 }
 
-// --- Actions ---
 export async function runInsights() {
   setInsightsLoading(true);
   setInsightsError(null);
@@ -245,7 +240,6 @@ export async function injectAcceptedQuestions(sectionName?: string) {
   setGenerateAccepted(new Set<number>());
 }
 
-// --- Targeted Generation ---
 export async function runTargeted(count: number) {
   const project = activeProject();
   if (!project) return;

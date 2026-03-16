@@ -76,14 +76,12 @@ function handleMathKeyboard(e: KeyboardEvent, session: MathSession) {
 function handleFlashcardKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typeof sectionHandlers.get>>) {
   const isFlipped = session.flashFlipped();
 
-  // Flip card (Space)
   if (matchesKey(e, 'flipCard')) {
     e.preventDefault();
     session.flipFlash();
     return;
   }
 
-  // 1-4: rate (only when flipped)
   if (isFlipped) {
     if (matchesKey(e, 'answer1')) { e.preventDefault(); session.rateFlash(1); return; }
     if (matchesKey(e, 'answer2')) { e.preventDefault(); session.rateFlash(2); return; }
@@ -91,7 +89,6 @@ function handleFlashcardKeyboard(e: KeyboardEvent, session: NonNullable<ReturnTy
     if (matchesKey(e, 'answer4')) { e.preventDefault(); session.rateFlash(4); return; }
   }
 
-  // Skip key: rate Good shortcut when flipped, flip when not
   if (matchesKey(e, 'skip')) {
     e.preventDefault();
     if (isFlipped) {
@@ -102,7 +99,6 @@ function handleFlashcardKeyboard(e: KeyboardEvent, session: NonNullable<ReturnTy
     return;
   }
 
-  // Flip alt (F)
   if (matchesKey(e, 'flipAlt')) {
     e.preventDefault();
     session.flipFlash();
@@ -113,7 +109,6 @@ function handleFlashcardKeyboard(e: KeyboardEvent, session: NonNullable<ReturnTy
 function handleMcqKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typeof sectionHandlers.get>>) {
   const st = session.state();
 
-  // 1-4: answer or rate
   if (matchesKey(e, 'answer1') || matchesKey(e, 'answer2') || matchesKey(e, 'answer3') || matchesKey(e, 'answer4')) {
     e.preventDefault();
     const answerActions = ['answer1', 'answer2', 'answer3', 'answer4'] as const;
@@ -128,7 +123,6 @@ function handleMcqKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typ
     return;
   }
 
-  // Space: advance through states + skip
   if (e.code === 'Space') {
     e.preventDefault();
     if (st === 'reviewing-history') {
@@ -145,28 +139,24 @@ function handleMcqKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typ
     return;
   }
 
-  // Undo
   if (matchesKey(e, 'undo')) {
     e.preventDefault();
     session.undo();
     return;
   }
 
-  // Suspend
   if (matchesKey(e, 'suspend')) {
     e.preventDefault();
     session.suspend();
     return;
   }
 
-  // Bury
   if (matchesKey(e, 'bury')) {
     e.preventDefault();
     session.bury();
     return;
   }
 
-  // View image
   if (matchesKey(e, 'viewImage')) {
     const link = session.currentImageLink();
     if (link) {
@@ -175,14 +165,12 @@ function handleMcqKeyboard(e: KeyboardEvent, session: NonNullable<ReturnType<typ
     return;
   }
 
-  // Go back in history
   if (matchesKey(e, 'goBack')) {
     e.preventDefault();
     session.goBackHistory();
     return;
   }
 
-  // Forward (D): navigate forward, blocked if unanswered
   if (matchesKey(e, 'forward')) {
     e.preventDefault();
     if (st === 'reviewing-history') {

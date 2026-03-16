@@ -10,7 +10,7 @@
 .launcher-card {
   background: var(--color-card);
   border-radius: 4px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  box-shadow: 0 4px 24px var(--shadow-overlay);
   padding: 48px 40px;
   max-width: 460px;
   width: 100%;
@@ -43,7 +43,7 @@
   border-radius: 2px;
   border: 2px solid var(--color-primary);
   background: var(--color-primary);
-  color: #fff;
+  color: white;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -163,7 +163,7 @@
   background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: 4px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 20px var(--shadow-medium);
   display: flex;
   flex-direction: column;
   z-index: 501;
@@ -180,7 +180,6 @@
   border: 1px solid var(--color-border);
   border-radius: 2px;
   font-size: 0.8rem;
-  font-family: inherit;
   color: var(--color-text);
   background: var(--color-bg);
 }

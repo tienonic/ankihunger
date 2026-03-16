@@ -48,7 +48,7 @@ export function QuestionPreview() {
                     {(w) => <div>{w}</div>}
                   </For>
                   <Show when={q.explanation}>
-                    <div style={{ "margin-top": "4px", "font-style": "italic", color: "var(--color-text-light)" }}>
+                    <div class="ai-preview-explanation">
                       {q.explanation}
                     </div>
                   </Show>
@@ -64,7 +64,7 @@ export function QuestionPreview() {
             onInput={(e) => setSectionName(e.currentTarget.value)}
             placeholder="Section name"
           />
-          <button
+          <button type="button"
             class="ai-btn"
             disabled={acceptedCount() === 0 || injecting()}
             onClick={handleInject}

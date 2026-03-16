@@ -6,10 +6,12 @@ import {
   generatorParameters,
   type FSRS,
   type Card,
+  type RecordLogItem,
 } from 'ts-fsrs';
 
-// wa-sqlite state
+// wa-sqlite state — typed loosely because wa-sqlite has no matching TypeScript overloads
 let db: number = 0;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let sqlite3: any = null;
 
 const SCHEMA = `
@@ -85,7 +87,6 @@ CREATE TABLE IF NOT EXISTS undo_stack (
 );
 `;
 
-// Migration system
 const SCHEMA_VERSION = 1;
 
 const migrations: Record<number, () => Promise<void>> = {
@@ -94,7 +95,6 @@ const migrations: Record<number, () => Promise<void>> = {
 };
 
 async function applyMigrations() {
-  // Read current schema version
   const rows: unknown[][] = [];
   await sqlite3.exec(db, 'PRAGMA user_version', (row: unknown[]) => rows.push(row));
   const currentVersion = rows.length > 0 ? (rows[0][0] as number) : 0;
@@ -102,7 +102,6 @@ async function applyMigrations() {
   if (currentVersion === SCHEMA_VERSION) return;
 
   if (currentVersion === 0) {
-    // Fresh database — apply full schema
     const statements = SCHEMA.split(';').map(s => s.trim()).filter(s => s.length > 0);
     for (const stmt of statements) {
       await sqlite3.exec(db, stmt + ';');
@@ -111,7 +110,6 @@ async function applyMigrations() {
     return;
   }
 
-  // Incremental migrations
   for (let v = currentVersion + 1; v <= SCHEMA_VERSION; v++) {
     const migrate = migrations[v];
     if (!migrate) throw new Error(`Missing migration for version ${v}`);
@@ -127,7 +125,6 @@ async function applyMigrations() {
   }
 }
 
-// FSRS engine
 let fsrsEngine: FSRS | null = null;
 let leechThreshold = 8;
 
@@ -156,7 +153,6 @@ function uuidv7(): string {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-// SQLite helpers - async wrappers around wa-sqlite
 async function run(sql: string, params?: unknown[]) {
   await sqlite3.run(db, sql, params ?? null);
 }
@@ -179,7 +175,6 @@ async function queryOne(sql: string, params?: unknown[]): Promise<Record<string,
   return rows[0] ?? null;
 }
 
-// Card helpers
 function cardToFSRS(row: Record<string, unknown>): Card {
   return {
     due: new Date(row.due as string),
@@ -223,7 +218,6 @@ function isLeech(lapses: number): boolean {
   return (lapses - leechThreshold) % Math.ceil(leechThreshold / 2) === 0;
 }
 
-// New cards today tracker — per section+cardType so each tab gets its own limit
 const newTodayMap = new Map<string, number>();
 let lastDate = new Date().toISOString().slice(0, 10);
 
@@ -240,7 +234,6 @@ async function checkNewDay() {
   }
 }
 
-// Message handlers
 async function handleMessage(request: WorkerRequest): Promise<unknown> {
   switch (request.type) {
     case 'INIT': {
@@ -381,11 +374,10 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
       const card = cardToFSRS(row);
 
       // Apply FSRS (pure computation, before transaction)
-      const result = fsrsEngine!.repeat(card, new Date()) as unknown as Record<number, { card: Card; log: any }>;
+      const result = fsrsEngine!.repeat(card, new Date()) as unknown as Record<number, RecordLogItem>;
       const reviewed = result[rating];
       const newCard = reviewed.card;
 
-      // Track lapses
       let newLapses = row.lapses as number;
       if (rating === Rating.Again && (card.state === State.Review || card.state === State.Relearning)) {
         newLapses++;
@@ -401,21 +393,18 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
 
       await run('BEGIN');
       try {
-        // Save undo state
         await run(`DELETE FROM undo_stack`);
         await run(
           `INSERT INTO undo_stack (card_id, prev_state) VALUES (?, ?)`,
           [cardId, JSON.stringify(row)]
         );
 
-        // Check leech
         if (isLeechNow) {
           await run(`UPDATE cards SET leech = 1 WHERE card_id = ?`, [cardId]);
         }
 
         await saveCardFromFSRS(cardId, newCard, newLapses);
 
-        // Log review
         await run(
           `INSERT INTO review_log (id, card_id, project_id, rating, review_time, section_id) VALUES (?, ?, ?, ?, ?, ?)`,
           [logId, cardId, projectId, rating, reviewTime, sectionId]
@@ -461,7 +450,6 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
         );
         await run(`DELETE FROM undo_stack WHERE id = ?`, [undoRow.id]);
 
-        // Remove the last review log for this card
         await run(
           `DELETE FROM review_log WHERE id = (
             SELECT id FROM review_log WHERE card_id = ? ORDER BY review_time DESC LIMIT 1
@@ -568,7 +556,6 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
          VALUES (?, ?, ?, ?, ?, ?)`,
         [uuidv7(), projectId, sectionId, rating, correct ? 1 : 0, new Date().toISOString()]
       );
-      // Cap at 200
       const countRow = await queryOne(`SELECT COUNT(*) as cnt FROM activity WHERE project_id = ?`, [projectId]);
       const cnt = (countRow?.cnt as number) ?? 0;
       if (cnt > 200) {
@@ -642,7 +629,6 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
   }
 }
 
-// Worker message handler — serialized to prevent race conditions
 let messageQueue: Promise<void> = Promise.resolve();
 
 self.onmessage = (e: MessageEvent<WorkerMessage>) => {

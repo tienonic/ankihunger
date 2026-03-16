@@ -40,7 +40,7 @@ export function StudyApp() {
           <Show when={glossaryEntries().length > 0}>
             <TermsDropdown />
           </Show>
-          <ActivityWidget isFlashMode={isFlashMode} activeSession={activeSession} timerSession={activeSession} />
+          <ActivityWidget isFlashMode={isFlashMode} activeSession={activeSession} />
         </div>
       </Show>
 

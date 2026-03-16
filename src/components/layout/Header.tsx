@@ -2,6 +2,8 @@ import { For, Show, onMount, onCleanup } from 'solid-js';
 import { activeProject, activeTab, setActiveTab, syncActivity, toggleSyncActivity, easyMode, toggleEasyMode, headerVisible, setHeaderVisible, headerLocked } from '../../core/store/app.ts';
 import { goToLauncher } from '../../features/launcher/store.ts';
 import { sectionHandlers, handlerVersion } from '../../core/store/sections.ts';
+
+interface FlashHandler { flashMode: () => boolean; toggleFlashMode: () => void; }
 import { SettingsPanel } from '../../features/settings/SettingsPanel.tsx';
 import { KeybindsPanel } from '../../features/settings/KeybindsPanel.tsx';
 import { TipsPanel } from '../../features/settings/TipsPanel.tsx';
@@ -36,20 +38,14 @@ export function Header() {
     return h && typeof h.flashMode === 'function' && typeof h.toggleFlashMode === 'function';
   };
 
-  function handleClickOutside(e: MouseEvent) {
+  const clickOutsideHandler = (e: MouseEvent) => {
     if (!headerVisible()) return;
     const target = e.target as HTMLElement;
-    if (target.closest('.header-menu') || target.closest('.header-pull')) return;
-    // Don't close if a panel backdrop was clicked (panel handles its own close)
-    if (target.closest('.settings-backdrop') || target.closest('.keybinds-overlay')) return;
+    if (target.closest('.header-menu') || target.closest('.header-pull') || target.closest('.settings-backdrop') || target.closest('.keybinds-overlay')) return;
     setHeaderVisible(false);
-  }
-
-  onMount(() => document.addEventListener('mousedown', handleClickOutside));
-  onCleanup(() => {
-    document.removeEventListener('mousedown', handleClickOutside);
-    if (closeTimer) clearTimeout(closeTimer);
-  });
+  };
+  onMount(() => document.addEventListener('mousedown', clickOutsideHandler));
+  onCleanup(() => { document.removeEventListener('mousedown', clickOutsideHandler); if (closeTimer) clearTimeout(closeTimer); });
 
   return (
     <div class="header-wrap">
@@ -64,54 +60,21 @@ export function Header() {
       <Show when={headerVisible()}>
         <div class="header-menu" onMouseEnter={clearClose} onMouseLeave={scheduleClose}>
           <div class="header-menu-label">{project().name}</div>
-          <button class="header-menu-item" onClick={() => goToLauncher()}>
-            &larr; Home
-          </button>
-          <label class="header-menu-item header-menu-check">
-            <input
-              type="checkbox"
-              checked={syncActivity()}
-              onChange={toggleSyncActivity}
-            />
-            Sync Graph
-          </label>
-          <label class="header-menu-item header-menu-check">
-            <input
-              type="checkbox"
-              checked={easyMode()}
-              onChange={toggleEasyMode}
-            />
-            Simple
-          </label>
+          <button type="button" class="header-menu-item" onClick={() => goToLauncher()}>&larr; Home</button>
+          <label class="header-menu-item header-menu-check"><input type="checkbox" checked={syncActivity()} onChange={toggleSyncActivity} />Sync Graph</label>
+          <label class="header-menu-item header-menu-check"><input type="checkbox" checked={easyMode()} onChange={toggleEasyMode} />Simple</label>
           <SettingsPanel />
           <AIPanel />
           <KeybindsPanel />
           <TipsPanel />
           <div class="header-menu-divider" />
           <For each={project().sections}>
-            {(section) => (
-              <button
-                class={`header-menu-item header-menu-tab ${activeTab() === section.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(section.id)}
-              >
-                {section.name}
-              </button>
-            )}
+            {(section) => <button type="button" class={`header-menu-item header-menu-tab ${activeTab() === section.id ? 'active' : ''}`} onClick={() => setActiveTab(section.id)}>{section.name}</button>}
           </For>
           <Show when={canFlash()}>
             <div class="header-menu-divider" />
-            <button
-              class={`header-menu-item header-menu-tab ${!(currentHandler() as any).flashMode() ? 'active' : ''}`}
-              onClick={() => { if ((currentHandler() as any).flashMode()) (currentHandler() as any).toggleFlashMode(); }}
-            >
-              Quiz
-            </button>
-            <button
-              class={`header-menu-item header-menu-tab ${(currentHandler() as any).flashMode() ? 'active' : ''}`}
-              onClick={() => { if (!(currentHandler() as any).flashMode()) (currentHandler() as any).toggleFlashMode(); }}
-            >
-              Flashcards
-            </button>
+            <button type="button" class={`header-menu-item header-menu-tab ${!(currentHandler() as FlashHandler).flashMode() ? 'active' : ''}`} onClick={() => { if ((currentHandler() as FlashHandler).flashMode()) (currentHandler() as FlashHandler).toggleFlashMode(); }}>Quiz</button>
+            <button type="button" class={`header-menu-item header-menu-tab ${(currentHandler() as FlashHandler).flashMode() ? 'active' : ''}`} onClick={() => { if (!(currentHandler() as FlashHandler).flashMode()) (currentHandler() as FlashHandler).toggleFlashMode(); }}>Flashcards</button>
           </Show>
         </div>
       </Show>

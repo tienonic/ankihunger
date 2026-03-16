@@ -125,3 +125,24 @@ export function findConflict(action: KeyAction, binding: Binding): KeyAction | n
   }
   return null;
 }
+
+export const CONTEXT_LABELS: Record<KeyContext, string> = {
+  global: 'Global',
+  mcq: 'MCQ / Quiz',
+  flashcard: 'Flashcard',
+  math: 'Math',
+};
+
+export function keyToLabel(key: string, code?: string): string {
+  if (code === 'Space' || key === ' ') return 'Space';
+  if (key === 'ArrowRight') return '\u2192';
+  if (key === 'ArrowLeft') return '\u2190';
+  if (key === 'ArrowUp') return '\u2191';
+  if (key === 'ArrowDown') return '\u2193';
+  if (key === 'Enter') return 'Enter';
+  if (key === 'Escape') return 'Esc';
+  if (key === 'Backspace') return 'Bksp';
+  if (key === 'Tab') return 'Tab';
+  if (key.length === 1) return key.toUpperCase();
+  return key;
+}

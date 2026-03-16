@@ -55,6 +55,9 @@
 }
 
 /* Insights */
+.ai-analyze-row { margin-bottom: 10px; }
+.ai-preview-explanation { margin-top: 4px; font-style: italic; color: var(--color-text-light); }
+
 .ai-insights-output {
   font-size: 0.78rem;
   line-height: 1.5;
@@ -78,7 +81,7 @@
 .ai-btn {
   padding: 8px 16px;
   background: var(--color-primary);
-  color: #fff;
+  color: white;
   border: none;
   border-radius: 2px;
   font-size: 0.78rem;
@@ -233,13 +236,13 @@
   width: 14px;
   height: 14px;
   border: 2px solid rgba(255,255,255,0.3);
-  border-top-color: #fff;
+  border-top-color: white;
   border-radius: 50%;
   animation: aiSpin 0.6s linear infinite;
 }
 
 .ai-spinner-dark {
-  border-color: rgba(0,0,0,0.15);
+  border-color: var(--shadow-medium);
   border-top-color: var(--color-primary);
 }
 

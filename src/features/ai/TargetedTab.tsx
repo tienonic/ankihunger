@@ -11,55 +11,30 @@ export function TargetedTab() {
   const [injecting, setInjecting] = createSignal(false);
 
   function toggleAccepted(index: number) {
-    const current = new Set(targetedAccepted());
-    if (current.has(index)) {
-      current.delete(index);
-    } else {
-      current.add(index);
-    }
-    setTargetedAccepted(current);
+    const s = new Set(targetedAccepted());
+    s.has(index) ? s.delete(index) : s.add(index);
+    setTargetedAccepted(s);
   }
 
   async function handleInject() {
     setInjecting(true);
-    try {
-      await injectTargetedQuestions(sectionName());
-    } finally {
-      setInjecting(false);
-    }
+    try { await injectTargetedQuestions(sectionName()); } finally { setInjecting(false); }
   }
 
   const acceptedCount = () => targetedAccepted().size;
 
   return (
     <div class="ai-generate-form">
-      <div class="ai-targeted-info">
-        Generate questions targeting your weak areas based on FSRS performance data.
-      </div>
-
+      <div class="ai-targeted-info">Generate questions targeting your weak areas based on FSRS performance data.</div>
       <Show when={targetedWeakAreas()}>
-        <div class="ai-targeted-weak">
-          Weak areas: {targetedWeakAreas()}
-        </div>
+        <div class="ai-targeted-weak">Weak areas: {targetedWeakAreas()}</div>
       </Show>
 
       <div class="ai-generate-row">
         <label>Questions:</label>
-        <input
-          type="number"
-          min={1}
-          max={50}
-          value={count()}
-          onInput={(e) => setCount(parseInt(e.currentTarget.value) || 10)}
-        />
-        <Show when={targetedLoading()} fallback={
-          <button class="ai-btn" onClick={() => runTargeted(count())}>
-            Generate from Weaknesses
-          </button>
-        }>
-          <button class="ai-btn ai-btn-secondary" onClick={abortStream}>
-            <span class="ai-spinner ai-spinner-dark" /> Stop
-          </button>
+        <input type="number" min={1} max={50} value={count()} onInput={(e) => setCount(parseInt(e.currentTarget.value) || 10)} />
+        <Show when={targetedLoading()} fallback={<button type="button" class="ai-btn" onClick={() => runTargeted(count())}>Generate from Weaknesses</button>}>
+          <button type="button" class="ai-btn ai-btn-secondary" onClick={abortStream}><span class="ai-spinner ai-spinner-dark" /> Stop</button>
         </Show>
       </div>
 
@@ -75,11 +50,7 @@ export function TargetedTab() {
               return (
                 <div class={`ai-preview-card ${accepted() ? '' : 'rejected'}`}>
                   <div class="ai-preview-header">
-                    <input
-                      type="checkbox"
-                      checked={accepted()}
-                      onChange={() => toggleAccepted(i())}
-                    />
+                    <input type="checkbox" checked={accepted()} onChange={() => toggleAccepted(i())} />
                     <span class="ai-preview-q">{q.q}</span>
                   </div>
                   <div class="ai-preview-answers">
@@ -87,30 +58,15 @@ export function TargetedTab() {
                     <For each={q.wrong}>
                       {(w) => <div>{w}</div>}
                     </For>
-                    <Show when={q.explanation}>
-                      <div style={{ "margin-top": "4px", "font-style": "italic", color: "var(--color-text-light)" }}>
-                        {q.explanation}
-                      </div>
-                    </Show>
+                    <Show when={q.explanation}><div class="ai-preview-explanation">{q.explanation}</div></Show>
                   </div>
                 </div>
               );
             }}
           </For>
           <div class="ai-preview-actions">
-            <input
-              type="text"
-              value={sectionName()}
-              onInput={(e) => setSectionName(e.currentTarget.value)}
-              placeholder="Section name"
-            />
-            <button
-              class="ai-btn"
-              disabled={acceptedCount() === 0 || injecting()}
-              onClick={handleInject}
-            >
-              {injecting() ? 'Adding...' : `Add ${acceptedCount()} questions`}
-            </button>
+            <input type="text" value={sectionName()} onInput={(e) => setSectionName(e.currentTarget.value)} placeholder="Section name" />
+            <button type="button" class="ai-btn" disabled={acceptedCount() === 0 || injecting()} onClick={handleInject}>{injecting() ? 'Adding...' : `Add ${acceptedCount()} questions`}</button>
           </div>
         </div>
       </Show>

@@ -1,5 +1,3 @@
-// Worker message types
-
 export type WorkerRequest =
   | { type: 'INIT' }
   | { type: 'LOAD_PROJECT'; projectId: string; sectionIds: string[]; cardIds: { sectionId: string; cardId: string; cardType: 'mcq' | 'passage' | 'flashcard' }[] }

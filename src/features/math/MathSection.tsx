@@ -14,158 +14,56 @@ export function MathSection(props: { section: Section }) {
   let feedbackRef: HTMLDivElement | undefined;
   let stepsRef: HTMLDivElement | undefined;
 
-  onMount(() => {
-    sectionHandlers.set(props.section.id, session as any);
-    session.generateProblem();
-  });
+  onMount(() => { sectionHandlers.set(props.section.id, session); session.generateProblem(); });
+  onCleanup(() => sectionHandlers.delete(props.section.id));
 
-  onCleanup(() => {
-    sectionHandlers.delete(props.section.id);
-  });
-
-  // Render LaTeX in question when problem changes
   createEffect(() => {
-    session.problem(); // track dependency
-    if (questionRef) {
-      questionRef.textContent = session.problem()?.q ?? '';
-      renderLatex(questionRef);
-    }
-    // Focus input on new problem
-    if (session.state() === 'answering') {
-      setTimeout(() => inputRef?.focus(), 0);
-    }
+    session.problem();
+    if (questionRef) { questionRef.textContent = session.problem()?.q ?? ''; renderLatex(questionRef); }
+    if (session.state() === 'answering') setTimeout(() => inputRef?.focus(), 0);
   });
 
-  // Render LaTeX in feedback when it changes
   createEffect(() => {
     const fb = session.feedback();
-    if (feedbackRef && fb) {
-      feedbackRef.innerHTML = fb.text;
-      renderLatex(feedbackRef);
-    }
+    if (feedbackRef && fb) { feedbackRef.innerHTML = fb.text; renderLatex(feedbackRef); }
   });
 
-  // Render LaTeX in steps when shown
-  createEffect(() => {
-    if (session.showSteps() && stepsRef) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => { if (stepsRef) renderLatex(stepsRef); }, 0);
-    }
-  });
+  createEffect(() => { if (session.showSteps() && stepsRef) setTimeout(() => { if (stepsRef) renderLatex(stepsRef); }, 0); });
 
-  function handleInputKey(e: KeyboardEvent) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      e.stopPropagation();
-      submitAnswer();
-    }
-  }
-
-  function submitAnswer() {
-    if (!inputRef) return;
-    session.checkAnswer(inputRef.value);
-  }
-
-  function skip() {
-    session.skipProblem();
-  }
-
-  function feedbackClass() {
-    const fb = session.feedback();
-    if (!fb) return 'feedback';
-    return `feedback show ${fb.type === 'correct' ? 'correct-fb' : fb.type === 'wrong' ? 'wrong-fb' : 'skip-fb'}`;
-  }
-
-  const categories = () => props.section.generators ?? Object.keys(CATEGORY_LABELS);
+  const submitAnswer = () => inputRef && session.checkAnswer(inputRef.value);
 
   return (
     <div>
-      {/* Action bar */}
-      <div class="mode-toggle mode-toggle-actions-only">
-        <span class="mode-toggle-actions">
-          <button type="button"
-            class={`pause-btn${session.paused() ? ' active' : ''}`}
-            onClick={() => session.togglePause()}
-            title={session.paused() ? 'Resume timer' : 'Pause timer'}
-          >
-            {session.paused() ? '\u25B6' : '\u23F8'}
-          </button>
-          <button type="button"
-            class="reset-btn"
-            onClick={() => session.resetSection()}
-            title="Reset score and streak"
-          >
-            Reset
-          </button>
-        </span>
-      </div>
+      <div class="mode-toggle mode-toggle-actions-only"><span class="mode-toggle-actions">
+          <button type="button" class={`pause-btn${session.paused() ? ' active' : ''}`} onClick={() => session.togglePause()} title={session.paused() ? 'Resume timer' : 'Pause timer'}>{session.paused() ? '\u25B6' : '\u23F8'}</button>
+          <button type="button" class="reset-btn" onClick={() => session.resetSection()} title="Reset score and streak">Reset</button>
+        </span></div>
 
-      {/* Category filter buttons */}
-      <div class="math-category-btns">
-        <button type="button"
-          class={session.category() === 'all' ? 'active' : ''}
-          onClick={() => session.setCategory('all')}
-        >
-          All
-        </button>
-        <For each={categories()}>
-          {(gen) => (
-            <button type="button"
-              class={session.category() === gen ? 'active' : ''}
-              onClick={() => session.setCategory(gen)}
-            >
-              {CATEGORY_LABELS[gen] ?? gen}
-            </button>
-          )}
-        </For>
-      </div>
+      <div class="math-category-btns"><button type="button" class={session.category() === 'all' ? 'active' : ''} onClick={() => session.setCategory('all')}>All</button><For each={props.section.generators ?? Object.keys(CATEGORY_LABELS)}>{(gen) => <button type="button" class={session.category() === gen ? 'active' : ''} onClick={() => session.setCategory(gen)}>{CATEGORY_LABELS[gen] ?? gen}</button>}</For></div>
 
-      {/* Quiz card */}
       <div class="card">
         <div class="question-header">
           <span class="question-text" ref={questionRef} />
-          <Show when={session.state() === 'answering'}>
-            <span class={`timer${session.timer.seconds() >= 59 ? ' skull' : session.timer.seconds() >= 15 ? ' red' : ''}`}>
-              {session.timer.seconds() >= 59 ? '\u{1F480}' : session.timer.seconds() + 's'}
-            </span>
-          </Show>
+          <Show when={session.state() === 'answering'}><span class={`timer${session.timer.seconds() >= 59 ? ' skull' : session.timer.seconds() >= 15 ? ' red' : ''}`}>{session.timer.seconds() >= 59 ? '\u{1F480}' : session.timer.seconds() + 's'}</span></Show>
         </div>
 
-        {/* Answer input + submit */}
         <Show when={session.state() === 'answering'}>
-          <div class="math-input">
-            <input
-              type="text"
-              ref={inputRef}
-              placeholder="Your answer"
-              onKeyDown={handleInputKey}
-            />
-            <button type="button" onClick={submitAnswer}>Submit</button>
-          </div>
-          <button type="button" class="dk-btn" onClick={skip}>Skip</button>
+          <div class="math-input"><input type="text" ref={inputRef} placeholder="Your answer" onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); submitAnswer(); } }} /><button type="button" onClick={submitAnswer}>Submit</button></div>
+          <button type="button" class="dk-btn" onClick={() => session.skipProblem()}>Skip</button>
         </Show>
 
-        {/* Feedback */}
         <Show when={session.state() === 'revealed' && session.feedback()}>
-          <div class={feedbackClass()} ref={feedbackRef} />
+          <div class={`feedback${session.feedback() ? ` show ${session.feedback()!.type === 'correct' ? 'correct-fb' : session.feedback()!.type === 'wrong' ? 'wrong-fb' : 'skip-fb'}` : ''}`} ref={feedbackRef} />
         </Show>
 
-        {/* Next button */}
         <Show when={session.state() === 'revealed'}>
-          <button type="button" class="action-btn" onClick={() => session.nextProblem()}>
-            Next Problem
-          </button>
+          <button type="button" class="action-btn" onClick={() => session.nextProblem()}>Next Problem</button>
         </Show>
 
-        {/* Steps */}
         <Show when={session.showSteps() && (session.problem()?.steps.length ?? 0) > 0}>
           <div class="math-steps" ref={stepsRef}>
             <h4>Step-by-Step Solution</h4>
-            <ol>
-              <For each={session.problem()!.steps}>
-                {(s) => <li innerHTML={s} />}
-              </For>
-            </ol>
+            <ol><For each={session.problem()!.steps}>{(s) => <li innerHTML={s} />}</For></ol>
           </div>
         </Show>
 

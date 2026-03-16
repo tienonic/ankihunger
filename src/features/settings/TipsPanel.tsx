@@ -2,17 +2,11 @@ import { createSignal, For, Show, onMount, onCleanup } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import {
   type KeyAction, type KeyContext,
-  keybinds,
+  keybinds, CONTEXT_LABELS,
 } from './keybinds.ts';
 import { activePanel, setActivePanel, setHeaderLocked } from '../../core/store/app.ts';
 
 const CONTEXT_ORDER: KeyContext[] = ['mcq', 'flashcard', 'math', 'global'];
-const CONTEXT_LABELS: Record<KeyContext, string> = {
-  global: 'Global',
-  mcq: 'MCQ / Quiz',
-  flashcard: 'Flashcard',
-  math: 'Math',
-};
 
 const TIPS: Record<KeyContext, { action: string; keys: (map: Record<KeyAction, { label: string }>) => string }[]> = {
   mcq: [
@@ -43,55 +37,21 @@ export function TipsPanel() {
   const [panelTop, setPanelTop] = createSignal(0);
   let btnRef!: HTMLButtonElement;
 
-  function close() {
-    setActivePanel(null);
-    setHeaderLocked(false);
-  }
-
-  function handleEscape(e: KeyboardEvent) {
-    if (e.key === 'Escape' && activePanel() === 'tips') {
-      close();
-    }
-  }
-
-  function handleBackdropClick(e: MouseEvent) {
-    if ((e.target as HTMLElement).classList.contains('settings-backdrop')) {
-      close();
-    }
-  }
-
+  function close() { setActivePanel(null); setHeaderLocked(false); }
+  const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape' && activePanel() === 'tips') close(); };
   onMount(() => document.addEventListener('keydown', handleEscape));
   onCleanup(() => document.removeEventListener('keydown', handleEscape));
 
   return (
     <>
-      <button ref={btnRef} class="tips-btn" title="Show keyboard tips" onClick={() => { setPanelTop(btnRef.getBoundingClientRect().top); setActivePanel('tips'); setHeaderLocked(true); }}>
-        Tips
-      </button>
+      <button type="button" ref={btnRef} class="tips-btn" title="Show keyboard tips" onClick={() => { setPanelTop(btnRef.getBoundingClientRect().top); setActivePanel('tips'); setHeaderLocked(true); }}>Tips</button>
       <Show when={activePanel() === 'tips'}>
         <Portal>
-          <div class="settings-backdrop" onClick={handleBackdropClick}>
+          <div class="settings-backdrop" onClick={(e) => { if ((e.target as HTMLElement).classList.contains('settings-backdrop')) close(); }}>
             <div class="keybinds-modal panel-fixed" style={{ top: `${panelTop()}px` }}>
-              <div class="keybinds-header">
-                <span>Tips</span>
-                <button class="keybinds-close" onClick={close}>&times;</button>
-              </div>
+              <div class="keybinds-header"><span>Tips</span><button type="button" class="keybinds-close" onClick={close}>&times;</button></div>
               <div class="keybinds-body">
-                <For each={CONTEXT_ORDER}>
-                  {(ctx) => (
-                    <div class="keybinds-group">
-                      <div class="keybinds-group-label">{CONTEXT_LABELS[ctx]}</div>
-                      <For each={TIPS[ctx]}>
-                        {(tip) => (
-                          <div class="keybinds-row">
-                            <span class="keybinds-action">{tip.action}</span>
-                            <kbd>{tip.keys(keybinds())}</kbd>
-                          </div>
-                        )}
-                      </For>
-                    </div>
-                  )}
-                </For>
+                <For each={CONTEXT_ORDER}>{(ctx) => <div class="keybinds-group"><div class="keybinds-group-label">{CONTEXT_LABELS[ctx]}</div><For each={TIPS[ctx]}>{(tip) => <div class="keybinds-row"><span class="keybinds-action">{tip.action}</span><kbd>{tip.keys(keybinds())}</kbd></div>}</For></div>}</For>
               </div>
             </div>
           </div>

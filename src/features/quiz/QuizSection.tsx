@@ -10,71 +10,29 @@ import { FlashcardArea } from './FlashcardArea.tsx';
 export function QuizSection(props: { section: Section }) {
   const session = createQuizSession(props.section);
 
-  onMount(() => {
-    sectionHandlers.set(props.section.id, session);
-    bumpHandlerVersion();
-    if (!session.flashMode()) {
-      session.pickNextCard();
-    }
-  });
-
-  onCleanup(() => {
-    sectionHandlers.delete(props.section.id);
-    bumpHandlerVersion();
-  });
+  onMount(() => { sectionHandlers.set(props.section.id, session); bumpHandlerVersion(); if (!session.flashMode()) session.pickNextCard(); });
+  onCleanup(() => { sectionHandlers.delete(props.section.id); bumpHandlerVersion(); });
 
   const hasFlash = () => props.section.hasFlashcards && (props.section.flashcards?.length ?? 0) > 0;
   const isPassage = () => props.section.type === 'passage-quiz';
   const sourceFolder = () => activeProject()?.sourceFolder;
 
-  function openFolder() {
-    const folder = sourceFolder();
-    if (folder) fetch(`/__open-folder?path=${encodeURIComponent(folder)}`);
-  }
+  function openFolder() { const folder = sourceFolder(); if (folder) fetch(`/__open-folder?path=${encodeURIComponent(folder)}`); }
 
   return (
     <div>
-      {/* Mode toggle (quiz/flash tabs) */}
       <Show when={hasFlash()}>
         <div class="mode-toggle">
-          <button
-            class={`mode-btn ${!session.flashMode() ? 'active' : ''}`}
-            onClick={() => { if (session.flashMode()) session.toggleFlashMode(); }}
-          >
-            Quiz Mode
-          </button>
-          <button
-            class={`mode-btn ${session.flashMode() ? 'active' : ''}`}
-            onClick={() => { if (!session.flashMode()) session.toggleFlashMode(); }}
-          >
-            Flashcards
-          </button>
-          <span class="mode-toggle-actions">
-            <Show when={session.currentImageLink()}>
-              <a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a>
-            </Show>
-            <Show when={sourceFolder()}>
-              <button class="reset-btn" onClick={openFolder} title="Open project folder">Open</button>
-            </Show>
-          </span>
+          <button type="button" class={`mode-btn ${!session.flashMode() ? 'active' : ''}`} onClick={() => { if (session.flashMode()) session.toggleFlashMode(); }}>Quiz Mode</button>
+          <button type="button" class={`mode-btn ${session.flashMode() ? 'active' : ''}`} onClick={() => { if (!session.flashMode()) session.toggleFlashMode(); }}>Flashcards</button>
+          <span class="mode-toggle-actions"><Show when={session.currentImageLink()}><a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a></Show><Show when={sourceFolder()}><button type="button" class="reset-btn" onClick={openFolder} title="Open project folder">Open</button></Show></span>
         </div>
       </Show>
 
-      {/* Actions only (no flashcards) */}
       <Show when={!hasFlash() && (session.currentImageLink() || sourceFolder())}>
-        <div class="mode-toggle mode-toggle-actions-only">
-          <span class="mode-toggle-actions">
-            <Show when={session.currentImageLink()}>
-              <a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a>
-            </Show>
-            <Show when={sourceFolder()}>
-              <button class="reset-btn" onClick={openFolder} title="Open project folder">Open</button>
-            </Show>
-          </span>
-        </div>
+        <div class="mode-toggle mode-toggle-actions-only"><span class="mode-toggle-actions"><Show when={session.currentImageLink()}><a class="view-img" href={session.currentImageLink()} target="_blank" rel="noopener">View Image</a></Show><Show when={sourceFolder()}><button type="button" class="reset-btn" onClick={openFolder} title="Open project folder">Open</button></Show></span></div>
       </Show>
 
-      {/* Quiz or Flash content */}
       <Show when={!session.flashMode()}>
         <McqCard session={session} isPassage={isPassage()} />
       </Show>

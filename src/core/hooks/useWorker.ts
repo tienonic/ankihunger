@@ -51,7 +51,6 @@ export async function initWorker(): Promise<void> {
   return initPromise;
 }
 
-// Typed shortcuts
 export const workerApi = {
   loadProject: (projectId: string, sectionIds: string[], cardIds: { sectionId: string; cardId: string; cardType: 'mcq' | 'passage' | 'flashcard' }[]) =>
     sendWorkerMessage({ type: 'LOAD_PROJECT', projectId, sectionIds, cardIds }),

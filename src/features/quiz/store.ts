@@ -24,7 +24,6 @@ export interface HistoryEntry {
 }
 
 export interface QuizSession {
-  // Signals
   state: () => QuizState;
   cardId: () => string | null;
   question: () => Question | null;
@@ -45,8 +44,6 @@ export interface QuizSession {
   leechWarning: () => boolean;
   skipped: () => boolean;
   currentImageLink: () => string;
-
-  // Actions
   pickNextCard: () => Promise<void>;
   answer: (option: string) => Promise<void>;
   skip: () => Promise<void>;
@@ -66,9 +63,7 @@ export interface QuizSession {
   studyMore: () => Promise<void>;
   increaseNewCards: (count?: number) => Promise<void>;
   unburyAll: () => Promise<void>;
-
-  // Timer
-  timer: { seconds: () => number; start: () => void; stop: () => number; reset: () => void; pause: () => void; resume: () => void; paused: () => boolean };
+  timer:{ seconds: () => number; start: () => void; stop: () => number; reset: () => void; pause: () => void; resume: () => void; paused: () => boolean };
   paused: () => boolean;
   togglePause: () => void;
 }
@@ -81,7 +76,6 @@ function timeToRating(seconds: number): number {
   if (seconds >= 8) return 3;  // Good
   return 4; // Easy
 }
-
 
 export function createQuizSession(section: Section): QuizSession {
   const project = () => activeProject()!;
@@ -121,11 +115,8 @@ export function createQuizSession(section: Section): QuizSession {
     }
   });
 
-  // History tracking
   let history: HistoryEntry[] = [];
   let histPos = -1;
-
-  // Passage-quiz scenario tracking
   let currentScenarioIdx = 0;
   let currentScenarioQIdx = 0;
 
@@ -220,7 +211,6 @@ export function createQuizSession(section: Section): QuizSession {
       setState('answering');
     });
 
-    // Track history
     histPos++;
     history = history.slice(0, histPos);
     history.push({
@@ -241,7 +231,6 @@ export function createQuizSession(section: Section): QuizSession {
 
     timer.start();
 
-    // Update glossary context
     const q = lookup.question;
     const ctx = [q.q, q.correct, q.imageName || q.cropName || '', q.explanation || ''].join(' ');
     setQuestionContext(ctx);
@@ -267,11 +256,9 @@ export function createQuizSession(section: Section): QuizSession {
       setSkipped(false);
     });
 
-    // Update score in worker and use result directly
     const s = await workerApi.updateScore(p.slug, section.id, correct);
     setScore({ correct: s.correct, attempted: s.attempted });
 
-    // Save to history
     const entry = history[histPos];
     if (entry) {
       entry.selected = option;
@@ -306,11 +293,9 @@ export function createQuizSession(section: Section): QuizSession {
       setSkipped(true);
     });
 
-    // Update score in worker and use result directly
     const s = await workerApi.updateScore(p.slug, section.id, false);
     setScore({ correct: s.correct, attempted: s.attempted });
 
-    // Save skip to history
     const entry = history[histPos];
     if (entry) {
       entry.selected = null;
@@ -321,7 +306,6 @@ export function createQuizSession(section: Section): QuizSession {
       entry.explanation = q.explanation ?? '';
     }
 
-    // Auto-rate Again
     await doRate(cId, 1);
   }
 
@@ -388,7 +372,6 @@ export function createQuizSession(section: Section): QuizSession {
     await pickNextCard();
   }
 
-  // Flash mode
   async function pickNextFlash() {
     const p = project();
     if (!p || !section.flashcards || section.flashCardIds.length === 0) return;
@@ -434,7 +417,6 @@ export function createQuizSession(section: Section): QuizSession {
       setRatingLabels({});
     });
 
-    // Update glossary context with flashcard text
     setQuestionContext([card.front, card.back].join(' '));
 
     await refreshDue();
@@ -630,7 +612,6 @@ export function createQuizSession(section: Section): QuizSession {
     const p = project();
     if (!p) return;
     await workerApi.resetSection(p.slug, section.id);
-    // Re-register cards
     const cardRegs = [
       ...section.cardIds.map(id => ({
         sectionId: section.id,

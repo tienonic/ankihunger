@@ -14,7 +14,7 @@
   border-radius: 2px;
   padding: 12px;
   z-index: 501;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--shadow-soft);
 }
 
 .settings-field {
@@ -33,7 +33,6 @@
   border: 1px solid var(--color-border);
   border-radius: 2px;
   font-size: 0.8rem;
-  font-family: inherit;
   color: var(--color-text);
   background: var(--color-bg);
   text-align: right;
@@ -43,7 +42,7 @@
   width: 100%;
   padding: 6px;
   background: var(--color-primary);
-  color: #fff;
+  color: white;
   border: none;
   border-radius: 2px;
   font-size: 0.75rem;
@@ -63,7 +62,7 @@
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px var(--shadow-soft);
 }
 
 .keybinds-modal.panel-fixed {

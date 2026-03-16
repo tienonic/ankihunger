@@ -3,6 +3,9 @@ import { activeProject, activeTab, syncActivity } from '../../core/store/app.ts'
 import { workerApi } from '../../core/hooks/useWorker.ts';
 import { sectionHandlers } from '../../core/store/sections.ts';
 
+type ActivityEntry = { section_id: string; rating: number; correct: number };
+type ScoreRow = { section_id: string; correct: number; attempted: number };
+
 const [activityScore, setActivityScore] = createSignal(0);
 const [reviewStats, setReviewStats] = createSignal({ reviews: 0, retention: '0%' });
 const [sidebarScore, setSidebarScore] = createSignal({ correct: 0, attempted: 0, due: 0, total: 0 });
@@ -19,12 +22,12 @@ export function setCanvasRef(el: HTMLCanvasElement) {
 export async function loadActivity() {
   const project = activeProject();
   if (!project) return;
-  let entries = await workerApi.getActivity(project.slug, 200) as any[];
+  let entries = await workerApi.getActivity(project.slug, 200) as ActivityEntry[];
   if (!syncActivity()) {
     const tab = activeTab();
-    if (tab) entries = entries.filter((e: any) => e.section_id === tab);
+    if (tab) entries = entries.filter((e) => e.section_id === tab);
   }
-  chartEntries = entries.map((e: any) => ({ rating: e.rating, correct: !!e.correct })).reverse();
+  chartEntries = entries.map((e) => ({ rating: e.rating, correct: !!e.correct })).reverse();
 
   let score = 0;
   for (const e of chartEntries) {
@@ -54,8 +57,8 @@ export async function loadSidebarScore() {
   if (!section || section.type === 'math-gen') return;
 
   const cardType = section.type === 'passage-quiz' ? 'passage' as const : 'mcq' as const;
-  const scores = await workerApi.getScores(project.slug);
-  const s = scores.find((sc: any) => sc.section_id === tab);
+  const scores = await workerApi.getScores(project.slug) as ScoreRow[];
+  const s = scores.find((sc) => sc.section_id === tab);
   const dueResult = await workerApi.countDue(project.slug, [tab], cardType);
   setSidebarScore({
     correct: s?.correct ?? 0,
@@ -132,7 +135,6 @@ function drawChart() {
   ctx.lineTo(w - rightPad, zeroY);
   ctx.stroke();
 
-  // Y-axis vertical line
   ctx.beginPath();
   ctx.moveTo(leftPad + 0.5, topPad);
   ctx.lineTo(leftPad + 0.5, topPad + plotH);

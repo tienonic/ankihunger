@@ -4,13 +4,13 @@ import { insightsOutput, insightsLoading, insightsError, runInsights, abortStrea
 export function InsightsTab() {
   return (
     <div>
-      <div style={{ "margin-bottom": "10px" }}>
+      <div class="ai-analyze-row">
         <Show when={insightsLoading()} fallback={
-          <button class="ai-btn" onClick={runInsights}>
+          <button type="button" class="ai-btn" onClick={runInsights}>
             Analyze Performance
           </button>
         }>
-          <button class="ai-btn ai-btn-secondary" onClick={abortStream}>
+          <button type="button" class="ai-btn ai-btn-secondary" onClick={abortStream}>
             <span class="ai-spinner ai-spinner-dark" /> Stop
           </button>
         </Show>

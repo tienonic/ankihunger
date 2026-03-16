@@ -38,20 +38,9 @@ export function SettingsPanel() {
     setHeaderLocked(false);
   }
 
-  function handleEscape(e: KeyboardEvent) {
-    if (e.key === 'Escape' && activePanel() === 'settings') {
-      close();
-    }
-  }
-
-  onMount(() => document.addEventListener('keydown', handleEscape));
-  onCleanup(() => document.removeEventListener('keydown', handleEscape));
-
-  function handleBackdropClick(e: MouseEvent) {
-    if ((e.target as HTMLElement).classList.contains('settings-backdrop')) {
-      close();
-    }
-  }
+  const escHandler = (e: KeyboardEvent) => { if (e.key === 'Escape' && activePanel() === 'settings') close(); };
+  onMount(() => document.addEventListener('keydown', escHandler));
+  onCleanup(() => document.removeEventListener('keydown', escHandler));
 
   async function handleSave() {
     const project = activeProject();
@@ -76,49 +65,15 @@ export function SettingsPanel() {
 
   return (
     <>
-      <button ref={btnRef} class="tips-btn" title="FSRS settings" onClick={handleOpen}>
-        Settings
-      </button>
+      <button type="button" ref={btnRef} class="tips-btn" title="FSRS settings" onClick={handleOpen}>Settings</button>
       <Show when={activePanel() === 'settings'}>
         <Portal>
-          <div class="settings-backdrop" onClick={handleBackdropClick}>
+          <div class="settings-backdrop" onClick={(e) => { if ((e.target as HTMLElement).classList.contains('settings-backdrop')) close(); }}>
             <div class="settings-dropdown" style={{ top: `${panelTop()}px` }}>
-              <label class="settings-field">
-                <span>Desired retention</span>
-                <input
-                  type="number"
-                  min="0.7"
-                  max="0.99"
-                  step="0.01"
-                  value={retention()}
-                  onInput={e => { const v = parseFloat(e.currentTarget.value); setRetention(isNaN(v) ? 0.9 : v); }}
-                />
-              </label>
-              <label class="settings-field">
-                <span>New cards / session</span>
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  step="1"
-                  value={newPerSession()}
-                  onInput={e => { const v = parseInt(e.currentTarget.value, 10); setNewPerSession(isNaN(v) ? 20 : v); }}
-                />
-              </label>
-              <label class="settings-field">
-                <span>Leech threshold</span>
-                <input
-                  type="number"
-                  min="2"
-                  max="30"
-                  step="1"
-                  value={leechThreshold()}
-                  onInput={e => { const v = parseInt(e.currentTarget.value, 10); setLeechThreshold(isNaN(v) ? 8 : v); }}
-                />
-              </label>
-              <button class="settings-save-btn" onClick={handleSave}>
-                {saved() ? 'Saved' : 'Save'}
-              </button>
+              <label class="settings-field"><span>Desired retention</span><input type="number" min="0.7" max="0.99" step="0.01" value={retention()} onInput={e => { const v = parseFloat(e.currentTarget.value); setRetention(isNaN(v) ? 0.9 : v); }} /></label>
+              <label class="settings-field"><span>New cards / session</span><input type="number" min="1" max="100" step="1" value={newPerSession()} onInput={e => { const v = parseInt(e.currentTarget.value, 10); setNewPerSession(isNaN(v) ? 20 : v); }} /></label>
+              <label class="settings-field"><span>Leech threshold</span><input type="number" min="2" max="30" step="1" value={leechThreshold()} onInput={e => { const v = parseInt(e.currentTarget.value, 10); setLeechThreshold(isNaN(v) ? 8 : v); }} /></label>
+              <button type="button" class="settings-save-btn" onClick={handleSave}>{saved() ? 'Saved' : 'Save'}</button>
             </div>
           </div>
         </Portal>
