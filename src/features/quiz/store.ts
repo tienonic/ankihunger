@@ -7,8 +7,6 @@ import { setQuestionContext } from '../glossary/store.ts';
 import { pushChartEntry } from '../activity/store.ts';
 import type { Section, Question } from '../../projects/types.ts';
 
-export { sectionHandlers, handlerVersion, bumpHandlerVersion } from '../../core/store/sections.ts';
-
 export type QuizState = 'idle' | 'answering' | 'revealed' | 'rated' | 'reviewing-history' | 'done';
 
 export interface HistoryEntry {
@@ -42,11 +40,9 @@ export interface QuizSession {
   flashFront: () => string;
   flashBack: () => string;
   flashDefFirst: () => boolean;
-  cardState: () => number;
   passage: () => string;
   historyReview: () => HistoryEntry | null;
   leechWarning: () => boolean;
-  ratingFlash: () => { rating: number; show: boolean };
   skipped: () => boolean;
   currentImageLink: () => string;
 
@@ -86,7 +82,6 @@ function timeToRating(seconds: number): number {
   return 4; // Easy
 }
 
-const RATING_LABELS: Record<number, string> = { 1: 'Again', 2: 'Hard', 3: 'Good', 4: 'Easy' };
 
 export function createQuizSession(section: Section): QuizSession {
   const project = () => activeProject()!;
@@ -106,11 +101,9 @@ export function createQuizSession(section: Section): QuizSession {
   const [flashFront, setFlashFront] = createSignal('');
   const [flashBack, setFlashBack] = createSignal('');
   const [flashDefFirst, setFlashDefFirst] = createSignal(false);
-  const [cardState, setCardState] = createSignal(0);
   const [passage, setPassage] = createSignal('');
   const [historyReview, setHistoryReview] = createSignal<HistoryEntry | null>(null);
   const [leechWarning, setLeechWarning] = createSignal(false);
-  const [ratingFlash, setRatingFlash] = createSignal<{ rating: number; show: boolean }>({ rating: 0, show: false });
   const [skipped, setSkipped] = createSignal(false);
 
   const timer = useTimer();
@@ -122,12 +115,8 @@ export function createQuizSession(section: Section): QuizSession {
     const st = state();
     const cId = cardId();
     if (!easy && st === 'revealed' && cId) {
-      Promise.all([
-        workerApi.previewRatings(cId),
-        workerApi.getCardState(cId) as Promise<any>,
-      ]).then(([preview, cs]) => {
+      workerApi.previewRatings(cId).then(preview => {
         setRatingLabels(preview.labels);
-        if (cs) setCardState(cs.fsrs_state ?? 0);
       });
     }
   });
@@ -151,11 +140,6 @@ export function createQuizSession(section: Section): QuizSession {
   function getCardType(): 'mcq' | 'passage' | 'flashcard' {
     if (flashMode()) return 'flashcard';
     return section.type === 'passage-quiz' ? 'passage' : 'mcq';
-  }
-
-  function getSectionIds(): string[] {
-    // For passage-quiz, the worker needs the section IDs
-    return [section.id];
   }
 
   function lookupQuestion(cId: string): { question: Question; scenarioIdx?: number; questionIdx?: number; passage?: string } | null {
@@ -301,12 +285,8 @@ export function createQuizSession(section: Section): QuizSession {
       const autoRating = correct ? timeToRating(elapsed) : 1;
       await doRate(cId, autoRating);
     } else {
-      const [preview, cs] = await Promise.all([
-        workerApi.previewRatings(cId),
-        workerApi.getCardState(cId) as Promise<any>,
-      ]);
+      const preview = await workerApi.previewRatings(cId);
       setRatingLabels(preview.labels);
-      if (cs) setCardState(cs.fsrs_state ?? 0);
     }
   }
 
@@ -457,8 +437,6 @@ export function createQuizSession(section: Section): QuizSession {
     // Update glossary context with flashcard text
     setQuestionContext([card.front, card.back].join(' '));
 
-    const cs = await workerApi.getCardState(result.cardId) as any;
-    if (cs) setCardState(cs.fsrs_state ?? 0);
     await refreshDue();
   }
 
@@ -579,8 +557,6 @@ export function createQuizSession(section: Section): QuizSession {
     });
 
     setQuestionContext([card.front, card.back].join(' '));
-    const cs = await workerApi.getCardState(fId) as any;
-    if (cs) setCardState(cs.fsrs_state ?? 0);
     await refreshDue();
   }
 
@@ -608,8 +584,6 @@ export function createQuizSession(section: Section): QuizSession {
         setState('answering');
       });
       setQuestionContext([card.front, card.back].join(' '));
-      const cs = await workerApi.getCardState(result.cardId) as any;
-      if (cs) setCardState(cs.fsrs_state ?? 0);
     } else {
       const lookup = lookupQuestion(result.cardId);
       if (!lookup) return;
@@ -706,11 +680,9 @@ export function createQuizSession(section: Section): QuizSession {
     flashFront,
     flashBack,
     flashDefFirst,
-    cardState,
     passage,
     historyReview,
     leechWarning,
-    ratingFlash,
     skipped,
     currentImageLink,
 

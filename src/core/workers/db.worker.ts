@@ -1,6 +1,5 @@
 import type { WorkerMessage, WorkerRequest, WorkerResponse } from './protocol.ts';
 import {
-  createEmptyCard,
   fsrs,
   Rating,
   State,
@@ -31,8 +30,7 @@ CREATE TABLE IF NOT EXISTS cards (
   suspended INTEGER DEFAULT 0,
   buried INTEGER DEFAULT 0,
   leech INTEGER DEFAULT 0,
-  updated_at TEXT DEFAULT (datetime('now')),
-  updated_by TEXT DEFAULT 'local'
+  updated_at TEXT DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_cards_due ON cards(due);
 CREATE INDEX IF NOT EXISTS idx_cards_section ON cards(section_id);
@@ -44,14 +42,7 @@ CREATE TABLE IF NOT EXISTS review_log (
   project_id TEXT NOT NULL,
   rating INTEGER NOT NULL,
   review_time TEXT NOT NULL,
-  elapsed_ms INTEGER,
-  new_state INTEGER,
-  new_stability REAL,
-  new_difficulty REAL,
-  scheduled_days INTEGER,
-  was_assisted INTEGER DEFAULT 0,
-  section_id TEXT,
-  device_id TEXT DEFAULT 'local'
+  section_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS scores (
@@ -69,32 +60,14 @@ CREATE TABLE IF NOT EXISTS activity (
   section_id TEXT,
   rating INTEGER NOT NULL,
   correct INTEGER NOT NULL,
-  timestamp TEXT NOT NULL,
-  device_id TEXT DEFAULT 'local'
+  timestamp TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS notes (
   id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL,
   text TEXT NOT NULL,
-  created_at TEXT DEFAULT (datetime('now')),
-  device_id TEXT DEFAULT 'local'
-);
-
-CREATE TABLE IF NOT EXISTS user_terms (
-  id TEXT PRIMARY KEY,
-  project_id TEXT NOT NULL,
-  term TEXT NOT NULL,
-  definition TEXT NOT NULL,
-  created_at TEXT DEFAULT (datetime('now')),
-  deleted INTEGER DEFAULT 0,
-  device_id TEXT DEFAULT 'local'
-);
-
-CREATE TABLE IF NOT EXISTS settings (
-  key TEXT PRIMARY KEY,
-  value_json TEXT NOT NULL,
-  updated_at TEXT
+  created_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS hotkeys (
@@ -104,23 +77,10 @@ CREATE TABLE IF NOT EXISTS hotkeys (
   updated_at TEXT
 );
 
-CREATE TABLE IF NOT EXISTS fsrs_params (
-  project_id TEXT PRIMARY KEY,
-  weights_json TEXT NOT NULL,
-  retention REAL DEFAULT 0.9,
-  updated_at TEXT
-);
-
-CREATE TABLE IF NOT EXISTS sync_meta (
-  key TEXT PRIMARY KEY,
-  value TEXT NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS undo_stack (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   card_id TEXT NOT NULL,
   prev_state TEXT NOT NULL,
-  review_log_id TEXT,
   created_at TEXT DEFAULT (datetime('now'))
 );
 `;
@@ -396,7 +356,7 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
     }
 
     case 'PREVIEW_RATINGS': {
-      if (!fsrsEngine) initFSRS(request.retention);
+      if (!fsrsEngine) initFSRS();
       const row = await queryOne(`SELECT * FROM cards WHERE card_id = ?`, [request.cardId]);
       if (!row) return { labels: {} };
 
@@ -412,7 +372,7 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
     }
 
     case 'REVIEW_CARD': {
-      if (!fsrsEngine) initFSRS(request.retention);
+      if (!fsrsEngine) initFSRS();
       const { cardId, projectId, sectionId, rating, elapsedMs } = request;
 
       const row = await queryOne(`SELECT * FROM cards WHERE card_id = ?`, [cardId]);
@@ -457,9 +417,8 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
 
         // Log review
         await run(
-          `INSERT INTO review_log (id, card_id, project_id, rating, review_time, elapsed_ms, new_state, new_stability, new_difficulty, scheduled_days, section_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [logId, cardId, projectId, rating, reviewTime, elapsedMs, newCard.state, newCard.stability, newCard.difficulty, newCard.scheduled_days, sectionId]
+          `INSERT INTO review_log (id, card_id, project_id, rating, review_time, section_id) VALUES (?, ?, ?, ?, ?, ?)`,
+          [logId, cardId, projectId, rating, reviewTime, sectionId]
         );
 
         await run('COMMIT');
@@ -644,37 +603,6 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
       return { ok: true };
     }
 
-    case 'GET_NOTES': {
-      return await queryAll(
-        `SELECT * FROM notes WHERE project_id = ? ORDER BY created_at DESC`,
-        [request.projectId]
-      );
-    }
-
-    case 'ADD_USER_TERM': {
-      await run(
-        `INSERT INTO user_terms (id, project_id, term, definition) VALUES (?, ?, ?, ?)`,
-        [uuidv7(), request.projectId, request.term, request.definition]
-      );
-      return { ok: true };
-    }
-
-    case 'GET_USER_TERMS': {
-      return await queryAll(
-        `SELECT * FROM user_terms WHERE project_id = ? AND deleted = 0 ORDER BY created_at DESC`,
-        [request.projectId]
-      );
-    }
-
-    case 'DELETE_USER_TERM': {
-      await run(`UPDATE user_terms SET deleted = 1 WHERE id = ?`, [request.id]);
-      return { ok: true };
-    }
-
-    case 'GET_CARD_STATE': {
-      return await queryOne(`SELECT * FROM cards WHERE card_id = ?`, [request.cardId]);
-    }
-
     case 'GET_HOTKEYS': {
       return await queryAll(`SELECT * FROM hotkeys`);
     }
@@ -687,15 +615,7 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
       return { ok: true };
     }
 
-    case 'GET_FSRS_PARAMS': {
-      return await queryOne(`SELECT * FROM fsrs_params WHERE project_id = ?`, [request.projectId]);
-    }
-
     case 'SET_FSRS_PARAMS': {
-      await run(
-        `INSERT OR REPLACE INTO fsrs_params (project_id, weights_json, retention, updated_at) VALUES (?, ?, ?, datetime('now'))`,
-        [request.projectId, JSON.stringify(request.weights), request.retention]
-      );
       initFSRS(request.retention);
       return { ok: true };
     }
@@ -715,10 +635,6 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
          ORDER BY lapses DESC, stability ASC`,
         [request.projectId]
       );
-    }
-
-    case 'IMPORT_LEGACY': {
-      return { ok: true };
     }
 
     default:

@@ -1,4 +1,3 @@
-import { createSignal, onCleanup } from 'solid-js';
 import type { WorkerRequest, WorkerResponse, WorkerMessage } from '../workers/protocol.ts';
 
 let worker: Worker | null = null;
@@ -33,7 +32,7 @@ function getWorker(): Worker {
   return worker;
 }
 
-export async function sendWorkerMessage<T = unknown>(request: WorkerRequest): Promise<T> {
+async function sendWorkerMessage<T = unknown>(request: WorkerRequest): Promise<T> {
   const w = getWorker();
   const id = ++msgId;
   const msg: WorkerMessage = { id, request };
@@ -54,8 +53,6 @@ export async function initWorker(): Promise<void> {
 
 // Typed shortcuts
 export const workerApi = {
-  init: () => sendWorkerMessage({ type: 'INIT' }),
-
   loadProject: (projectId: string, sectionIds: string[], cardIds: { sectionId: string; cardId: string; cardType: 'mcq' | 'passage' | 'flashcard' }[]) =>
     sendWorkerMessage({ type: 'LOAD_PROJECT', projectId, sectionIds, cardIds }),
 
@@ -112,29 +109,11 @@ export const workerApi = {
   addNote: (projectId: string, text: string) =>
     sendWorkerMessage({ type: 'ADD_NOTE', projectId, text }),
 
-  getNotes: (projectId: string) =>
-    sendWorkerMessage<{ id: string; text: string; created_at: string }[]>({ type: 'GET_NOTES', projectId }),
-
-  addUserTerm: (projectId: string, term: string, definition: string) =>
-    sendWorkerMessage({ type: 'ADD_USER_TERM', projectId, term, definition }),
-
-  getUserTerms: (projectId: string) =>
-    sendWorkerMessage<{ id: string; term: string; definition: string }[]>({ type: 'GET_USER_TERMS', projectId }),
-
-  deleteUserTerm: (id: string) =>
-    sendWorkerMessage({ type: 'DELETE_USER_TERM', id }),
-
-  getCardState: (cardId: string) =>
-    sendWorkerMessage({ type: 'GET_CARD_STATE', cardId }),
-
   getReviewLog: (projectId: string, limit?: number) =>
     sendWorkerMessage({ type: 'GET_REVIEW_LOG', projectId, limit }),
 
-  getFSRSParams: (projectId: string) =>
-    sendWorkerMessage({ type: 'GET_FSRS_PARAMS', projectId }),
-
-  setFSRSParams: (projectId: string, weights: number[], retention: number) =>
-    sendWorkerMessage({ type: 'SET_FSRS_PARAMS', projectId, weights, retention }),
+  setFSRSParams: (projectId: string, retention: number) =>
+    sendWorkerMessage({ type: 'SET_FSRS_PARAMS', projectId, retention }),
 
   getPerformanceCards: (projectId: string) =>
     sendWorkerMessage<{ card_id: string; section_id: string; card_type: string; fsrs_state: number; stability: number; difficulty: number; reps: number; lapses: number }[]>({

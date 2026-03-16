@@ -6,7 +6,6 @@ import { LatexText } from '../../components/LatexText.tsx';
 
 const RATING_CSS: Record<number, string> = { 1: 'rating-again', 2: 'rating-hard', 3: 'rating-good', 4: 'rating-easy' };
 const RATING_NAMES: Record<number, string> = { 1: 'Again', 2: 'Hard', 3: 'Good', 4: 'Easy' };
-const FLASH_CSS: Record<number, string> = { 1: 'flash-again', 2: 'flash-hard', 3: 'flash-good', 4: 'flash-easy' };
 
 export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
   const s = props.session;
@@ -62,7 +61,7 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
             const fb = () => feedbackFor(opt);
             return (
               <div class="option-wrapper">
-                <button
+                <button type="button"
                   class={optionClass(opt)}
                   onClick={() => {
                     const st = s.state();
@@ -95,7 +94,7 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
         <div class="rating-area">
           <For each={[1, 2, 3, 4]}>
             {(rating) => (
-              <button class={`rating-btn ${RATING_CSS[rating]}`} onClick={() => s.rate(rating)}>
+              <button type="button" class={`rating-btn ${RATING_CSS[rating]}`} onClick={() => s.rate(rating)}>
                 <span class="rating-label">{RATING_NAMES[rating]}</span>
                 <span class="rating-interval">{s.ratingLabels()[rating] ?? ''}</span>
               </button>
@@ -107,9 +106,9 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
       {/* Card actions */}
       <Show when={showActions()}>
         <div class="card-actions">
-          <button class="action-sm" onClick={() => s.undo()}>Undo</button>
-          <button class="action-sm" onClick={() => s.suspend()}>Suspend</button>
-          <button class="action-sm" onClick={() => s.bury()}>Bury</button>
+          <button type="button" class="action-sm" onClick={() => s.undo()}>Undo</button>
+          <button type="button" class="action-sm" onClick={() => s.suspend()}>Suspend</button>
+          <button type="button" class="action-sm" onClick={() => s.bury()}>Bury</button>
         </div>
       </Show>
 
@@ -143,7 +142,7 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
             <span>{s.dueCount().total} total cards</span>
           </div>
           <div class="done-actions">
-            <button class="action-sm" onClick={() => s.studyMore()}>Study More</button>
+            <button type="button" class="action-sm" onClick={() => s.studyMore()}>Study More</button>
             <div class="done-add-new">
               {(() => {
                 const [count, setCount] = createSignal(5);
@@ -155,11 +154,11 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
                     class="new-cards-input"
                     onInput={(e) => setCount(Math.max(1, parseInt(e.currentTarget.value) || 1))}
                   />
-                  <button class="action-sm" onClick={() => s.increaseNewCards(count())}>Add New</button>
+                  <button type="button" class="action-sm" onClick={() => s.increaseNewCards(count())}>Add New</button>
                 </>;
               })()}
             </div>
-            <button class="action-sm" onClick={() => s.unburyAll()}>Unbury Cards</button>
+            <button type="button" class="action-sm" onClick={() => s.unburyAll()}>Unbury Cards</button>
           </div>
         </div>
       </Show>

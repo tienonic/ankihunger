@@ -20,17 +20,10 @@ export type WorkerRequest =
   | { type: 'GET_ACTIVITY'; projectId: string; limit?: number }
   | { type: 'CLEAR_ACTIVITY'; projectId: string }
   | { type: 'ADD_NOTE'; projectId: string; text: string }
-  | { type: 'GET_NOTES'; projectId: string }
-  | { type: 'ADD_USER_TERM'; projectId: string; term: string; definition: string }
-  | { type: 'GET_USER_TERMS'; projectId: string }
-  | { type: 'DELETE_USER_TERM'; id: string }
-  | { type: 'GET_CARD_STATE'; cardId: string }
   | { type: 'GET_HOTKEYS' }
   | { type: 'SET_HOTKEY'; action: string; binding: string; context: string }
-  | { type: 'IMPORT_LEGACY'; projectId: string; data: unknown }
   | { type: 'GET_REVIEW_LOG'; projectId: string; limit?: number }
-  | { type: 'GET_FSRS_PARAMS'; projectId: string }
-  | { type: 'SET_FSRS_PARAMS'; projectId: string; weights: number[]; retention: number }
+  | { type: 'SET_FSRS_PARAMS'; projectId: string; retention: number }
   | { type: 'GET_PERFORMANCE_CARDS'; projectId: string };
 
 export interface WorkerResponse {

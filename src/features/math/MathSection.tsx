@@ -83,14 +83,14 @@ export function MathSection(props: { section: Section }) {
       {/* Action bar */}
       <div class="mode-toggle mode-toggle-actions-only">
         <span class="mode-toggle-actions">
-          <button
+          <button type="button"
             class={`pause-btn${session.paused() ? ' active' : ''}`}
             onClick={() => session.togglePause()}
             title={session.paused() ? 'Resume timer' : 'Pause timer'}
           >
             {session.paused() ? '\u25B6' : '\u23F8'}
           </button>
-          <button
+          <button type="button"
             class="reset-btn"
             onClick={() => session.resetSection()}
             title="Reset score and streak"
@@ -102,7 +102,7 @@ export function MathSection(props: { section: Section }) {
 
       {/* Category filter buttons */}
       <div class="math-category-btns">
-        <button
+        <button type="button"
           class={session.category() === 'all' ? 'active' : ''}
           onClick={() => session.setCategory('all')}
         >
@@ -110,7 +110,7 @@ export function MathSection(props: { section: Section }) {
         </button>
         <For each={categories()}>
           {(gen) => (
-            <button
+            <button type="button"
               class={session.category() === gen ? 'active' : ''}
               onClick={() => session.setCategory(gen)}
             >
@@ -140,9 +140,9 @@ export function MathSection(props: { section: Section }) {
               placeholder="Your answer"
               onKeyDown={handleInputKey}
             />
-            <button onClick={submitAnswer}>Submit</button>
+            <button type="button" onClick={submitAnswer}>Submit</button>
           </div>
-          <button class="dk-btn" onClick={skip}>Skip</button>
+          <button type="button" class="dk-btn" onClick={skip}>Skip</button>
         </Show>
 
         {/* Feedback */}
@@ -152,7 +152,7 @@ export function MathSection(props: { section: Section }) {
 
         {/* Next button */}
         <Show when={session.state() === 'revealed'}>
-          <button class="action-btn" onClick={() => session.nextProblem()}>
+          <button type="button" class="action-btn" onClick={() => session.nextProblem()}>
             Next Problem
           </button>
         </Show>

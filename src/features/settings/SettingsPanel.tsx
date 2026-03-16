@@ -65,7 +65,7 @@ export function SettingsPanel() {
     project.config.new_per_session = nps;
     project.config.leech_threshold = lt;
 
-    await workerApi.setFSRSParams(project.slug, [], ret);
+    await workerApi.setFSRSParams(project.slug, ret);
 
     setRetention(ret);
     setNewPerSession(nps);

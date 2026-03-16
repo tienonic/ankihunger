@@ -43,10 +43,6 @@ export function getLastProject(): string | null {
   try { return localStorage.getItem('last-project'); } catch { return null; }
 }
 
-function clearLastProject() {
-  try { localStorage.removeItem('last-project'); } catch { /* */ }
-}
-
 function saveProjectData(slug: string, data: ProjectData) {
   try { localStorage.setItem(`proj-data-${slug}`, JSON.stringify(data)); } catch { /* */ }
 }

@@ -343,50 +343,7 @@
   color: var(--color-text);
 }
 
-.state-badge {
-  display: inline-block;
-  padding: 2px 10px;
-  border-radius: 2px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-top: 8px;
-}
 
-.state-badge.state-new { background: var(--color-info-light); color: var(--color-info); }
-.state-badge.state-learning { background: var(--color-accent-light); color: var(--color-accent-dark); }
-.state-badge.state-review { background: var(--color-primary-light); color: var(--color-primary); }
-.state-badge.state-relearning { background: var(--color-danger-light); color: var(--color-danger); }
-
-/* === Rating Flash === */
-.rating-flash {
-  position: absolute;
-  top: 12px;
-  right: 80px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 2px 12px;
-  border-radius: 2px;
-  opacity: 0;
-  pointer-events: none;
-  transition: none;
-}
-
-.rating-flash.show {
-  animation: ratingFlashFade 1.6s ease-out forwards;
-}
-
-.rating-flash.flash-easy { background: var(--color-info-light); color: var(--color-info); }
-.rating-flash.flash-good { background: var(--color-success-light); color: var(--color-success); }
-.rating-flash.flash-hard { background: var(--color-accent-light); color: var(--color-accent-dark); }
-.rating-flash.flash-again { background: var(--color-danger-light); color: var(--color-danger); }
-
-@keyframes ratingFlashFade {
-  0% { opacity: 1; }
-  70% { opacity: 1; }
-  100% { opacity: 0; }
-}
 
 /* === Timer === */
 .timer {

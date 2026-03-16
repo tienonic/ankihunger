@@ -58,7 +58,7 @@ export function ActivityWidget(props: { isFlashMode: () => boolean; activeSessio
           </div>
         </div>
         <div class="activity-reset-wrap" ref={resetWrapRef}>
-          <button
+          <button type="button"
             class="activity-reset-btn"
             onClick={() => setResetMenuOpen(v => !v)}
           >
@@ -70,16 +70,16 @@ export function ActivityWidget(props: { isFlashMode: () => boolean; activeSessio
                 <div class="reset-confirm">
                   <span class="reset-confirm-label">Are you sure?</span>
                   <div class="reset-confirm-btns">
-                    <button class="reset-confirm-yes" onClick={() => {
+                    <button type="button" class="reset-confirm-yes" onClick={() => {
                       confirmAction()?.();
                       setConfirmAction(null);
                       setResetMenuOpen(false);
                     }}>Yes</button>
-                    <button class="reset-confirm-no" onClick={() => setConfirmAction(null)}>No</button>
+                    <button type="button" class="reset-confirm-no" onClick={() => setConfirmAction(null)}>No</button>
                   </div>
                 </div>
               }>
-                <button class="reset-menu-item" onClick={() => {
+                <button type="button" class="reset-menu-item" onClick={() => {
                   setConfirmAction(() => async () => {
                     const p = activeProject();
                     if (p) { await workerApi.clearActivity(p.slug); loadActivity(); }
@@ -87,7 +87,7 @@ export function ActivityWidget(props: { isFlashMode: () => boolean; activeSessio
                 }}>
                   Reset Graph
                 </button>
-                <button class="reset-menu-item" onClick={() => {
+                <button type="button" class="reset-menu-item" onClick={() => {
                   setConfirmAction(() => () => {
                     props.activeSession()?.resetSection?.();
                   });
@@ -111,8 +111,8 @@ export function ActivityWidget(props: { isFlashMode: () => boolean; activeSessio
                 <span class="stat-item">total: <strong>{due().total}</strong></span>
               </div>
               <div class="flash-sidebar-btns">
-                <button class="action-sm flash-nav-btn" onClick={() => s.shuffleFlash()} title="Random card">shuffle</button>
-                <button class="action-sm flash-nav-btn" onClick={() => s.resetSection()} title="Reset flashcard progress">reset</button>
+                <button type="button" class="action-sm flash-nav-btn" onClick={() => s.shuffleFlash()} title="Random card">shuffle</button>
+                <button type="button" class="action-sm flash-nav-btn" onClick={() => s.resetSection()} title="Reset flashcard progress">reset</button>
               </div>
             </div>
           );

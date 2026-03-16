@@ -8,7 +8,3 @@ export function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-/** Pick a random element from an array */
-export function pick<T>(arr: T[]): T {
-  return arr[Math.floor(Math.random() * arr.length)];
-}

@@ -38,14 +38,12 @@ button, input, textarea, select { font-family: inherit; }
 
 /* === Zen mode === */
 .zen .header-wrap { display: none; }
-.zen .state-badge { display: none; }
 .zen .card-actions { display: none; }
 .zen .sidebar-right { display: none !important; }
 .zen .mode-btn { display: none; }
 .zen .mode-toggle { border-color: transparent; margin-bottom: 4px; }
 .zen .dk-btn { display: none; }
 .zen .timer { display: none; }
-.zen .rating-flash { display: none; }
 .zen .flashcard-hint { display: none; }
 .zen .feedback { display: none !important; }
 .zen .option-feedback { display: none; }
@@ -77,11 +75,9 @@ button, input, textarea, select { font-family: inherit; }
 }
 
 @media (max-width: 600px) {
-  .tab-btn { font-size: 0.7rem; padding: 8px 4px; }
   .card { padding: 16px; }
   .flashcard-front { font-size: 1rem; }
   .rating-btn { min-width: 60px; padding: 8px 4px; }
-  .header-top { gap: 8px; }
 }
 
 /* Utilities */
