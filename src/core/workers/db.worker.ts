@@ -199,7 +199,7 @@ async function saveCardFromFSRS(cardId: string, card: Card, lapses?: number) {
       card.state, card.due.toISOString(), card.stability, card.difficulty,
       card.elapsed_days, card.scheduled_days, card.reps,
       lapses ?? null,
-      card.last_review ? (card.last_review as Date).toISOString() : null,
+      card.last_review ? card.last_review.toISOString() : null,
       cardId,
     ]
   );
@@ -221,8 +221,8 @@ function isLeech(lapses: number): boolean {
 const newTodayMap = new Map<string, number>();
 let lastDate = new Date().toISOString().slice(0, 10);
 
-function newTodayKey(sectionIds: string[], cardType?: string): string {
-  return sectionIds.join(',') + '|' + (cardType ?? '');
+function newTodayKey(projectId: string, sectionIds: string[], cardType?: string): string {
+  return projectId + '|' + sectionIds.join(',') + '|' + (cardType ?? '');
 }
 
 async function checkNewDay() {
@@ -258,17 +258,24 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
 
     case 'LOAD_PROJECT': {
       const { projectId, sectionIds, cardIds } = request;
-      for (const sid of sectionIds) {
-        await run(
-          `INSERT OR IGNORE INTO scores (project_id, section_id, correct, attempted) VALUES (?, ?, 0, 0)`,
-          [projectId, sid]
-        );
-      }
-      for (const c of cardIds) {
-        await run(
-          `INSERT OR IGNORE INTO cards (card_id, project_id, section_id, card_type) VALUES (?, ?, ?, ?)`,
-          [c.cardId, projectId, c.sectionId, c.cardType]
-        );
+      await run('BEGIN');
+      try {
+        for (const sid of sectionIds) {
+          await run(
+            `INSERT OR IGNORE INTO scores (project_id, section_id, correct, attempted) VALUES (?, ?, 0, 0)`,
+            [projectId, sid]
+          );
+        }
+        for (const c of cardIds) {
+          await run(
+            `INSERT OR IGNORE INTO cards (card_id, project_id, section_id, card_type) VALUES (?, ?, ?, ?)`,
+            [c.cardId, projectId, c.sectionId, c.cardType]
+          );
+        }
+        await run('COMMIT');
+      } catch (e) {
+        await run('ROLLBACK');
+        throw e;
       }
       return { ok: true };
     }
@@ -304,7 +311,7 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
       if (row) return { cardId: row.card_id };
 
       // 3. New cards (capped per section+cardType)
-      const key = newTodayKey(sectionIds, cardType);
+      const key = newTodayKey(projectId, sectionIds, cardType);
       const used = newTodayMap.get(key) ?? 0;
       if (used < newPerSession) {
         row = await queryOne(
@@ -341,7 +348,7 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
         `SELECT card_id FROM cards
          WHERE project_id = ? AND section_id IN (${placeholders})
          AND suspended = 0 AND buried = 0${typeFilter}${excludeFilter}
-         ORDER BY stability ASC LIMIT 1`,
+         ORDER BY stability ASC, RANDOM() LIMIT 1`,
         [projectId, ...sectionIds, ...typeParam, ...excludeParam]
       );
       return row ? { cardId: row.card_id } : { cardId: null };
@@ -370,10 +377,10 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
 
     case 'REVIEW_CARD': {
       if (!fsrsEngine) initFSRS();
-      const { cardId, projectId, sectionId, rating, elapsedMs } = request;
+      const { cardId, projectId, sectionId, rating } = request;
 
       const row = await queryOne(`SELECT * FROM cards WHERE card_id = ?`, [cardId]);
-      if (!row) return { error: 'Card not found' };
+      if (!row) throw new Error(`Card not found: ${cardId}`);
 
       const card = cardToFSRS(row);
 
@@ -496,8 +503,8 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
         `SELECT COUNT(*) as cnt FROM cards
          WHERE project_id = ? AND section_id IN (${placeholders})
          AND suspended = 0 AND buried = 0
-         AND ((fsrs_state IN (1,3) AND due <= ?) OR (fsrs_state = 2 AND due <= ?))${typeFilter}`,
-        [projectId, ...sectionIds, now, now, ...typeParam]
+         AND fsrs_state IN (1,2,3) AND due <= ?${typeFilter}`,
+        [projectId, ...sectionIds, now, ...typeParam]
       );
       const newRow = await queryOne(
         `SELECT COUNT(*) as cnt FROM cards
@@ -544,12 +551,21 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
 
     case 'RESET_SECTION': {
       const { projectId, sectionId } = request;
-      await run(`DELETE FROM cards WHERE project_id = ? AND section_id = ?`, [projectId, sectionId]);
-      await run(
-        `UPDATE scores SET correct = 0, attempted = 0, updated_at = datetime('now')
-         WHERE project_id = ? AND section_id = ?`,
-        [projectId, sectionId]
-      );
+      await run('BEGIN');
+      try {
+        await run(`DELETE FROM cards WHERE project_id = ? AND section_id = ?`, [projectId, sectionId]);
+        await run(
+          `UPDATE scores SET correct = 0, attempted = 0, updated_at = datetime('now')
+           WHERE project_id = ? AND section_id = ?`,
+          [projectId, sectionId]
+        );
+        await run(`DELETE FROM undo_stack`);
+        await run('COMMIT');
+      } catch (e) {
+        await run('ROLLBACK');
+        throw e;
+      }
+      newTodayMap.clear(); // Reset new-card daily counter so freshly re-inserted cards are shown
       return { ok: true };
     }
 
@@ -607,7 +623,7 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
     }
 
     case 'SET_FSRS_PARAMS': {
-      initFSRS(request.retention);
+      initFSRS(request.retention, request.leechThreshold);
       return { ok: true };
     }
 

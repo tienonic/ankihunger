@@ -1,4 +1,4 @@
-import { createSignal, onCleanup } from 'solid-js';
+import { createSignal, batch, onCleanup } from 'solid-js';
 
 export function useTimer() {
   const [seconds, setSeconds] = createSignal(0);
@@ -7,8 +7,7 @@ export function useTimer() {
 
   function start() {
     stop();
-    setSeconds(0);
-    setPaused(false);
+    batch(() => { setSeconds(0); setPaused(false); });
     interval = setInterval(() => setSeconds(s => s + 1), 1000);
   }
 
@@ -36,8 +35,7 @@ export function useTimer() {
 
   function reset() {
     stop();
-    setSeconds(0);
-    setPaused(false);
+    batch(() => { setSeconds(0); setPaused(false); });
   }
 
   onCleanup(() => { if (interval !== null) clearInterval(interval); });

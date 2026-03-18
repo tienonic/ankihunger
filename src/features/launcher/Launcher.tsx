@@ -1,5 +1,5 @@
 import './launcher.css';
-import { createSignal, For, Show } from 'solid-js';
+import { createSignal, For, Show, batch } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { projectRegistry } from '../../projects/registry.ts';
 import {
@@ -29,7 +29,7 @@ export function Launcher() {
 
   function readFile(file: File) {
     const reader = new FileReader();
-    reader.onload = (ev) => { validateAndOpenFile(ev.target?.result as string); };
+    reader.onload = (ev) => { const result = ev.target?.result; if (typeof result === 'string') validateAndOpenFile(result); };
     reader.onerror = () => { setLoadError('Failed to read file'); };
     reader.readAsText(file);
   }
@@ -47,7 +47,7 @@ export function Launcher() {
 
         <button type="button" class="launcher-browse-btn" onClick={() => setBrowseOpen(true)}>Browse All Projects</button>
 
-        <div class="launcher-file-row"><button type="button" class="launcher-open-btn" onClick={() => fileInput.click()}>Open File (.json)</button><input ref={fileInput} type="file" accept=".json" class="hidden" onChange={(e) => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) { readFile(f); (e.target as HTMLInputElement).value = ''; } }} /></div>
+        <div class="launcher-file-row"><button type="button" class="launcher-open-btn" onClick={() => fileInput.click()}>Open File (.json)</button><input ref={fileInput} type="file" accept=".json" class="hidden" onChange={(e) => { const f = e.currentTarget.files?.[0]; if (f) { readFile(f); e.currentTarget.value = ''; } }} /></div>
 
         <DropZone onDrop={readFile} onClick={() => fileInput.click()} />
 
@@ -57,13 +57,13 @@ export function Launcher() {
 
       <Show when={browseOpen()}>
         <Portal>
-          <div class="settings-backdrop" onClick={(e) => { if ((e.target as HTMLElement).classList.contains('settings-backdrop')) { setBrowseOpen(false); setSearchQuery(''); } }}>
+          <div class="settings-backdrop" onClick={(e) => { if (e.target instanceof Element && e.target.classList.contains('settings-backdrop')) { batch(() => { setBrowseOpen(false); setSearchQuery(''); }); } }}>
             <div class="launcher-browse-panel">
-              <div class="keybinds-header"><span>All Projects</span><button type="button" class="keybinds-close" onClick={() => { setBrowseOpen(false); setSearchQuery(''); }}>&times;</button></div>
+              <div class="keybinds-header"><span>All Projects</span><button type="button" class="keybinds-close" onClick={() => batch(() => { setBrowseOpen(false); setSearchQuery(''); })}>&times;</button></div>
               <div class="launcher-browse-search"><input type="text" placeholder="Search projects..." value={searchQuery()} onInput={(e) => setSearchQuery(e.currentTarget.value)} autofocus /></div>
               <div class="launcher-browse-list">
                 <For each={filteredRegistry()}>
-                  {(proj) => <button type="button" class="launcher-browse-item" onClick={() => { setBrowseOpen(false); setSearchQuery(''); openRegistryProject(proj.slug); }}>{proj.name}</button>}
+                  {(proj) => <button type="button" class="launcher-browse-item" onClick={() => { batch(() => { setBrowseOpen(false); setSearchQuery(''); }); openRegistryProject(proj.slug); }}>{proj.name}</button>}
                 </For>
                 <Show when={filteredRegistry().length === 0}>
                   <div class="launcher-browse-empty">No projects found</div>

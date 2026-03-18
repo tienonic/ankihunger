@@ -1,7 +1,7 @@
-import { createSignal } from 'solid-js';
+import { createSignal, batch } from 'solid-js';
 import type { Project } from '../../projects/types.ts';
 
-export interface GlossaryEntry {
+interface GlossaryEntry {
   term: string;
   def: string;
   hasImage?: boolean;
@@ -15,9 +15,7 @@ export { entries, searchQuery, setSearchQuery, setQuestionContext };
 
 export function buildGlossary(project: Project) {
   const sorted = [...project.glossary].sort((a, b) => a.term.localeCompare(b.term));
-  setEntries(sorted);
-  setQuestionContext('');
-  setSearchQuery('');
+  batch(() => { setEntries(sorted); setQuestionContext(''); setSearchQuery(''); });
 }
 
 export function getRelevantTerms(): GlossaryEntry[] {

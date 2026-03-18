@@ -1,7 +1,7 @@
 import type { PerformanceSummary, GeneratedQuestion } from './types.ts';
 import type { Section } from '../../projects/types.ts';
 
-export const INSIGHTS_SYSTEM = `You are a spaced-repetition study coach analyzing FSRS data. Cover:
+const INSIGHTS_SYSTEM = `You are a spaced-repetition study coach analyzing FSRS data. Cover:
 1. Overall summary (1-2 sentences)
 2. Weakest sections by accuracy
 3. Specific weak cards (up to 5) — mention card IDs and why they're struggling
@@ -10,11 +10,11 @@ export const INSIGHTS_SYSTEM = `You are a spaced-repetition study coach analyzin
 
 Be direct, under 600 words. Use markdown headers and bullet points.`;
 
-export const GENERATE_SYSTEM = `Output ONLY a JSON array. Each element: { "q": "question text", "correct": "correct answer", "wrong": ["wrong1", "wrong2", "wrong3"], "explanation": "brief explanation" }.
+const GENERATE_SYSTEM = `Output ONLY a JSON array. Each element: { "q": "question text", "correct": "correct answer", "wrong": ["wrong1", "wrong2", "wrong3"], "explanation": "brief explanation" }.
 Questions test recall not recognition. Wrong answers must be plausible. Vary types: definition, application, comparison, cause/effect. Explanations under 60 words. Generate exactly the number requested.
 IMPORTANT: All answer options (correct and wrong) must be similar in length. Do not let the correct answer stand out by being noticeably longer or shorter than the distractors.`;
 
-export const TARGETED_SYSTEM = `Output ONLY a JSON array. Each element: { "q": "question text", "correct": "correct answer", "wrong": ["wrong1", "wrong2", "wrong3"], "explanation": "brief explanation" }.
+const TARGETED_SYSTEM = `Output ONLY a JSON array. Each element: { "q": "question text", "correct": "correct answer", "wrong": ["wrong1", "wrong2", "wrong3"], "explanation": "brief explanation" }.
 Focus on the student's weakest areas. Generate questions that reinforce concepts they're struggling with — target low-accuracy sections, high-lapse cards, and unstable knowledge. Wrong answers must be plausible. Explanations under 60 words.
 IMPORTANT: All answer options (correct and wrong) must be similar in length. Do not let the correct answer stand out by being noticeably longer or shorter than the distractors.`;
 
@@ -95,7 +95,7 @@ function validateQuestion(item: unknown): item is GeneratedQuestion {
   return (
     typeof obj.q === 'string' && obj.q.length > 0 &&
     typeof obj.correct === 'string' && obj.correct.length > 0 &&
-    Array.isArray(obj.wrong) && obj.wrong.length >= 1 &&
+    Array.isArray(obj.wrong) && obj.wrong.length >= 3 &&
     obj.wrong.every((w: unknown) => typeof w === 'string')
   );
 }

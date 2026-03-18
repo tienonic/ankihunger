@@ -1,12 +1,11 @@
 import { Show, For, createSignal } from 'solid-js';
-import type { Section } from '../../projects/types.ts';
 import type { QuizSession } from './store.ts';
 import { LatexHtml } from '../../components/LatexText.tsx';
 
 const RATING_CSS: Record<number, string> = { 1: 'rating-again', 2: 'rating-hard', 3: 'rating-good', 4: 'rating-easy' };
 const RATING_NAMES: Record<number, string> = { 1: 'Again', 2: 'Hard', 3: 'Good', 4: 'Easy' };
 
-export function FlashcardArea(props: { session: QuizSession; section: Section }) {
+export function FlashcardArea(props: { session: QuizSession }) {
   const s = props.session;
 
   return (
@@ -22,7 +21,7 @@ export function FlashcardArea(props: { session: QuizSession; section: Section })
         <Show when={!s.flashFlipped()}><p class="flashcard-hint">Flip to rate</p></Show>
 
         <Show when={s.flashFlipped() && s.flashCardId()}>
-          <div class="flash-rating-area"><For each={[1, 2, 3, 4]}>{(rating) => <button type="button" class={`rating-btn ${RATING_CSS[rating]}`} onClick={(e) => { e.stopPropagation(); s.rateFlash(rating); }}><span class="rating-label">{RATING_NAMES[rating]}</span><span class="rating-interval">{s.ratingLabels()[rating] ?? ''}</span></button>}</For></div>
+          <div class="flash-rating-area"><For each={[1, 2, 3, 4]}>{(rating) => <button type="button" class={`rating-btn ${RATING_CSS[rating]}`} onClick={(e) => { e.stopPropagation(); s.rateFlash(rating).catch(() => {}); }}><span class="rating-label">{RATING_NAMES[rating]}</span><span class="rating-interval">{s.ratingLabels()[rating] ?? ''}</span></button>}</For></div>
         </Show>
 
         <Show when={s.flashFlipped()}><p class="flashcard-hint">1-4 to rate</p></Show>
@@ -33,10 +32,10 @@ export function FlashcardArea(props: { session: QuizSession; section: Section })
           <h3 class="done-title">Session Complete</h3>
           <div class="done-due"><span>{s.dueCount().newCount} new remaining</span><span>{s.dueCount().total} total cards</span></div>
           <div class="done-actions">
-            <button type="button" class="action-sm" onClick={() => s.studyMore()}>Study More</button>
-            <button type="button" class="action-sm cram-btn" onClick={() => s.startCram()}>Cram</button>
-            <div class="done-add-new">{(() => { const [count, setCount] = createSignal(5); return <><input type="number" value={count()} min="1" class="new-cards-input" onInput={(e) => setCount(Math.max(1, parseInt(e.currentTarget.value) || 1))} /><button type="button" class="action-sm" onClick={() => s.increaseNewCards(count())}>Add New</button></>; })()}</div>
-            <button type="button" class="action-sm" onClick={() => s.unburyAll()}>Unbury Cards</button>
+            <button type="button" class="action-sm" onClick={() => s.studyMore().catch(() => {})}>Study More</button>
+            <button type="button" class="action-sm cram-btn" onClick={() => s.startCram().catch(() => {})}>Cram</button>
+            <div class="done-add-new">{(() => { const [count, setCount] = createSignal(5); return <><input type="number" value={count()} min="1" class="new-cards-input" onInput={(e) => setCount(Math.max(1, parseInt(e.currentTarget.value, 10) || 1))} /><button type="button" class="action-sm" onClick={() => s.increaseNewCards(count()).catch(() => {})}>Add New</button></>; })()}</div>
+            <button type="button" class="action-sm" onClick={() => s.unburyAll().catch(() => {})}>Unbury Cards</button>
           </div>
         </div>
       </Show>

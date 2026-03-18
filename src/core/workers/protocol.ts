@@ -4,9 +4,9 @@ export type WorkerRequest =
   | { type: 'PICK_NEXT'; projectId: string; sectionIds: string[]; newPerSession: number; cardType?: 'mcq' | 'passage' | 'flashcard' }
   | { type: 'PICK_NEXT_OVERRIDE'; projectId: string; sectionIds: string[]; cardType?: 'mcq' | 'passage' | 'flashcard'; excludeIds?: string[] }
   | { type: 'RESET_NEW_COUNT' }
-  | { type: 'PREVIEW_RATINGS'; cardId: string; retention?: number }
-  | { type: 'REVIEW_CARD'; cardId: string; projectId: string; sectionId: string; rating: number; elapsedMs: number; retention?: number }
-  | { type: 'UNDO_REVIEW'; cardId: string }
+  | { type: 'PREVIEW_RATINGS'; cardId: string }
+  | { type: 'REVIEW_CARD'; cardId: string; projectId: string; sectionId: string; rating: number }
+  | { type: 'UNDO_REVIEW' }
   | { type: 'SUSPEND_CARD'; cardId: string }
   | { type: 'BURY_CARD'; cardId: string }
   | { type: 'UNBURY_ALL'; projectId: string }
@@ -21,7 +21,7 @@ export type WorkerRequest =
   | { type: 'GET_HOTKEYS' }
   | { type: 'SET_HOTKEY'; action: string; binding: string; context: string }
   | { type: 'GET_REVIEW_LOG'; projectId: string; limit?: number }
-  | { type: 'SET_FSRS_PARAMS'; projectId: string; retention: number }
+  | { type: 'SET_FSRS_PARAMS'; retention: number; leechThreshold?: number }
   | { type: 'GET_PERFORMANCE_CARDS'; projectId: string };
 
 export interface WorkerResponse {

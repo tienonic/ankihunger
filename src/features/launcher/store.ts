@@ -1,8 +1,8 @@
-import { createSignal } from 'solid-js';
+import { createSignal, batch } from 'solid-js';
 import { projectRegistry } from '../../projects/registry.ts';
 import { loadProject, validateProject } from '../../projects/loader.ts';
 import { initWorker, workerApi } from '../../core/hooks/useWorker.ts';
-import { setAppPhase, setActiveProject, setActiveTab, activeProject, setHeaderVisible, setActivePanel } from '../../core/store/app.ts';
+import { setAppPhase, setActiveProject, setActiveTab, setHeaderVisible, setActivePanel, setHeaderLocked } from '../../core/store/app.ts';
 import { buildGlossary } from '../glossary/store.ts';
 import { loadKeybinds } from '../settings/keybinds.ts';
 import type { Project, ProjectData } from '../../projects/types.ts';
@@ -55,18 +55,14 @@ export function getProjectData(slug: string): ProjectData | null {
 }
 
 export async function openProject(data: ProjectData, isDefault: boolean, registryFolder?: string) {
-  setIsLoading(true);
-  setLoadError(null);
+  if (isLoading()) return;
+  batch(() => { setIsLoading(true); setLoadError(null); });
 
   try {
     const project = loadProject(data);
     if (registryFolder) {
       project.sourceFolder = `src/projects/${registryFolder}`;
     }
-
-    if (!isDefault) saveProjectData(project.slug, data);
-    setLastProject(project.slug);
-    addRecentProject(project.name, project.slug);
 
     // Ensure worker is initialized before registering cards
     await initWorker();
@@ -78,25 +74,37 @@ export async function openProject(data: ProjectData, isDefault: boolean, registr
       sectionIds.push(s.id);
       const mcqType = s.type === 'passage-quiz' ? 'passage' : 'mcq';
       for (const id of s.cardIds) {
-        cardRegs.push({ sectionId: s.id, cardId: id, cardType: mcqType as 'mcq' | 'passage' });
+        cardRegs.push({ sectionId: s.id, cardId: id, cardType: mcqType });
       }
       for (const id of s.flashCardIds) {
         cardRegs.push({ sectionId: s.id, cardId: id, cardType: 'flashcard' });
       }
     }
     await workerApi.loadProject(project.slug, sectionIds, cardRegs);
+    await workerApi.setFSRSParams(project.config.desired_retention, project.config.leech_threshold);
     await loadKeybinds();
 
-    setHeaderVisible(false);
-    setActivePanel(null);
-    setActiveProject(project);
-    buildGlossary(project);
-    setActiveTab(project.sections[0]?.id ?? null);
-    setAppPhase('study');
+    // Persist project data only after async loading succeeds — prevents failed projects
+    // from appearing in recent list or being auto-loaded on next startup
+    if (!isDefault) saveProjectData(project.slug, data);
+    setLastProject(project.slug);
+    addRecentProject(project.name, project.slug);
+
+    batch(() => {
+      setHeaderVisible(false);
+      setActivePanel(null);
+      setHeaderLocked(false);
+      setActiveProject(project);
+      buildGlossary(project);
+      setActiveTab(project.sections[0]?.id ?? null);
+      setAppPhase('study');
+      setIsLoading(false);
+    });
   } catch (err) {
-    setLoadError(err instanceof Error ? err.message : 'Failed to load project');
-  } finally {
-    setIsLoading(false);
+    batch(() => {
+      setLoadError(err instanceof Error ? err.message : 'Failed to load project');
+      setIsLoading(false);
+    });
   }
 }
 
@@ -106,15 +114,19 @@ export async function openRegistryProject(slug: string) {
     setLoadError('Project not found in registry');
     return;
   }
-  const data = await entry.loader();
-  await openProject(data, true, entry.folder);
+  try {
+    const data = await entry.loader();
+    await openProject(data, true, entry.folder);
+  } catch (err) {
+    setLoadError('Failed to load project: ' + (err instanceof Error ? err.message : String(err)));
+  }
 }
 
 export function openRecentProject(slug: string) {
   const entry = projectRegistry.find(p => p.slug === slug);
   if (entry) {
     entry.loader()
-      .then(data => openProject(data, true))
+      .then(data => openProject(data, true, entry.folder))
       .catch(err => setLoadError('Failed to load project: ' + (err instanceof Error ? err.message : String(err))));
   } else {
     const saved = getProjectData(slug);
@@ -128,9 +140,7 @@ export function clearRecentProjects() {
 }
 
 export function goToLauncher() {
-  setAppPhase('launcher');
-  setActiveProject(null);
-  setActiveTab(null);
+  batch(() => { setAppPhase('launcher'); setActiveProject(null); setActiveTab(null); });
 }
 
 export function validateAndOpenFile(jsonStr: string) {
@@ -141,7 +151,7 @@ export function validateAndOpenFile(jsonStr: string) {
       setLoadError('Invalid project: ' + errors.join(', '));
       return;
     }
-    openProject(data as ProjectData, false);
+    openProject(data, false);
   } catch (err) {
     setLoadError('Failed to parse JSON: ' + (err instanceof Error ? err.message : String(err)));
   }

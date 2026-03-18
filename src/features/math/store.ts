@@ -2,11 +2,11 @@ import { createSignal, batch } from 'solid-js';
 import { workerApi } from '../../core/hooks/useWorker.ts';
 import { useTimer } from '../../core/hooks/useTimer.ts';
 import { activeProject } from '../../core/store/app.ts';
-import { mathGenerators, CATEGORY_LABELS } from '../../data/math.ts';
+import { mathGenerators } from '../../data/math.ts';
 import type { MathProblem } from '../../data/math.ts';
 import type { Section } from '../../projects/types.ts';
 
-export type MathState = 'answering' | 'revealed';
+type MathState = 'answering' | 'revealed';
 
 export interface MathSession {
   state: () => MathState;
@@ -33,7 +33,7 @@ export interface MathSession {
 }
 
 export function createMathSession(section: Section): MathSession {
-  const project = () => activeProject()!;
+  const project = () => activeProject();
 
   const [state, setState] = createSignal<MathState>('answering');
   const [problem, setProblem] = createSignal<MathProblem | null>(null);
@@ -74,13 +74,14 @@ export function createMathSession(section: Section): MathSession {
 
   function checkAnswer(val: string) {
     if (state() !== 'answering') return;
-    timer.stop();
 
     const p = problem();
     if (!p) return;
 
     const parsed = parseFloat(val);
     if (isNaN(parsed)) return;
+
+    timer.stop();
 
     const ans = p.a;
     const isCorrect = Math.abs(parsed - ans) <= Math.abs(ans) * 0.01 + 0.01;
@@ -112,7 +113,7 @@ export function createMathSession(section: Section): MathSession {
 
     const proj = project();
     if (proj) {
-      workerApi.updateScore(proj.slug, section.id, isCorrect);
+      workerApi.updateScore(proj.slug, section.id, isCorrect).catch(() => {});
     }
   }
 
@@ -147,7 +148,7 @@ export function createMathSession(section: Section): MathSession {
 
     const proj = project();
     if (proj) {
-      workerApi.updateScore(proj.slug, section.id, false);
+      workerApi.updateScore(proj.slug, section.id, false).catch(() => {});
     }
   }
 
@@ -174,7 +175,7 @@ export function createMathSession(section: Section): MathSession {
 
     const proj = project();
     if (proj) {
-      workerApi.resetSection(proj.slug, section.id);
+      workerApi.resetSection(proj.slug, section.id).catch(() => {});
     }
   }
 

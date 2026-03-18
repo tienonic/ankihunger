@@ -19,8 +19,7 @@ function getWorker(): Worker {
         entry.resolve(data);
       }
     };
-    worker.onerror = (e) => {
-      console.error('Worker error:', e);
+    worker.onerror = () => {
       for (const [, entry] of pending) {
         entry.reject(new Error('Worker crashed'));
       }
@@ -51,6 +50,16 @@ export async function initWorker(): Promise<void> {
   return initPromise;
 }
 
+export function terminateWorker(): void {
+  for (const [, entry] of pending) {
+    entry.reject(new Error('Worker terminated'));
+  }
+  pending.clear();
+  worker?.terminate();
+  worker = null;
+  initPromise = null;
+}
+
 export const workerApi = {
   loadProject: (projectId: string, sectionIds: string[], cardIds: { sectionId: string; cardId: string; cardType: 'mcq' | 'passage' | 'flashcard' }[]) =>
     sendWorkerMessage({ type: 'LOAD_PROJECT', projectId, sectionIds, cardIds }),
@@ -67,13 +76,13 @@ export const workerApi = {
   previewRatings: (cardId: string) =>
     sendWorkerMessage<{ labels: Record<number, string> }>({ type: 'PREVIEW_RATINGS', cardId }),
 
-  reviewCard: (cardId: string, projectId: string, sectionId: string, rating: number, elapsedMs: number) =>
+  reviewCard: (cardId: string, projectId: string, sectionId: string, rating: number) =>
     sendWorkerMessage<{ card: { state: number; due: string; stability: number; difficulty: number }; isLeech: boolean; lapses: number }>({
-      type: 'REVIEW_CARD', cardId, projectId, sectionId, rating, elapsedMs,
+      type: 'REVIEW_CARD', cardId, projectId, sectionId, rating,
     }),
 
-  undoReview: (cardId: string) =>
-    sendWorkerMessage<{ undone: boolean; cardId?: string }>({ type: 'UNDO_REVIEW', cardId }),
+  undoReview: () =>
+    sendWorkerMessage<{ undone: boolean; cardId?: string }>({ type: 'UNDO_REVIEW' }),
 
   suspendCard: (cardId: string) =>
     sendWorkerMessage({ type: 'SUSPEND_CARD', cardId }),
@@ -109,10 +118,10 @@ export const workerApi = {
     sendWorkerMessage({ type: 'ADD_NOTE', projectId, text }),
 
   getReviewLog: (projectId: string, limit?: number) =>
-    sendWorkerMessage({ type: 'GET_REVIEW_LOG', projectId, limit }),
+    sendWorkerMessage<{ id: string; card_id: string; project_id: string; section_id: string; rating: number; review_time: string }[]>({ type: 'GET_REVIEW_LOG', projectId, limit }),
 
-  setFSRSParams: (projectId: string, retention: number) =>
-    sendWorkerMessage({ type: 'SET_FSRS_PARAMS', projectId, retention }),
+  setFSRSParams: (retention: number, leechThreshold?: number) =>
+    sendWorkerMessage({ type: 'SET_FSRS_PARAMS', retention, leechThreshold }),
 
   getPerformanceCards: (projectId: string) =>
     sendWorkerMessage<{ card_id: string; section_id: string; card_type: string; fsrs_state: number; stability: number; difficulty: number; reps: number; lapses: number }[]>({

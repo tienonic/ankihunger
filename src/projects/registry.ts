@@ -1,8 +1,5 @@
 import type { RegistryEntry, ProjectData } from './types.ts';
-
-function slugify(str: string): string {
-  return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
+import { slugify } from './loader.ts';
 
 // Auto-discover JSON project files from /projects/ at repo root
 const jsonModules = import.meta.glob('/projects/*.json', { eager: true }) as Record<

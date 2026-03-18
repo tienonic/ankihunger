@@ -18,7 +18,7 @@ export function TargetedTab() {
 
   async function handleInject() {
     setInjecting(true);
-    try { await injectTargetedQuestions(sectionName()); } finally { setInjecting(false); }
+    try { await injectTargetedQuestions(sectionName()); } catch { /* injection failure */ } finally { setInjecting(false); }
   }
 
   const acceptedCount = () => targetedAccepted().size;
@@ -32,7 +32,7 @@ export function TargetedTab() {
 
       <div class="ai-generate-row">
         <label>Questions:</label>
-        <input type="number" min={1} max={50} value={count()} onInput={(e) => setCount(parseInt(e.currentTarget.value) || 10)} />
+        <input type="number" min={1} max={50} value={count()} onInput={(e) => setCount(parseInt(e.currentTarget.value, 10) || 10)} />
         <Show when={targetedLoading()} fallback={<button type="button" class="ai-btn" onClick={() => runTargeted(count())}>Generate from Weaknesses</button>}>
           <button type="button" class="ai-btn ai-btn-secondary" onClick={abortStream}><span class="ai-spinner ai-spinner-dark" /> Stop</button>
         </Show>

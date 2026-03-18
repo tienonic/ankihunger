@@ -13,7 +13,7 @@ export interface Binding {
   label: string;
 }
 
-export type KeybindMap = Record<KeyAction, Binding>;
+type KeybindMap = Record<KeyAction, Binding>;
 
 export type KeyContext = 'global' | 'mcq' | 'flashcard' | 'math';
 
@@ -54,11 +54,7 @@ export const DEFAULT_KEYBINDS: KeybindMap = {
 };
 
 function cloneDefaults(): KeybindMap {
-  const out = {} as KeybindMap;
-  for (const k of Object.keys(DEFAULT_KEYBINDS) as KeyAction[]) {
-    out[k] = { ...DEFAULT_KEYBINDS[k] };
-  }
-  return out;
+  return structuredClone(DEFAULT_KEYBINDS);
 }
 
 const [keybinds, setKeybinds] = createSignal<KeybindMap>(cloneDefaults());
@@ -77,14 +73,20 @@ export function matchesKey(e: KeyboardEvent, action: KeyAction): boolean {
 
 export async function loadKeybinds(): Promise<void> {
   try {
-    const rows = await workerApi.getHotkeys() as { action: string; binding: string }[];
+    const rows = await workerApi.getHotkeys();
     if (!rows || rows.length === 0) return;
     const map = cloneDefaults();
     for (const row of rows) {
       const action = row.action as KeyAction;
       if (!(action in DEFAULT_KEYBINDS)) continue;
-      const parsed = JSON.parse(row.binding) as Binding;
-      map[action] = parsed;
+      try {
+        const parsed = JSON.parse(row.binding) as Binding;
+        if (parsed && typeof parsed.key === 'string' && typeof parsed.label === 'string') {
+          map[action] = parsed;
+        }
+      } catch {
+        // Skip malformed binding row; leave default for this action
+      }
     }
     setKeybinds(map);
   } catch {
@@ -96,17 +98,23 @@ export async function setKeybind(action: KeyAction, binding: Binding): Promise<v
   const map = { ...keybinds() };
   map[action] = binding;
   setKeybinds(map);
-  const context = ACTION_META[action].context;
-  await workerApi.setHotkey(action, JSON.stringify(binding), context);
+  try {
+    const context = ACTION_META[action].context;
+    await workerApi.setHotkey(action, JSON.stringify(binding), context);
+  } catch {
+    // Local state already updated; DB persistence failure is non-critical
+  }
 }
 
 export async function resetKeybinds(): Promise<void> {
   setKeybinds(cloneDefaults());
-  // Clear all custom bindings from DB by re-setting to defaults
-  const actions = Object.keys(DEFAULT_KEYBINDS) as KeyAction[];
-  for (const action of actions) {
-    const context = ACTION_META[action].context;
-    await workerApi.setHotkey(action, JSON.stringify(DEFAULT_KEYBINDS[action]), context);
+  try {
+    const actions = Object.keys(DEFAULT_KEYBINDS) as KeyAction[];
+    await Promise.all(actions.map(action =>
+      workerApi.setHotkey(action, JSON.stringify(DEFAULT_KEYBINDS[action]), ACTION_META[action].context)
+    ));
+  } catch {
+    // Local state already reset; DB persistence failure is non-critical
   }
 }
 

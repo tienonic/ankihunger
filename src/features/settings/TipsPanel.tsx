@@ -1,4 +1,4 @@
-import { createSignal, For, Show, onMount, onCleanup } from 'solid-js';
+import { createSignal, For, Show, onMount, onCleanup, batch } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import {
   type KeyAction, type KeyContext,
@@ -37,17 +37,17 @@ export function TipsPanel() {
   const [panelTop, setPanelTop] = createSignal(0);
   let btnRef!: HTMLButtonElement;
 
-  function close() { setActivePanel(null); setHeaderLocked(false); }
+  function close() { batch(() => { setActivePanel(null); setHeaderLocked(false); }); }
   const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape' && activePanel() === 'tips') close(); };
   onMount(() => document.addEventListener('keydown', handleEscape));
   onCleanup(() => document.removeEventListener('keydown', handleEscape));
 
   return (
     <>
-      <button type="button" ref={btnRef} class="tips-btn" title="Show keyboard tips" onClick={() => { setPanelTop(btnRef.getBoundingClientRect().top); setActivePanel('tips'); setHeaderLocked(true); }}>Tips</button>
+      <button type="button" ref={btnRef} class="tips-btn" title="Show keyboard tips" onClick={() => batch(() => { setPanelTop(btnRef.getBoundingClientRect().top); setActivePanel('tips'); setHeaderLocked(true); })}>Tips</button>
       <Show when={activePanel() === 'tips'}>
         <Portal>
-          <div class="settings-backdrop" onClick={(e) => { if ((e.target as HTMLElement).classList.contains('settings-backdrop')) close(); }}>
+          <div class="settings-backdrop" onClick={(e) => { if (e.target instanceof Element && e.target.classList.contains('settings-backdrop')) close(); }}>
             <div class="keybinds-modal panel-fixed" style={{ top: `${panelTop()}px` }}>
               <div class="keybinds-header"><span>Tips</span><button type="button" class="keybinds-close" onClick={close}>&times;</button></div>
               <div class="keybinds-body">

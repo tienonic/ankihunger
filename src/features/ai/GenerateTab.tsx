@@ -20,7 +20,7 @@ export function GenerateTab() {
           min={1}
           max={50}
           value={count()}
-          onInput={(e) => setCount(parseInt(e.currentTarget.value) || 10)}
+          onInput={(e) => setCount(parseInt(e.currentTarget.value, 10) || 10)}
         />
         <Show when={generateLoading()} fallback={
           <button type="button"

@@ -1,5 +1,5 @@
 import './settings.css';
-import { Show, onMount, onCleanup, createSignal } from 'solid-js';
+import { Show, onMount, onCleanup, createSignal, batch } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { activeProject, activePanel, setActivePanel, setHeaderLocked } from '../../core/store/app.ts';
 import { workerApi } from '../../core/hooks/useWorker.ts';
@@ -15,32 +15,28 @@ export function SettingsPanel() {
   function load() {
     const project = activeProject();
     if (!project) return;
-    setRetention(project.config.desired_retention);
-    setNewPerSession(project.config.new_per_session);
-    setLeechThreshold(project.config.leech_threshold);
+    batch(() => {
+      setRetention(project.config.desired_retention);
+      setNewPerSession(project.config.new_per_session);
+      setLeechThreshold(project.config.leech_threshold);
+    });
   }
 
   function handleOpen() {
     if (activePanel() === 'settings') {
-      setActivePanel(null);
-      setHeaderLocked(false);
+      batch(() => { setActivePanel(null); setHeaderLocked(false); });
     } else {
       load();
-      setPanelTop(btnRef.getBoundingClientRect().top);
-      setActivePanel('settings');
-      setHeaderLocked(true);
-      setSaved(false);
+      batch(() => { setPanelTop(btnRef.getBoundingClientRect().top); setActivePanel('settings'); setHeaderLocked(true); setSaved(false); });
     }
   }
 
-  function close() {
-    setActivePanel(null);
-    setHeaderLocked(false);
-  }
+  function close() { batch(() => { setActivePanel(null); setHeaderLocked(false); }); }
 
+  let saveTimer: ReturnType<typeof setTimeout> | undefined;
   const escHandler = (e: KeyboardEvent) => { if (e.key === 'Escape' && activePanel() === 'settings') close(); };
   onMount(() => document.addEventListener('keydown', escHandler));
-  onCleanup(() => document.removeEventListener('keydown', escHandler));
+  onCleanup(() => { document.removeEventListener('keydown', escHandler); if (saveTimer) clearTimeout(saveTimer); });
 
   async function handleSave() {
     const project = activeProject();
@@ -54,13 +50,14 @@ export function SettingsPanel() {
     project.config.new_per_session = nps;
     project.config.leech_threshold = lt;
 
-    await workerApi.setFSRSParams(project.slug, ret);
-
-    setRetention(ret);
-    setNewPerSession(nps);
-    setLeechThreshold(lt);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+    try {
+      await workerApi.setFSRSParams(ret, lt);
+      batch(() => { setRetention(ret); setNewPerSession(nps); setLeechThreshold(lt); setSaved(true); });
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => { setSaved(false); saveTimer = undefined; }, 1500);
+    } catch {
+      // Keep local state changes; DB persistence failure is non-critical
+    }
   }
 
   return (
@@ -68,7 +65,7 @@ export function SettingsPanel() {
       <button type="button" ref={btnRef} class="tips-btn" title="FSRS settings" onClick={handleOpen}>Settings</button>
       <Show when={activePanel() === 'settings'}>
         <Portal>
-          <div class="settings-backdrop" onClick={(e) => { if ((e.target as HTMLElement).classList.contains('settings-backdrop')) close(); }}>
+          <div class="settings-backdrop" onClick={(e) => { if (e.target instanceof Element && e.target.classList.contains('settings-backdrop')) close(); }}>
             <div class="settings-dropdown" style={{ top: `${panelTop()}px` }}>
               <label class="settings-field"><span>Desired retention</span><input type="number" min="0.7" max="0.99" step="0.01" value={retention()} onInput={e => { const v = parseFloat(e.currentTarget.value); setRetention(isNaN(v) ? 0.9 : v); }} /></label>
               <label class="settings-field"><span>New cards / session</span><input type="number" min="1" max="100" step="1" value={newPerSession()} onInput={e => { const v = parseInt(e.currentTarget.value, 10); setNewPerSession(isNaN(v) ? 20 : v); }} /></label>

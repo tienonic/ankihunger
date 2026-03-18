@@ -11,7 +11,7 @@ import { TipsPanel } from '../../features/settings/TipsPanel.tsx';
 import { AIPanel } from '../../features/ai/AIPanel.tsx';
 
 export function Header() {
-  const project = () => activeProject()!;
+  const project = activeProject;
   const [exportLabel, setExportLabel] = createSignal('Export');
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -34,16 +34,17 @@ export function Header() {
     }, 800);
   }
 
-  const currentHandler = () => { handlerVersion(); return sectionHandlers.get(activeTab()!); };
+  const currentHandler = () => { handlerVersion(); const tab = activeTab(); return tab ? sectionHandlers.get(tab) : undefined; };
   const canFlash = () => {
     const h = currentHandler();
     return h && typeof h.flashMode === 'function' && typeof h.toggleFlashMode === 'function';
   };
+  const flashHandler = () => currentHandler() as FlashHandler;
 
   const clickOutsideHandler = (e: MouseEvent) => {
     if (!headerVisible()) return;
-    const target = e.target as HTMLElement;
-    if (target.closest('.header-menu') || target.closest('.header-pull') || target.closest('.settings-backdrop') || target.closest('.keybinds-overlay')) return;
+    if (!(e.target instanceof Element)) return;
+    if (e.target.closest('.header-menu') || e.target.closest('.header-pull') || e.target.closest('.settings-backdrop')) return;
     setHeaderVisible(false);
   };
   onMount(() => document.addEventListener('mousedown', clickOutsideHandler));
@@ -61,14 +62,20 @@ export function Header() {
       </div>
       <Show when={headerVisible()}>
         <div class="header-menu" onMouseEnter={clearClose} onMouseLeave={scheduleClose}>
-          <div class="header-menu-label">{project().name}</div>
+          <div class="header-menu-label">{project()?.name}</div>
           <button type="button" class="header-menu-item" onClick={() => goToLauncher()}>&larr; Home</button>
           <label class="header-menu-item header-menu-check"><input type="checkbox" checked={syncActivity()} onChange={toggleSyncActivity} />Sync Graph</label>
           <label class="header-menu-item header-menu-check"><input type="checkbox" checked={easyMode()} onChange={toggleEasyMode} />Simple</label>
-          <button type="button" class="header-menu-item" onClick={async () => {
+          <button type="button" class="header-menu-item" disabled={exportLabel() !== 'Export'} onClick={async () => {
+            const p = project();
+            if (!p) return;
             setExportLabel('Exporting…');
-            const ok = await exportProjectData(project());
-            setExportLabel(ok ? 'Exported!' : 'Failed');
+            try {
+              const ok = await exportProjectData(p);
+              setExportLabel(ok ? 'Exported!' : 'Failed');
+            } catch {
+              setExportLabel('Failed');
+            }
             setTimeout(() => setExportLabel('Export'), 1500);
           }}>{exportLabel()}</button>
           <SettingsPanel />
@@ -76,13 +83,13 @@ export function Header() {
           <KeybindsPanel />
           <TipsPanel />
           <div class="header-menu-divider" />
-          <For each={project().sections}>
+          <For each={project()?.sections ?? []}>
             {(section) => <button type="button" class={`header-menu-item header-menu-tab ${activeTab() === section.id ? 'active' : ''}`} onClick={() => setActiveTab(section.id)}>{section.name}</button>}
           </For>
           <Show when={canFlash()}>
             <div class="header-menu-divider" />
-            <button type="button" class={`header-menu-item header-menu-tab ${!(currentHandler() as FlashHandler).flashMode() ? 'active' : ''}`} onClick={() => { if ((currentHandler() as FlashHandler).flashMode()) (currentHandler() as FlashHandler).toggleFlashMode(); }}>Quiz</button>
-            <button type="button" class={`header-menu-item header-menu-tab ${(currentHandler() as FlashHandler).flashMode() ? 'active' : ''}`} onClick={() => { if (!(currentHandler() as FlashHandler).flashMode()) (currentHandler() as FlashHandler).toggleFlashMode(); }}>Flashcards</button>
+            <button type="button" class={`header-menu-item header-menu-tab ${!flashHandler().flashMode() ? 'active' : ''}`} onClick={() => { if (flashHandler().flashMode()) flashHandler().toggleFlashMode(); }}>Quiz</button>
+            <button type="button" class={`header-menu-item header-menu-tab ${flashHandler().flashMode() ? 'active' : ''}`} onClick={() => { if (!flashHandler().flashMode()) flashHandler().toggleFlashMode(); }}>Flashcards</button>
           </Show>
         </div>
       </Show>

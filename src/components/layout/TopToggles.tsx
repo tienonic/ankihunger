@@ -1,9 +1,10 @@
 import { Show } from 'solid-js';
-import { activeTab, activeProject, zenMode, toggleZenMode, headerVisible, termsOpen } from '../../core/store/app.ts';
-import { sectionHandlers } from '../../core/store/sections.ts';
+import { activeTab, zenMode, toggleZenMode, headerVisible, termsOpen } from '../../core/store/app.ts';
+import { sectionHandlers, handlerVersion } from '../../core/store/sections.ts';
 
 export function TopToggles() {
   const activeSession = () => {
+    handlerVersion();
     const tab = activeTab();
     return tab ? sectionHandlers.get(tab) : undefined;
   };

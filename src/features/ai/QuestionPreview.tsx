@@ -1,5 +1,5 @@
 import { createSignal, For, Show } from 'solid-js';
-import { generateOutput, generateAccepted, setGenerateAccepted, generateLoading, injectAcceptedQuestions } from './store.ts';
+import { generateOutput, generateAccepted, setGenerateAccepted, injectAcceptedQuestions } from './store.ts';
 
 export function QuestionPreview() {
   const [sectionName, setSectionName] = createSignal('AI Generated');
@@ -19,6 +19,8 @@ export function QuestionPreview() {
     setInjecting(true);
     try {
       await injectAcceptedQuestions(sectionName());
+    } catch {
+      // Injection failure — keep UI state consistent
     } finally {
       setInjecting(false);
     }

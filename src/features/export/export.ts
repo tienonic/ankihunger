@@ -2,11 +2,12 @@ import { workerApi } from '../../core/hooks/useWorker.ts';
 import type { Project, Section, Question } from '../../projects/types.ts';
 
 interface ReviewLogEntry {
+  id: string;
   card_id: string;
+  project_id: string;
   section_id: string;
   rating: number;
-  elapsed_ms: number;
-  timestamp: string;
+  review_time: string;
 }
 
 interface EnrichedEntry {
@@ -29,9 +30,9 @@ function enrichEntry(entry: ReviewLogEntry, sectionMap: Map<string, Section>): E
     const id = entry.card_id;
     const prefix = section.id + '-';
 
-    if (id.includes('-flash-')) {
+    if (id.startsWith(prefix + 'flash-')) {
       cardType = 'flashcard';
-      const idx = parseInt(id.split('-flash-')[1], 10);
+      const idx = parseInt(id.slice(prefix.length + 'flash-'.length), 10);
       const fc = section.flashcards?.[idx];
       if (fc) {
         question = fc.front;
@@ -63,7 +64,7 @@ function enrichEntry(entry: ReviewLogEntry, sectionMap: Map<string, Section>): E
   return {
     cardId: entry.card_id,
     rating: entry.rating,
-    reviewTime: entry.timestamp,
+    reviewTime: entry.review_time,
     sectionId: entry.section_id,
     question,
     correctAnswer,
@@ -74,33 +75,33 @@ function enrichEntry(entry: ReviewLogEntry, sectionMap: Map<string, Section>): E
 export async function exportProjectData(project: Project): Promise<boolean> {
   const pid = project.slug;
 
-  const [reviewLog, cards, scores, activity] = await Promise.all([
-    workerApi.getReviewLog(pid) as Promise<ReviewLogEntry[]>,
-    workerApi.getPerformanceCards(pid),
-    workerApi.getScores(pid),
-    workerApi.getActivity(pid),
-  ]);
-
-  const sectionMap = new Map<string, Section>();
-  for (const s of project.sections) sectionMap.set(s.id, s);
-
-  const enrichedLog = (reviewLog || []).map(e => enrichEntry(e, sectionMap));
-
-  const now = new Date();
-  const ts = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const fileName = `export-${ts}.json`;
-
-  const payload = {
-    project: project.name,
-    slug: pid,
-    exportedAt: now.toISOString(),
-    reviewLog: enrichedLog,
-    cards: cards || [],
-    scores: scores || [],
-    activity: activity || [],
-  };
-
   try {
+    const [reviewLog, cards, scores, activity] = await Promise.all([
+      workerApi.getReviewLog(pid),
+      workerApi.getPerformanceCards(pid),
+      workerApi.getScores(pid),
+      workerApi.getActivity(pid),
+    ]);
+
+    const sectionMap = new Map<string, Section>();
+    for (const s of project.sections) sectionMap.set(s.id, s);
+
+    const enrichedLog = (reviewLog || []).map(e => enrichEntry(e, sectionMap));
+
+    const now = new Date();
+    const ts = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const fileName = `export-${ts}.json`;
+
+    const payload = {
+      project: project.name,
+      slug: pid,
+      exportedAt: now.toISOString(),
+      reviewLog: enrichedLog,
+      cards: cards || [],
+      scores: scores || [],
+      activity: activity || [],
+    };
+
     const res = await fetch('/api/export', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

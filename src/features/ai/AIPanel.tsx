@@ -1,4 +1,4 @@
-import { createSignal, Show, onMount, onCleanup, Switch, Match } from 'solid-js';
+import { createSignal, Show, onMount, onCleanup, Switch, Match, batch } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { activePanel, setActivePanel, setHeaderLocked } from '../../core/store/app.ts';
 import { aiTab, setAiTab, abortStream } from './store.ts';
@@ -17,15 +17,15 @@ export function AIPanel() {
   const [panelTop, setPanelTop] = createSignal(0);
   let btnRef!: HTMLButtonElement;
 
-  function close() { abortStream(); setActivePanel(null); setHeaderLocked(false); }
+  function close() { abortStream(); batch(() => { setActivePanel(null); setHeaderLocked(false); }); }
   const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape' && activePanel() === 'ai') close(); };
-  function handleBackdropClick(e: MouseEvent) { if ((e.target as HTMLElement).classList.contains('settings-backdrop')) close(); }
+  function handleBackdropClick(e: MouseEvent) { if (e.target instanceof Element && e.target.classList.contains('settings-backdrop')) close(); }
   onMount(() => document.addEventListener('keydown', handleEscape));
   onCleanup(() => document.removeEventListener('keydown', handleEscape));
 
   return (
     <>
-      <button type="button" ref={btnRef} class="tips-btn" title="AI Assistant" onClick={() => { setPanelTop(btnRef.getBoundingClientRect().top); setActivePanel('ai'); setHeaderLocked(true); }}>AI</button>
+      <button type="button" ref={btnRef} class="tips-btn" title="AI Assistant" onClick={() => batch(() => { setPanelTop(btnRef.getBoundingClientRect().top); setActivePanel('ai'); setHeaderLocked(true); })}>AI</button>
       <Show when={activePanel() === 'ai'}>
         <Portal>
           <div class="settings-backdrop" onClick={handleBackdropClick}>

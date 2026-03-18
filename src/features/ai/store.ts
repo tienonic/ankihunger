@@ -1,4 +1,4 @@
-import { createSignal } from 'solid-js';
+import { createSignal, batch } from 'solid-js';
 import { workerApi } from '../../core/hooks/useWorker.ts';
 import { activeProject, setActiveProject, setActiveTab } from '../../core/store/app.ts';
 import { bumpHandlerVersion } from '../../core/store/sections.ts';
@@ -57,7 +57,8 @@ async function callBridge(
     throw new Error(`Bridge error ${resp.status}: ${body}`);
   }
 
-  const reader = resp.body!.getReader();
+  if (!resp.body) throw new Error('Response body is null');
+  const reader = resp.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
 
@@ -67,7 +68,7 @@ async function callBridge(
     buffer += decoder.decode(value, { stream: true });
 
     const lines = buffer.split('\n');
-    buffer = lines.pop()!;
+    buffer = lines.pop() ?? '';
 
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
@@ -86,12 +87,13 @@ async function callBridge(
 }
 
 async function gatherPerformanceSummary(): Promise<PerformanceSummary> {
-  const project = activeProject()!;
+  const project = activeProject();
+  if (!project) throw new Error('No active project');
   const slug = project.slug;
 
   const [scores, reviewLog, cards] = await Promise.all([
     workerApi.getScores(slug),
-    workerApi.getReviewLog(slug, 500) as Promise<{ card_id: string; rating: number; section_id: string }[]>,
+    workerApi.getReviewLog(slug, 500),
     workerApi.getPerformanceCards(slug),
   ]);
 
@@ -114,38 +116,31 @@ async function gatherPerformanceSummary(): Promise<PerformanceSummary> {
     };
   });
 
-  const weakCards = cards
-    .filter(c => c.lapses >= 3)
-    .slice(0, 10)
-    .map(c => ({
-      cardId: c.card_id,
-      sectionId: c.section_id,
-      lapses: c.lapses,
-      stability: c.stability,
-      difficulty: c.difficulty,
-    }));
+  const weakCards = cards.filter(c => c.lapses >= 3).slice(0, 10).map(c => ({
+    cardId: c.card_id, sectionId: c.section_id,
+    lapses: c.lapses, stability: c.stability, difficulty: c.difficulty,
+  }));
 
-  const recent = (reviewLog as { rating: number }[]).slice(0, 100);
-  const recentCorrect = recent.filter(r => r.rating >= 3).length;
-  const recentAccuracy = recent.length > 0 ? recentCorrect / recent.length : 0;
+  const recent = reviewLog.slice(0, 100);
+  const recentAccuracy = recent.length > 0 ? recent.filter(r => r.rating >= 3).length / recent.length : 0;
 
   return {
     projectName: project.name,
     sections,
     weakCards,
     recentAccuracy,
-    totalReviews: (reviewLog as unknown[]).length,
+    totalReviews: reviewLog.length,
     totalCards: cards.length,
   };
 }
 
 export async function runInsights() {
-  setInsightsLoading(true);
-  setInsightsError(null);
-  setInsightsOutput('');
+  activeAbort?.abort();
+  batch(() => { setInsightsLoading(true); setInsightsError(null); setInsightsOutput(''); setGenerateLoading(false); setTargetedLoading(false); });
 
-  activeAbort = new AbortController();
-  const signal = activeAbort.signal;
+  const ctrl = new AbortController();
+  activeAbort = ctrl;
+  const signal = ctrl.signal;
 
   try {
     const summary = await gatherPerformanceSummary();
@@ -156,21 +151,20 @@ export async function runInsights() {
     if (signal.aborted) return;
     setInsightsError(err instanceof Error ? err.message : String(err));
   } finally {
-    setInsightsLoading(false);
-    activeAbort = null;
+    if (activeAbort === ctrl || activeAbort === null) setInsightsLoading(false);
+    if (activeAbort === ctrl) activeAbort = null;
   }
 }
 
 export async function runGenerate(sourceText: string, count: number) {
   if (!sourceText.trim()) { setGenerateError('Paste some study material first'); return; }
+  activeAbort?.abort();
 
-  setGenerateLoading(true);
-  setGenerateError(null);
-  setGenerateOutput([]);
-  setGenerateAccepted(new Set<number>());
+  batch(() => { setGenerateLoading(true); setGenerateError(null); setGenerateOutput([]); setGenerateAccepted(new Set<number>()); setInsightsLoading(false); setTargetedLoading(false); });
 
-  activeAbort = new AbortController();
-  const signal = activeAbort.signal;
+  const ctrl = new AbortController();
+  activeAbort = ctrl;
+  const signal = ctrl.signal;
   let fullResponse = '';
 
   try {
@@ -182,15 +176,14 @@ export async function runGenerate(sourceText: string, count: number) {
     if (questions.length === 0) {
       setGenerateError('No valid questions found in response');
     } else {
-      setGenerateOutput(questions);
-      setGenerateAccepted(new Set(questions.map((_, i) => i)));
+      batch(() => { setGenerateOutput(questions); setGenerateAccepted(new Set(questions.map((_, i) => i))); });
     }
   } catch (err) {
     if (signal.aborted) return;
     setGenerateError(err instanceof Error ? err.message : String(err));
   } finally {
-    setGenerateLoading(false);
-    activeAbort = null;
+    if (activeAbort === ctrl || activeAbort === null) setGenerateLoading(false);
+    if (activeAbort === ctrl) activeAbort = null;
   }
 }
 
@@ -230,27 +223,23 @@ export async function injectAcceptedQuestions(sectionName?: string) {
     cardType: 'mcq' as const,
   }));
   await workerApi.loadProject(project.slug, [sectionId], cardRegs);
+  const currentProject = activeProject();
+  if (!currentProject || currentProject.slug !== project.slug) return; // Project changed while loading
 
-  const updatedSections = [...project.sections, newSection];
-  setActiveProject({ ...project, sections: updatedSections });
-  setActiveTab(sectionId);
-  bumpHandlerVersion();
-
-  setGenerateOutput([]);
-  setGenerateAccepted(new Set<number>());
+  const updatedSections = [...currentProject.sections, newSection];
+  batch(() => { setActiveProject({ ...currentProject, sections: updatedSections }); setActiveTab(sectionId); bumpHandlerVersion(); setGenerateOutput([]); setGenerateAccepted(new Set<number>()); });
 }
 
 export async function runTargeted(count: number) {
   const project = activeProject();
   if (!project) return;
+  activeAbort?.abort();
 
-  setTargetedLoading(true);
-  setTargetedError(null);
-  setTargetedOutput([]);
-  setTargetedAccepted(new Set<number>());
+  batch(() => { setTargetedLoading(true); setTargetedError(null); setTargetedOutput([]); setTargetedAccepted(new Set<number>()); setInsightsLoading(false); setGenerateLoading(false); });
 
-  activeAbort = new AbortController();
-  const signal = activeAbort.signal;
+  const ctrl = new AbortController();
+  activeAbort = ctrl;
+  const signal = ctrl.signal;
   let fullResponse = '';
 
   try {
@@ -258,15 +247,8 @@ export async function runTargeted(count: number) {
     const perfData = formatPerformanceSummary(summary);
 
     // Show weak areas summary in the UI
-    const weak = summary.sections
-      .filter(s => s.attempted > 0)
-      .sort((a, b) => a.accuracy - b.accuracy)
-      .slice(0, 3);
-    if (weak.length > 0) {
-      setTargetedWeakAreas(weak.map(s => `${s.name} (${(s.accuracy * 100).toFixed(0)}%)`).join(', '));
-    } else {
-      setTargetedWeakAreas('');
-    }
+    const weak = summary.sections.filter(s => s.attempted > 0).sort((a, b) => a.accuracy - b.accuracy).slice(0, 3);
+    setTargetedWeakAreas(weak.map(s => `${s.name} (${(s.accuracy * 100).toFixed(0)}%)`).join(', '));
 
     // Gather sample questions from weakest sections for style context
     const sampleSections = weak.length > 0
@@ -282,15 +264,14 @@ export async function runTargeted(count: number) {
     if (questions.length === 0) {
       setTargetedError('No valid questions found in response');
     } else {
-      setTargetedOutput(questions);
-      setTargetedAccepted(new Set(questions.map((_, i) => i)));
+      batch(() => { setTargetedOutput(questions); setTargetedAccepted(new Set(questions.map((_, i) => i))); });
     }
   } catch (err) {
     if (signal.aborted) return;
     setTargetedError(err instanceof Error ? err.message : String(err));
   } finally {
-    setTargetedLoading(false);
-    activeAbort = null;
+    if (activeAbort === ctrl || activeAbort === null) setTargetedLoading(false);
+    if (activeAbort === ctrl) activeAbort = null;
   }
 }
 
@@ -330,12 +311,9 @@ export async function injectTargetedQuestions(sectionName?: string) {
     cardType: 'mcq' as const,
   }));
   await workerApi.loadProject(project.slug, [sectionId], cardRegs);
+  const currentProject = activeProject();
+  if (!currentProject || currentProject.slug !== project.slug) return; // Project changed while loading
 
-  const updatedSections = [...project.sections, newSection];
-  setActiveProject({ ...project, sections: updatedSections });
-  setActiveTab(sectionId);
-  bumpHandlerVersion();
-
-  setTargetedOutput([]);
-  setTargetedAccepted(new Set<number>());
+  const updatedSections = [...currentProject.sections, newSection];
+  batch(() => { setActiveProject({ ...currentProject, sections: updatedSections }); setActiveTab(sectionId); bumpHandlerVersion(); setTargetedOutput([]); setTargetedAccepted(new Set<number>()); });
 }

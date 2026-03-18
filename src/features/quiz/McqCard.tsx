@@ -26,11 +26,11 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
 
   return (
     <div class="card">
-      <Show when={s.isCorrect() && (s.state() === 'revealed' || s.state() === 'rated')}>
-        <button type="button" class="card-flag-btn" title="Mark as wrong for extra practice" onClick={() => s.flagWrong()}>&times;</button>
+      <Show when={s.isCorrect() && (s.state() === 'revealed' || (s.state() === 'rated' && !s.cramMode()))}>
+        <button type="button" class="card-flag-btn" title="Mark as wrong for extra practice" onClick={() => s.flagWrong().catch(() => {})}>&times;</button>
       </Show>
       <Show when={props.isPassage && s.passage()}><div class="passage" innerHTML={s.passage()} /></Show>
-      <Show when={s.question()}><div class="question-header"><LatexText text={s.question()!.q} class="question-text" /></div></Show>
+      <Show when={s.question()}>{(q) => <div class="question-header"><LatexText text={q().q} class="question-text" /></div>}</Show>
 
       <div class="options">
         <For each={s.options()}>
@@ -38,9 +38,9 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
             const fb = () => feedbackFor(opt);
             return (
               <div class="option-wrapper">
-                <button type="button" class={optionClass(opt)} onClick={() => { const st = s.state(); if (st === 'answering') { s.answer(opt); return; } if (st === 'rated') s.pickNextCard(); else if (st === 'revealed' && easyMode()) s.rate(s.isCorrect() ? 3 : 1); else if (st === 'reviewing-history') s.advanceFromHistory(); }}><LatexText text={opt} /></button>
+                <button type="button" class={optionClass(opt)} onClick={() => { const st = s.state(); if (st === 'answering') { s.answer(opt).catch(() => {}); return; } if (st === 'rated') s.pickNextCard().catch(() => {}); else if (st === 'revealed' && easyMode()) s.rate(s.isCorrect() ? 3 : 1).catch(() => {}); else if (st === 'reviewing-history') s.advanceFromHistory(); }}><LatexText text={opt} /></button>
                 <Show when={fb()}>
-                  <div class={fb()!.cls}><Show when={fb()!.text}><LatexText text={fb()!.text} /></Show><Show when={fb()!.explanation}><LatexText text={fb()!.explanation} class="explanation" /></Show></div>
+                  {(fbd) => <div class={fbd().cls}><Show when={fbd().text}><LatexText text={fbd().text} /></Show><Show when={fbd().explanation}><LatexText text={fbd().explanation} class="explanation" /></Show></div>}
                 </Show>
               </div>
             );
@@ -51,10 +51,10 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
       <Show when={s.state() === 'revealed' && !easyMode()}>
         <div class="rating-area">
           <For each={[1, 2, 3, 4]}>
-            {(rating) => <button type="button" class={`rating-btn ${RATING_CSS[rating]}`} onClick={() => s.rate(rating)}><span class="rating-label">{RATING_NAMES[rating]}</span><span class="rating-interval">{s.ratingLabels()[rating] ?? ''}</span></button>}
+            {(rating) => <button type="button" class={`rating-btn ${RATING_CSS[rating]}`} onClick={() => s.rate(rating).catch(() => {})}><span class="rating-label">{RATING_NAMES[rating]}</span><span class="rating-interval">{s.ratingLabels()[rating] ?? ''}</span></button>}
           </For>
         </div>
-        <div class="card-actions"><button type="button" class="action-sm" onClick={() => s.undo()}>Undo</button><button type="button" class="action-sm" onClick={() => s.suspend()}>Suspend</button><button type="button" class="action-sm" onClick={() => s.bury()}>Bury</button></div>
+        <div class="card-actions"><button type="button" class="action-sm" onClick={() => s.undo().catch(() => {})}>Undo</button><button type="button" class="action-sm" onClick={() => s.suspend().catch(() => {})}>Suspend</button><button type="button" class="action-sm" onClick={() => s.bury().catch(() => {})}>Bury</button></div>
       </Show>
 
       <Show when={s.leechWarning()}>
@@ -73,12 +73,12 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
           </Show>
           <div class="done-due"><span>{s.dueCount().newCount} new remaining</span><span>{s.dueCount().total} total cards</span></div>
           <div class="done-actions">
-            <button type="button" class="action-sm" onClick={() => s.studyMore()}>Study More</button>
-            <button type="button" class="action-sm cram-btn" onClick={() => s.startCram()}>Cram</button>
+            <button type="button" class="action-sm" onClick={() => s.studyMore().catch(() => {})}>Study More</button>
+            <button type="button" class="action-sm cram-btn" onClick={() => s.startCram().catch(() => {})}>Cram</button>
             <div class="done-add-new">
-              {(() => { const [count, setCount] = createSignal(5); return <><input type="number" value={count()} min="1" class="new-cards-input" onInput={(e) => setCount(Math.max(1, parseInt(e.currentTarget.value) || 1))} /><button type="button" class="action-sm" onClick={() => s.increaseNewCards(count())}>Add New</button></>; })()}
+              {(() => { const [count, setCount] = createSignal(5); return <><input type="number" value={count()} min="1" class="new-cards-input" onInput={(e) => setCount(Math.max(1, parseInt(e.currentTarget.value, 10) || 1))} /><button type="button" class="action-sm" onClick={() => s.increaseNewCards(count()).catch(() => {})}>Add New</button></>; })()}
             </div>
-            <button type="button" class="action-sm" onClick={() => s.unburyAll()}>Unbury Cards</button>
+            <button type="button" class="action-sm" onClick={() => s.unburyAll().catch(() => {})}>Unbury Cards</button>
           </div>
         </div>
       </Show>

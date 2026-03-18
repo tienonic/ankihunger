@@ -8,7 +8,7 @@ const DEFAULT_CONFIG: ProjectConfig = {
   imageSearchSuffix: '',
 };
 
-function slugify(str: string): string {
+export function slugify(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
@@ -37,8 +37,8 @@ function buildCardIds(section: Section): void {
 
 export function loadProject(data: ProjectData): Project {
   const config: ProjectConfig = { ...DEFAULT_CONFIG, ...data.config };
-  const sections: Section[] = (data.sections as Section[]).map(s => {
-    const section = { ...s, cardIds: [] as string[], flashCardIds: [] as string[] };
+  const sections: Section[] = data.sections.map(s => {
+    const section: Section = { ...s, cardIds: [], flashCardIds: [] };
     buildCardIds(section);
     return section;
   });
@@ -61,7 +61,8 @@ export function validateProject(data: unknown): string[] {
   }
 
   const d = data as Record<string, unknown>;
-  if (!d.name) errors.push('Missing project name');
+  if (!d.name || typeof d.name !== 'string') errors.push('Missing or invalid project name');
+  else if (!slugify(d.name)) errors.push('Project name must contain at least one alphanumeric character');
   if (!Array.isArray(d.sections) || d.sections.length === 0) {
     errors.push('No sections defined');
   } else {
@@ -77,15 +78,19 @@ export function validateProject(data: unknown): string[] {
       } else if (!VALID_TYPES.includes(s.type as Section['type'])) {
         errors.push(`Section "${s.name || s.id}" has invalid type: "${s.type}"`);
       }
-      if (s.type === 'mc-quiz' && (!Array.isArray(s.questions) || (s.questions as unknown[]).length === 0)) {
+      if (s.type === 'mc-quiz' && (!Array.isArray(s.questions) || s.questions.length === 0)) {
         errors.push(`Section "${s.name}" has no questions`);
+      } else if (s.type === 'mc-quiz' && (s.questions as Record<string, unknown>[]).some(q => typeof q.q !== 'string' || typeof q.correct !== 'string' || !Array.isArray(q.wrong))) {
+        errors.push(`Section "${s.name}" has a question missing "q" (string), "correct" (string), or "wrong" (array)`);
       }
-      if (s.type === 'passage-quiz' && (!Array.isArray(s.scenarios) || (s.scenarios as unknown[]).length === 0)) {
+      if (s.type === 'passage-quiz' && (!Array.isArray(s.scenarios) || s.scenarios.length === 0)) {
         errors.push(`Section "${s.name}" has no scenarios`);
+      } else if (s.type === 'passage-quiz' && (s.scenarios as Record<string, unknown>[]).some(sc => typeof sc.passage !== 'string' || !Array.isArray(sc.questions) || (sc.questions as unknown[]).length === 0)) {
+        errors.push(`Section "${s.name}" has a scenario missing "passage" (string) or "questions" array`);
+      } else if (s.type === 'passage-quiz' && (s.scenarios as Record<string, unknown>[]).some(sc => (sc.questions as Record<string, unknown>[]).some(q => typeof q.q !== 'string' || typeof q.correct !== 'string' || !Array.isArray(q.wrong)))) {
+        errors.push(`Section "${s.name}" has a scenario question missing "q" (string), "correct" (string), or "wrong" (array)`);
       }
-      if (s.type === 'math-gen' && (!Array.isArray(s.generators) || (s.generators as unknown[]).length === 0)) {
-        errors.push(`Section "${s.name}" has no generators`);
-      }
+      // generators is optional for math-gen — defaults to all categories if omitted
     }
   }
 

@@ -1,10 +1,11 @@
 import './math.css';
-import { Show, For, createEffect, onMount, onCleanup } from 'solid-js';
+import { Show, For, createEffect, onMount, onCleanup, untrack } from 'solid-js';
 import type { Section } from '../../projects/types.ts';
 import { createMathSession } from './store.ts';
-import { sectionHandlers } from '../../core/store/sections.ts';
+import { sectionHandlers, bumpHandlerVersion } from '../../core/store/sections.ts';
 import { CATEGORY_LABELS } from '../../data/math.ts';
 import { renderLatex } from '../../core/hooks/useLatex.ts';
+import { activeTab } from '../../core/store/app.ts';
 
 export function MathSection(props: { section: Section }) {
   const session = createMathSession(props.section);
@@ -14,13 +15,25 @@ export function MathSection(props: { section: Section }) {
   let feedbackRef: HTMLDivElement | undefined;
   let stepsRef: HTMLDivElement | undefined;
 
-  onMount(() => { sectionHandlers.set(props.section.id, session); session.generateProblem(); });
-  onCleanup(() => sectionHandlers.delete(props.section.id));
+  onMount(() => { sectionHandlers.set(props.section.id, session); bumpHandlerVersion(); session.generateProblem(); });
+  onCleanup(() => { sectionHandlers.delete(props.section.id); bumpHandlerVersion(); });
+
+  // Reset timer when this section becomes the active tab — same fix as QuizSection
+  createEffect(() => {
+    if (activeTab() !== props.section.id) return;
+    if (untrack(() => session.state()) === 'answering') session.timer.start();
+  });
 
   createEffect(() => {
-    session.problem();
-    if (questionRef) { questionRef.textContent = session.problem()?.q ?? ''; renderLatex(questionRef); }
-    if (session.state() === 'answering') setTimeout(() => inputRef?.focus(), 0);
+    const p = session.problem();
+    if (questionRef) { questionRef.textContent = p?.q ?? ''; renderLatex(questionRef); }
+  });
+
+  createEffect(() => {
+    if (session.state() === 'answering') {
+      const id = setTimeout(() => inputRef?.focus(), 0);
+      onCleanup(() => clearTimeout(id));
+    }
   });
 
   createEffect(() => {
@@ -28,9 +41,24 @@ export function MathSection(props: { section: Section }) {
     if (feedbackRef && fb) { feedbackRef.innerHTML = fb.text; renderLatex(feedbackRef); }
   });
 
-  createEffect(() => { if (session.showSteps() && stepsRef) setTimeout(() => { if (stepsRef) renderLatex(stepsRef); }, 0); });
+  createEffect(() => {
+    if (session.showSteps() && stepsRef) {
+      const id = setTimeout(() => { if (stepsRef) renderLatex(stepsRef); }, 0);
+      onCleanup(() => clearTimeout(id));
+    }
+  });
 
   const submitAnswer = () => inputRef && session.checkAnswer(inputRef.value);
+
+  const timerCls = () => { const s = session.timer.seconds(); return `timer${s >= 59 ? ' skull' : s >= 15 ? ' red' : ''}`; };
+  const timerContent = () => { const s = session.timer.seconds(); return s >= 59 ? '\u{1F480}' : s + 's'; };
+
+  const feedbackCls = () => {
+    const fb = session.feedback();
+    if (!fb) return 'feedback';
+    const kind = `${fb.type}-fb`;
+    return `feedback show ${kind}`;
+  };
 
   return (
     <div>
@@ -44,7 +72,7 @@ export function MathSection(props: { section: Section }) {
       <div class="card">
         <div class="question-header">
           <span class="question-text" ref={questionRef} />
-          <Show when={session.state() === 'answering'}><span class={`timer${session.timer.seconds() >= 59 ? ' skull' : session.timer.seconds() >= 15 ? ' red' : ''}`}>{session.timer.seconds() >= 59 ? '\u{1F480}' : session.timer.seconds() + 's'}</span></Show>
+          <Show when={session.state() === 'answering'}><span class={timerCls()}>{timerContent()}</span></Show>
         </div>
 
         <Show when={session.state() === 'answering'}>
@@ -52,9 +80,7 @@ export function MathSection(props: { section: Section }) {
           <button type="button" class="dk-btn" onClick={() => session.skipProblem()}>Skip</button>
         </Show>
 
-        <Show when={session.state() === 'revealed' && session.feedback()}>
-          <div class={`feedback${session.feedback() ? ` show ${session.feedback()!.type === 'correct' ? 'correct-fb' : session.feedback()!.type === 'wrong' ? 'wrong-fb' : 'skip-fb'}` : ''}`} ref={feedbackRef} />
-        </Show>
+        <div class={feedbackCls()} ref={feedbackRef} />
 
         <Show when={session.state() === 'revealed'}>
           <button type="button" class="action-btn" onClick={() => session.nextProblem()}>Next Problem</button>
@@ -63,7 +89,7 @@ export function MathSection(props: { section: Section }) {
         <Show when={session.showSteps() && (session.problem()?.steps.length ?? 0) > 0}>
           <div class="math-steps" ref={stepsRef}>
             <h4>Step-by-Step Solution</h4>
-            <ol><For each={session.problem()!.steps}>{(s) => <li innerHTML={s} />}</For></ol>
+            <ol><For each={session.problem()?.steps ?? []}>{(s) => <li innerHTML={s} />}</For></ol>
           </div>
         </Show>
 

@@ -13,7 +13,8 @@ export function DropZone(props: DropZoneProps) {
     setIsDragOver(true);
   }
 
-  function handleDragLeave() {
+  function handleDragLeave(e: DragEvent) {
+    if (e.relatedTarget instanceof Node && e.currentTarget instanceof Element && e.currentTarget.contains(e.relatedTarget)) return;
     setIsDragOver(false);
   }
 

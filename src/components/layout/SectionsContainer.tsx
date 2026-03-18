@@ -4,11 +4,9 @@ import { QuizSection } from '../../features/quiz/QuizSection.tsx';
 import { MathSection } from '../../features/math/MathSection.tsx';
 
 export function SectionsContainer() {
-  const project = () => activeProject()!;
-
   return (
     <div>
-      <For each={project().sections}>
+      <For each={activeProject()?.sections ?? []}>
         {(section) => (
           <div class={activeTab() === section.id ? 'block' : 'hidden'}>
             {section.type === 'math-gen'

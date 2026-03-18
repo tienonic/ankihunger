@@ -1,35 +1,44 @@
 import './notes.css';
-import { createSignal, Show } from 'solid-js';
+import { createSignal, Show, batch, onCleanup } from 'solid-js';
 import { noteBoxVisible, setNoteBoxVisible, activeProject } from '../../core/store/app.ts';
 import { workerApi } from '../../core/hooks/useWorker.ts';
 
 export function NoteBox() {
   const [placeholder, setPlaceholder] = createSignal('');
   let inputRef: HTMLInputElement | undefined;
+  let closeTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function cancelCloseTimer() {
+    if (closeTimer !== undefined) { clearTimeout(closeTimer); closeTimer = undefined; }
+  }
+
+  onCleanup(cancelCloseTimer);
 
   function handleKeyDown(e: KeyboardEvent) {
     e.stopPropagation();
     if (e.key === 'Enter') {
       const text = inputRef?.value.trim();
       const project = activeProject();
-      if (text && project) {
-        workerApi.addNote(project.slug, text);
-        inputRef!.value = '';
+      if (text && project && inputRef) {
+        workerApi.addNote(project.slug, text).catch(() => {});
+        inputRef.value = '';
         setPlaceholder('saved');
-        setTimeout(() => {
-          setNoteBoxVisible(false);
-          setPlaceholder('');
+        cancelCloseTimer();
+        closeTimer = setTimeout(() => {
+          closeTimer = undefined;
+          batch(() => { setNoteBoxVisible(false); setPlaceholder(''); });
         }, 400);
       }
     } else if (e.key === 'Escape') {
+      cancelCloseTimer();
       if (inputRef) inputRef.value = '';
-      setPlaceholder('');
-      setNoteBoxVisible(false);
+      batch(() => { setPlaceholder(''); setNoteBoxVisible(false); });
     }
   }
 
   function handleBlur() {
-    setNoteBoxVisible(false);
+    cancelCloseTimer();
+    batch(() => { setNoteBoxVisible(false); setPlaceholder(''); });
   }
 
   return (
