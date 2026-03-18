@@ -63,6 +63,7 @@ export interface QuizSession {
   resetSection: () => Promise<void>;
   refreshDue: () => Promise<void>;
   studyMore: () => Promise<void>;
+  flagWrong: () => Promise<void>;
   startCram: () => Promise<void>;
   endCram: () => void;
   increaseNewCards: (count?: number) => Promise<void>;
@@ -347,6 +348,19 @@ export function createQuizSession(section: Section): QuizSession {
     const cId = cardId();
     if (!cId) return;
     await doRate(cId, rating);
+  }
+
+  async function flagWrong() {
+    const cId = cardId();
+    const p = project();
+    if (!cId || !p) return;
+    const st = state();
+    if (st === 'revealed') {
+      await doRate(cId, 1);
+    } else if (st === 'rated') {
+      await workerApi.undoReview(cId);
+      await doRate(cId, 1);
+    }
   }
 
   async function undoAction() {
@@ -774,6 +788,7 @@ export function createQuizSession(section: Section): QuizSession {
     resetSection: resetSectionAction,
     refreshDue,
     studyMore,
+    flagWrong,
     startCram,
     endCram,
     increaseNewCards,

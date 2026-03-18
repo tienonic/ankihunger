@@ -2,7 +2,7 @@
 import { defineConfig } from 'vite';
 import { exec, spawn } from 'child_process';
 import { resolve } from 'path';
-import { readFileSync } from 'fs';
+import { readFileSync, mkdirSync, writeFileSync } from 'fs';
 import solid from 'vite-plugin-solid';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -132,6 +132,36 @@ function aiBridgePlugin() {
   };
 }
 
+function exportPlugin() {
+  return {
+    name: 'export-data',
+    configureServer(server: any) {
+      server.middlewares.use((req: any, res: any, next: any) => {
+        if (req.method !== 'POST' || req.url !== '/api/export') return next();
+
+        let body = '';
+        req.on('data', (chunk: Buffer) => { body += chunk.toString(); });
+        req.on('end', () => {
+          try {
+            const { slug, fileName, data } = JSON.parse(body);
+            if (!slug || !fileName || !data) throw new Error('missing fields');
+            const dir = resolve('exports', slug);
+            mkdirSync(dir, { recursive: true });
+            writeFileSync(resolve(dir, fileName), JSON.stringify(data, null, 2));
+            console.log(`\x1b[32m[export]\x1b[0m ${slug}/${fileName}`);
+            res.writeHead(200, { 'Content-Type': 'text/plain' });
+            res.end('ok');
+          } catch (err: any) {
+            console.log(`\x1b[31m[export] error:\x1b[0m ${err.message}`);
+            res.writeHead(400, { 'Content-Type': 'text/plain' });
+            res.end(err.message);
+          }
+        });
+      });
+    },
+  };
+}
+
 const coopCoepHeaders = {
   'Cross-Origin-Opener-Policy': 'same-origin',
   'Cross-Origin-Embedder-Policy': 'require-corp',
@@ -143,6 +173,7 @@ export default defineConfig({
     tailwindcss(),
     openFolderPlugin(),
     aiBridgePlugin(),
+    exportPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {

@@ -26,6 +26,9 @@ export function McqCard(props: { session: QuizSession; isPassage?: boolean }) {
 
   return (
     <div class="card">
+      <Show when={s.isCorrect() && (s.state() === 'revealed' || s.state() === 'rated')}>
+        <button type="button" class="card-flag-btn" title="Mark as wrong for extra practice" onClick={() => s.flagWrong()}>&times;</button>
+      </Show>
       <Show when={props.isPassage && s.passage()}><div class="passage" innerHTML={s.passage()} /></Show>
       <Show when={s.question()}><div class="question-header"><LatexText text={s.question()!.q} class="question-text" /></div></Show>
 

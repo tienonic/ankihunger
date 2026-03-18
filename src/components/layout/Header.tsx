@@ -1,5 +1,6 @@
-import { For, Show, onMount, onCleanup } from 'solid-js';
+import { For, Show, createSignal, onMount, onCleanup } from 'solid-js';
 import { activeProject, activeTab, setActiveTab, syncActivity, toggleSyncActivity, easyMode, toggleEasyMode, headerVisible, setHeaderVisible, headerLocked } from '../../core/store/app.ts';
+import { exportProjectData } from '../../features/export/export.ts';
 import { goToLauncher } from '../../features/launcher/store.ts';
 import { sectionHandlers, handlerVersion } from '../../core/store/sections.ts';
 
@@ -11,6 +12,7 @@ import { AIPanel } from '../../features/ai/AIPanel.tsx';
 
 export function Header() {
   const project = () => activeProject()!;
+  const [exportLabel, setExportLabel] = createSignal('Export');
   let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
   function open() {
@@ -63,6 +65,12 @@ export function Header() {
           <button type="button" class="header-menu-item" onClick={() => goToLauncher()}>&larr; Home</button>
           <label class="header-menu-item header-menu-check"><input type="checkbox" checked={syncActivity()} onChange={toggleSyncActivity} />Sync Graph</label>
           <label class="header-menu-item header-menu-check"><input type="checkbox" checked={easyMode()} onChange={toggleEasyMode} />Simple</label>
+          <button type="button" class="header-menu-item" onClick={async () => {
+            setExportLabel('Exporting…');
+            const ok = await exportProjectData(project());
+            setExportLabel(ok ? 'Exported!' : 'Failed');
+            setTimeout(() => setExportLabel('Export'), 1500);
+          }}>{exportLabel()}</button>
           <SettingsPanel />
           <AIPanel />
           <KeybindsPanel />

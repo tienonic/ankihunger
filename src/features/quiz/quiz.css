@@ -473,5 +473,25 @@
   background: var(--color-accent-light);
 }
 
+/* === Flag as wrong === */
+.card-flag-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: none;
+  border: none;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--color-danger);
+  cursor: pointer;
+  opacity: 0;
+  padding: 2px 5px;
+  transition: opacity 0.15s;
+  z-index: 5;
+}
+
+.card:hover .card-flag-btn { opacity: 0.35; }
+.card-flag-btn:hover { opacity: 1 !important; }
+
 .leech-warning { display: block; margin-top: 8px; }
 .key-hints { margin-top: 12px; }
