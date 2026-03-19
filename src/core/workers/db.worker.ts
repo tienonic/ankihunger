@@ -87,11 +87,20 @@ CREATE TABLE IF NOT EXISTS undo_stack (
 );
 `;
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 const migrations: Record<number, () => Promise<void>> = {
-  // Future migrations go here, e.g.:
-  // 2: async () => { await sqlite3.exec(db, 'ALTER TABLE cards ADD COLUMN ...'); },
+  2: async () => {
+    await sqlite3.exec(db, `
+      CREATE TABLE IF NOT EXISTS daily_new (
+        project_id TEXT NOT NULL,
+        date TEXT NOT NULL,
+        key TEXT NOT NULL,
+        count INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (project_id, date, key)
+      );
+    `);
+  },
 };
 
 async function applyMigrations() {
@@ -128,10 +137,11 @@ async function applyMigrations() {
 let fsrsEngine: FSRS | null = null;
 let leechThreshold = 8;
 
-function initFSRS(retention = 0.9, threshold = 8) {
+function initFSRS(retention = 0.9, threshold = 8, maxInterval = 36500) {
   const params = generatorParameters({
     request_retention: retention,
     enable_short_term: true,
+    maximum_interval: maxInterval,
   });
   fsrsEngine = fsrs(params);
   leechThreshold = threshold;
@@ -218,7 +228,6 @@ function isLeech(lapses: number): boolean {
   return (lapses - leechThreshold) % Math.ceil(leechThreshold / 2) === 0;
 }
 
-const newTodayMap = new Map<string, number>();
 let lastDate = new Date().toISOString().slice(0, 10);
 
 function newTodayKey(projectId: string, sectionIds: string[], cardType?: string): string {
@@ -229,9 +238,26 @@ async function checkNewDay() {
   const today = new Date().toISOString().slice(0, 10);
   if (lastDate !== today) {
     lastDate = today;
-    newTodayMap.clear();
     await run(`UPDATE cards SET buried = 0 WHERE buried = 1`);
   }
+}
+
+async function getNewTodayCount(projectId: string, key: string): Promise<number> {
+  const today = new Date().toISOString().slice(0, 10);
+  const row = await queryOne(
+    `SELECT count FROM daily_new WHERE project_id = ? AND date = ? AND key = ?`,
+    [projectId, today, key]
+  );
+  return row ? (row.count as number) : 0;
+}
+
+async function incrementNewToday(projectId: string, key: string): Promise<void> {
+  const today = new Date().toISOString().slice(0, 10);
+  await run(
+    `INSERT INTO daily_new (project_id, date, key, count) VALUES (?, ?, ?, 1)
+     ON CONFLICT(project_id, date, key) DO UPDATE SET count = count + 1`,
+    [projectId, today, key]
+  );
 }
 
 async function handleMessage(request: WorkerRequest): Promise<unknown> {
@@ -251,6 +277,10 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
       db = await sqlite3.open_v2('study-tool.db');
 
       await applyMigrations();
+
+      if (navigator.storage?.persist) {
+        navigator.storage.persist().catch(() => {});
+      }
 
       initFSRS();
       return { ok: true };
@@ -310,9 +340,9 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
       );
       if (row) return { cardId: row.card_id };
 
-      // 3. New cards (capped per section+cardType)
+      // 3. New cards (capped per section+cardType, persisted in daily_new)
       const key = newTodayKey(projectId, sectionIds, cardType);
-      const used = newTodayMap.get(key) ?? 0;
+      const used = await getNewTodayCount(projectId, key);
       if (used < newPerSession) {
         row = await queryOne(
           `SELECT card_id FROM cards
@@ -323,7 +353,7 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
           [projectId, ...sectionIds, ...typeParam]
         );
         if (row) {
-          newTodayMap.set(key, used + 1);
+          await incrementNewToday(projectId, key);
           return { cardId: row.card_id };
         }
       }
@@ -355,7 +385,8 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
     }
 
     case 'RESET_NEW_COUNT': {
-      newTodayMap.clear();
+      const today = new Date().toISOString().slice(0, 10);
+      await run(`DELETE FROM daily_new WHERE date = ?`, [today]);
       return { ok: true };
     }
 
@@ -565,7 +596,7 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
         await run('ROLLBACK');
         throw e;
       }
-      newTodayMap.clear(); // Reset new-card daily counter so freshly re-inserted cards are shown
+      await run(`DELETE FROM daily_new WHERE project_id = ?`, [projectId]);
       return { ok: true };
     }
 
@@ -623,7 +654,7 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
     }
 
     case 'SET_FSRS_PARAMS': {
-      initFSRS(request.retention, request.leechThreshold);
+      initFSRS(request.retention, request.leechThreshold, request.maxInterval);
       return { ok: true };
     }
 
@@ -642,6 +673,132 @@ async function handleMessage(request: WorkerRequest): Promise<unknown> {
          ORDER BY lapses DESC, stability ASC`,
         [request.projectId]
       );
+    }
+
+    case 'GET_SESSION_SUMMARY': {
+      const { projectId } = request;
+      const lastRow = await queryOne(
+        `SELECT review_time FROM review_log WHERE project_id = ? ORDER BY review_time DESC LIMIT 1`,
+        [projectId]
+      );
+      const now = new Date().toISOString();
+      const dueRow = await queryOne(
+        `SELECT COUNT(*) as cnt FROM cards
+         WHERE project_id = ? AND suspended = 0 AND buried = 0
+         AND fsrs_state IN (1,2,3) AND due <= ?`,
+        [projectId, now]
+      );
+      return {
+        lastReviewAt: lastRow ? (lastRow.review_time as string) : null,
+        dueNow: (dueRow?.cnt as number) ?? 0,
+      };
+    }
+
+    case 'EXPORT_PROJECT_DATA': {
+      const { projectId } = request;
+      const cards = await queryAll(`SELECT * FROM cards WHERE project_id = ?`, [projectId]);
+      const review_log = await queryAll(`SELECT * FROM review_log WHERE project_id = ?`, [projectId]);
+      const scores = await queryAll(`SELECT * FROM scores WHERE project_id = ?`, [projectId]);
+      const activity = await queryAll(`SELECT * FROM activity WHERE project_id = ?`, [projectId]);
+      const notes = await queryAll(`SELECT * FROM notes WHERE project_id = ?`, [projectId]);
+      return { cards, review_log, scores, activity, notes };
+    }
+
+    case 'EXPORT_GLOBAL_DATA': {
+      const hotkeys = await queryAll(`SELECT * FROM hotkeys`);
+      return { hotkeys };
+    }
+
+    case 'IMPORT_PROJECT_DATA': {
+      const { projectId, cards, review_log, scores, activity, notes } = request;
+      await run('BEGIN');
+      try {
+        await run(`DELETE FROM cards WHERE project_id = ?`, [projectId]);
+        await run(`DELETE FROM review_log WHERE project_id = ?`, [projectId]);
+        await run(`DELETE FROM scores WHERE project_id = ?`, [projectId]);
+        await run(`DELETE FROM activity WHERE project_id = ?`, [projectId]);
+        await run(`DELETE FROM notes WHERE project_id = ?`, [projectId]);
+        await run(`DELETE FROM daily_new WHERE project_id = ?`, [projectId]);
+        await run(`DELETE FROM undo_stack`);
+
+        for (const c of cards) {
+          await run(
+            `INSERT INTO cards (card_id, project_id, section_id, card_type, fsrs_state, due, stability, difficulty, elapsed_days, scheduled_days, reps, lapses, last_review, suspended, buried, leech, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [c.card_id, c.project_id, c.section_id, c.card_type, c.fsrs_state, c.due, c.stability, c.difficulty, c.elapsed_days, c.scheduled_days, c.reps, c.lapses, c.last_review, c.suspended, c.buried, c.leech, c.updated_at]
+          );
+        }
+        for (const r of review_log) {
+          await run(
+            `INSERT INTO review_log (id, card_id, project_id, rating, review_time, section_id) VALUES (?, ?, ?, ?, ?, ?)`,
+            [r.id, r.card_id, r.project_id, r.rating, r.review_time, r.section_id]
+          );
+        }
+        for (const s of scores) {
+          await run(
+            `INSERT INTO scores (project_id, section_id, correct, attempted, updated_at) VALUES (?, ?, ?, ?, ?)`,
+            [s.project_id, s.section_id, s.correct, s.attempted, s.updated_at]
+          );
+        }
+        for (const a of activity) {
+          await run(
+            `INSERT INTO activity (id, project_id, section_id, rating, correct, timestamp) VALUES (?, ?, ?, ?, ?, ?)`,
+            [a.id, a.project_id, a.section_id, a.rating, a.correct, a.timestamp]
+          );
+        }
+        for (const n of notes) {
+          await run(
+            `INSERT INTO notes (id, project_id, text, created_at) VALUES (?, ?, ?, ?)`,
+            [n.id, n.project_id, n.text, n.created_at]
+          );
+        }
+
+        await run('COMMIT');
+      } catch (e) {
+        await run('ROLLBACK');
+        throw e;
+      }
+      return { ok: true };
+    }
+
+    case 'IMPORT_GLOBAL_DATA': {
+      const { hotkeys } = request;
+      await run('BEGIN');
+      try {
+        for (const h of hotkeys) {
+          await run(
+            `INSERT OR REPLACE INTO hotkeys (action, binding, context, updated_at) VALUES (?, ?, ?, ?)`,
+            [h.action, h.binding, h.context, h.updated_at]
+          );
+        }
+        await run('COMMIT');
+      } catch (e) {
+        await run('ROLLBACK');
+        throw e;
+      }
+      return { ok: true };
+    }
+
+    case 'GET_DECK_STATS': {
+      const { projectId } = request;
+      const now = new Date().toISOString();
+      const newRow = await queryOne(
+        `SELECT COUNT(*) as cnt FROM cards WHERE project_id = ? AND fsrs_state = 0 AND suspended = 0 AND buried = 0`,
+        [projectId]
+      );
+      const learningRow = await queryOne(
+        `SELECT COUNT(*) as cnt FROM cards WHERE project_id = ? AND fsrs_state IN (1, 3) AND suspended = 0 AND buried = 0 AND due <= ?`,
+        [projectId, now]
+      );
+      const dueRow = await queryOne(
+        `SELECT COUNT(*) as cnt FROM cards WHERE project_id = ? AND fsrs_state = 2 AND suspended = 0 AND buried = 0 AND due <= ?`,
+        [projectId, now]
+      );
+      return {
+        new: (newRow?.cnt as number) ?? 0,
+        learning: (learningRow?.cnt as number) ?? 0,
+        due: (dueRow?.cnt as number) ?? 0,
+      };
     }
 
     default:

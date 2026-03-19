@@ -2,7 +2,7 @@ import { createSignal, batch } from 'solid-js';
 import { projectRegistry } from '../../projects/registry.ts';
 import { loadProject, validateProject } from '../../projects/loader.ts';
 import { initWorker, workerApi } from '../../core/hooks/useWorker.ts';
-import { setAppPhase, setActiveProject, setActiveTab, setHeaderVisible, setActivePanel, setHeaderLocked } from '../../core/store/app.ts';
+import { setAppPhase, setActiveProject, setActiveTab, setHeaderVisible, setActivePanel, setHeaderLocked, setSessionSummary, formatGap } from '../../core/store/app.ts';
 import { buildGlossary } from '../glossary/store.ts';
 import { loadKeybinds } from '../settings/keybinds.ts';
 import type { Project, ProjectData } from '../../projects/types.ts';
@@ -54,12 +54,25 @@ export function getProjectData(slug: string): ProjectData | null {
   } catch { return null; }
 }
 
+export function saveProjectConfig(slug: string, config: Partial<Project['config']>) {
+  try { localStorage.setItem(`proj-config-${slug}`, JSON.stringify(config)); } catch {}
+}
+
+export function getProjectConfig(slug: string): Partial<Project['config']> | null {
+  try {
+    const raw = localStorage.getItem(`proj-config-${slug}`);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 export async function openProject(data: ProjectData, isDefault: boolean, registryFolder?: string) {
   if (isLoading()) return;
   batch(() => { setIsLoading(true); setLoadError(null); });
 
   try {
     const project = loadProject(data);
+    const savedConfig = getProjectConfig(project.slug);
+    if (savedConfig) Object.assign(project.config, savedConfig);
     if (registryFolder) {
       project.sourceFolder = `src/projects/${registryFolder}`;
     }
@@ -81,7 +94,7 @@ export async function openProject(data: ProjectData, isDefault: boolean, registr
       }
     }
     await workerApi.loadProject(project.slug, sectionIds, cardRegs);
-    await workerApi.setFSRSParams(project.config.desired_retention, project.config.leech_threshold);
+    await workerApi.setFSRSParams(project.config.desired_retention, project.config.leech_threshold, project.config.max_interval);
     await loadKeybinds();
 
     // Persist project data only after async loading succeeds — prevents failed projects
@@ -100,6 +113,20 @@ export async function openProject(data: ProjectData, isDefault: boolean, registr
       setAppPhase('study');
       setIsLoading(false);
     });
+
+    // Fetch session summary (non-blocking)
+    workerApi.getSessionSummary(project.slug).then(summary => {
+      if (!summary.lastReviewAt) return;
+      const ms = Date.now() - new Date(summary.lastReviewAt).getTime();
+      const hours = ms / 3600000;
+      if (hours >= 2) {
+        setSessionSummary({
+          lastReviewAt: summary.lastReviewAt,
+          dueNow: summary.dueNow,
+          gap: formatGap(summary.lastReviewAt),
+        });
+      }
+    }).catch(() => {});
   } catch (err) {
     batch(() => {
       setLoadError(err instanceof Error ? err.message : 'Failed to load project');
@@ -143,9 +170,31 @@ export function goToLauncher() {
   batch(() => { setAppPhase('launcher'); setActiveProject(null); setActiveTab(null); });
 }
 
-export function validateAndOpenFile(jsonStr: string) {
+export async function validateAndOpenFile(jsonStr: string) {
   try {
     const data = JSON.parse(jsonStr);
+
+    // Detect backup files
+    if (data.version === 1 && data.backupType && typeof data.slug === 'string' && Array.isArray(data.cards)) {
+      batch(() => { setIsLoading(true); setLoadError(null); });
+      try {
+        const { validateBackupFile, restoreBackup } = await import('../backup/backup.ts');
+        if (!validateBackupFile(data)) {
+          batch(() => { setLoadError('Invalid backup file'); setIsLoading(false); });
+          return;
+        }
+        const slug = await restoreBackup(data);
+        setIsLoading(false);
+        openRecentProject(slug);
+      } catch (err) {
+        batch(() => {
+          setLoadError('Failed to restore backup: ' + (err instanceof Error ? err.message : String(err)));
+          setIsLoading(false);
+        });
+      }
+      return;
+    }
+
     const errors = validateProject(data);
     if (errors.length > 0) {
       setLoadError('Invalid project: ' + errors.join(', '));

@@ -1,5 +1,5 @@
 import './launcher.css';
-import { createSignal, For, Show, batch } from 'solid-js';
+import { createSignal, For, Show, batch, onMount } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { projectRegistry } from '../../projects/registry.ts';
 import {
@@ -13,6 +13,7 @@ import {
   clearRecentProjects,
 } from './store.ts';
 import { DropZone } from './DropZone.tsx';
+import { initWorker, workerApi } from '../../core/hooks/useWorker.ts';
 
 export function Launcher() {
   let fileInput!: HTMLInputElement;
@@ -20,6 +21,27 @@ export function Launcher() {
   const recentProjects = () => { recentVersion(); return getRecentProjects(); };
   const [browseOpen, setBrowseOpen] = createSignal(false);
   const [searchQuery, setSearchQuery] = createSignal('');
+  const [deckStats, setDeckStats] = createSignal<Record<string, { new: number; learning: number; due: number }>>({});
+
+  onMount(async () => {
+    try {
+      await initWorker();
+      const projects = getRecentProjects();
+      const entries = await Promise.all(
+        projects.map(async (p) => {
+          try {
+            const stats = await workerApi.getDeckStats(p.slug);
+            return [p.slug, stats] as const;
+          } catch { return null; }
+        })
+      );
+      const results: Record<string, { new: number; learning: number; due: number }> = {};
+      for (const entry of entries) {
+        if (entry) results[entry[0]] = entry[1];
+      }
+      setDeckStats(results);
+    } catch { /* worker init failed */ }
+  });
 
   const filteredRegistry = () => {
     const q = searchQuery().toLowerCase().trim();
@@ -41,7 +63,23 @@ export function Launcher() {
         <p class="launcher-subtitle">FSRS-Powered Spaced Repetition</p>
 
         <Show when={recentProjects().length > 0}>
-          <div class="launcher-list"><For each={recentProjects()}>{(p) => <button type="button" class="launcher-proj-btn" onClick={() => openRecentProject(p.slug)}>{p.name}</button>}</For></div>
+          <div class="launcher-list"><For each={recentProjects()}>{(p) => {
+            const stats = () => deckStats()[p.slug];
+            return (
+              <button type="button" class="launcher-proj-btn" onClick={() => openRecentProject(p.slug)}>
+                <span class="proj-name">{p.name}</span>
+                <Show when={stats()}>
+                  {(s) => (
+                    <span class="proj-counts">
+                      <span class="count-new">{s().new}</span>
+                      <span class="count-learning">{s().learning}</span>
+                      <span class="count-due">{s().due}</span>
+                    </span>
+                  )}
+                </Show>
+              </button>
+            );
+          }}</For></div>
           <button type="button" class="launcher-clear-recent" onClick={() => { clearRecentProjects(); setRecentVersion(v => v + 1); }}>clear recent</button>
         </Show>
 

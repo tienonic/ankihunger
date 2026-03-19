@@ -1,4 +1,4 @@
-import type { WorkerRequest, WorkerResponse, WorkerMessage } from '../workers/protocol.ts';
+import type { WorkerRequest, WorkerResponse, WorkerMessage, CardRow, ReviewLogRow, ScoreRow, ActivityRow, NoteRow, HotkeyRow } from '../workers/protocol.ts';
 
 let worker: Worker | null = null;
 let msgId = 0;
@@ -120,17 +120,37 @@ export const workerApi = {
   getReviewLog: (projectId: string, limit?: number) =>
     sendWorkerMessage<{ id: string; card_id: string; project_id: string; section_id: string; rating: number; review_time: string }[]>({ type: 'GET_REVIEW_LOG', projectId, limit }),
 
-  setFSRSParams: (retention: number, leechThreshold?: number) =>
-    sendWorkerMessage({ type: 'SET_FSRS_PARAMS', retention, leechThreshold }),
+  setFSRSParams: (retention: number, leechThreshold?: number, maxInterval?: number) =>
+    sendWorkerMessage({ type: 'SET_FSRS_PARAMS', retention, leechThreshold, maxInterval }),
 
   getPerformanceCards: (projectId: string) =>
     sendWorkerMessage<{ card_id: string; section_id: string; card_type: string; fsrs_state: number; stability: number; difficulty: number; reps: number; lapses: number }[]>({
       type: 'GET_PERFORMANCE_CARDS', projectId,
     }),
 
+  getSessionSummary: (projectId: string) =>
+    sendWorkerMessage<{ lastReviewAt: string | null; dueNow: number }>({ type: 'GET_SESSION_SUMMARY', projectId }),
+
   getHotkeys: () =>
     sendWorkerMessage<{ action: string; binding: string; context: string }[]>({ type: 'GET_HOTKEYS' }),
 
   setHotkey: (action: string, binding: string, context: string) =>
     sendWorkerMessage({ type: 'SET_HOTKEY', action, binding, context }),
+
+  exportProjectData: (projectId: string) =>
+    sendWorkerMessage<{ cards: CardRow[]; review_log: ReviewLogRow[]; scores: ScoreRow[]; activity: ActivityRow[]; notes: NoteRow[] }>({
+      type: 'EXPORT_PROJECT_DATA', projectId,
+    }),
+
+  exportGlobalData: () =>
+    sendWorkerMessage<{ hotkeys: HotkeyRow[] }>({ type: 'EXPORT_GLOBAL_DATA' }),
+
+  importProjectData: (projectId: string, cards: CardRow[], review_log: ReviewLogRow[], scores: ScoreRow[], activity: ActivityRow[], notes: NoteRow[]) =>
+    sendWorkerMessage({ type: 'IMPORT_PROJECT_DATA', projectId, cards, review_log, scores, activity, notes }),
+
+  importGlobalData: (hotkeys: HotkeyRow[]) =>
+    sendWorkerMessage({ type: 'IMPORT_GLOBAL_DATA', hotkeys }),
+
+  getDeckStats: (projectId: string) =>
+    sendWorkerMessage<{ new: number; learning: number; due: number }>({ type: 'GET_DECK_STATS', projectId }),
 };

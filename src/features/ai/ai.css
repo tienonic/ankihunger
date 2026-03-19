@@ -56,7 +56,7 @@
 
 /* Insights */
 .ai-analyze-row { margin-bottom: 10px; }
-.ai-preview-explanation { margin-top: 4px; font-style: italic; color: var(--color-text-light); }
+.ai-preview-explanation { margin-top: 4px; color: var(--color-text-light); }
 
 .ai-insights-output {
   font-size: 0.78rem;
